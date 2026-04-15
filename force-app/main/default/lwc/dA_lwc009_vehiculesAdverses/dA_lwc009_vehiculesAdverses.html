@@ -1,0 +1,265 @@
+<template>
+            <!-- ════ CARD PRINCIPALE ════ -->
+            <div class="pm-card">
+
+                <!-- HEADER -->
+                <div class="pm-header">
+                    <div class="pm-header__left">
+                        <div class="pm-header__icon-wrap">
+                            <lightning-icon icon-name="standard:vehicle" size="small"></lightning-icon>
+                        </div>
+                        <div>
+                            <h2 class="pm-header__title">Véhicules adverses</h2>
+                            <span class="pm-header__subtitle">Gestion des véhicules impliqués</span>
+                        </div>
+                    </div>
+                    <div class="pm-header__actions">
+                        <button class="pm-btn pm-btn--add" onclick={handleAdd}>
+                            <lightning-icon icon-name="utility:add" size="x-small"></lightning-icon>
+                            Ajouter un véhicule
+                        </button>
+                    </div>
+                </div>
+
+                <!-- BODY -->
+                <div class="pm-body">
+
+                    <!-- Spinner -->
+                    <template lwc:if={isLoading}>
+                        <div class="pm-spinner-overlay">
+                            <lightning-spinner alternative-text="Chargement..." size="medium"></lightning-spinner>
+                        </div>
+                    </template>
+
+                    <!-- Empty state -->
+                    <template lwc:elseif={isEmpty}>
+                        <div class="pm-empty">
+                            <div class="pm-empty__icon">
+                                <lightning-icon icon-name="standard:vehicle" size="large"></lightning-icon>
+                            </div>
+                            <p class="pm-empty__text">Il n'y a actuellement aucun véhicule à afficher.</p>
+                            <button class="pm-btn pm-btn--outlined" onclick={handleAdd}>
+                                <lightning-icon icon-name="utility:add" size="x-small"></lightning-icon>
+                                Ajouter un véhicule
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- Tableau -->
+                    <template lwc:else>
+                        <div class="pm-table-wrap">
+                            <table class="pm-table">
+                                <thead>
+                                    <tr>
+                                        <th class="pm-th">Nom de véhicule</th>
+                                        <th class="pm-th">État du véhicule</th>
+                                        <th class="pm-th">N° d'immatriculation</th>
+                                        <th class="pm-th">Marque</th>
+                                        <th class="pm-th pm-th--center">Nb passagers</th>
+                                        <th class="pm-th pm-th--center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={vehicules} for:item="v">
+                                        <tr key={v.Id}>
+                                            <td class="pm-td pm-td--mono">{v.nomVehicule}</td>
+                                            <td class="pm-td">
+                                                <span class={v.etatBadgeClass}>{v.EtatVehicule__c}</span>
+                                            </td>
+                                            <td class="pm-td pm-td--mono">{v.immatriculation}</td>
+                                            <td class="pm-td pm-td--name">{v.marqueAffichee}</td>
+                                            <td class="pm-td pm-td--center">{v.NbDePassagerBlesses__c}</td>
+                                            <td class="pm-td pm-td--actions pm-td--center">
+                                                <div class="pm-action-group">
+                                                    <button
+                                                        class="pm-action-btn pm-action-btn--edit"
+                                                        data-id={v.Id}
+                                                        onclick={handleEdit}
+                                                        title="Modifier">
+                                                        <lightning-icon icon-name="utility:edit" size="x-small"></lightning-icon>
+                                                    </button>
+                                                    <button
+                                                        class="pm-action-btn pm-action-btn--delete"
+                                                        data-id={v.Id}
+                                                        onclick={handleDelete}
+                                                        title="Supprimer">
+                                                        <lightning-icon icon-name="utility:delete" size="x-small"></lightning-icon>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </template>
+
+                </div>
+            </div>
+
+            <!-- ════ POPUP Ajout / Modification ════ -->
+            <template lwc:if={showModal}>
+                <div class="pm-modal-overlay">
+                    <div class="pm-modal">
+
+                        <!-- Modal Header -->
+                        <div class="pm-modal__header">
+                            <div class="pm-modal__header-inner">
+                                <lightning-icon icon-name="standard:vehicle" size="small"></lightning-icon>
+                                <h2 class="pm-modal__title">{modalTitle}</h2>
+                            </div>
+                            <button class="pm-modal__close" onclick={closeModal}>
+                                <lightning-icon icon-name="utility:close" size="x-small"></lightning-icon>
+                            </button>
+                        </div>
+
+                        <!-- Modal Body -->
+                        <div class="pm-modal__body">
+
+                            <!-- Section 1 : Véhicule -->
+                            <div class="pm-section">
+                                <div class="pm-section__title">
+                                    <span class="pm-section__num">1</span>
+                                    Informations véhicule
+                                </div>
+                                <div class="pm-grid">
+                                    <div class="pm-field">
+                                        <lightning-input
+                                            label="N° d'immatriculation"
+                                            value={form.immatriculation}
+                                            data-field="immatriculation"
+                                            onchange={handleFieldChange}>
+                                        </lightning-input>
+                                    </div>
+                                    <div class="pm-field">
+                                        <lightning-combobox
+                                            label="Marque"
+                                            value={form.marque}
+                                            options={marqueOptions}
+                                            data-field="marque"
+                                            onchange={handleFieldChange}>
+                                        </lightning-combobox>
+                                    </div>
+                                    <div class="pm-field">
+        <lightning-combobox
+            label="Type véhicule"
+            value={form.typeVehicule}
+            options={typeVehiculeOptions}
+            data-field="typeVehicule"
+            onchange={handleFieldChange}>
+        </lightning-combobox>
+    </div>
+                                    <div class="pm-field">
+                                        <lightning-input
+                                            type="date"
+                                            label="Date de mise en circulation"
+                                            value={form.dateMiseEnCirculation}
+                                            data-field="dateMiseEnCirculation"
+                                            onchange={handleFieldChange}>
+                                        </lightning-input>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Section 2 : Sinistre -->
+                            <div class="pm-section">
+                                <div class="pm-section__title">
+                                    <span class="pm-section__num">2</span>
+                                    Informations sinistre
+                                </div>
+                                <div class="pm-grid">
+                                    <div class="pm-field">
+                                        <lightning-combobox
+                                            label="État du véhicule"
+                                            value={form.etatVehicule}
+                                            options={etatVehiculeOptions}
+                                            data-field="etatVehicule"
+                                            onchange={handleFieldChange}>
+                                        </lightning-combobox>
+                                    </div>
+                                    <div class="pm-field">
+                                        <lightning-input
+                                            type="number"
+                                            label="Nombre de passagers blessés"
+                                            value={form.nbPassagers}
+                                            data-field="nbPassagers"
+                                            onchange={handleFieldChange}>
+                                        </lightning-input>
+                                    </div>
+                                    <div class="pm-field">
+                                        <lightning-combobox
+                                            label="Pays"
+                                            value={form.pays}
+                                            options={paysOptions}
+                                            data-field="pays"
+                                            onchange={handleFieldChange}>
+                                        </lightning-combobox>
+                                    </div>
+                                    <div class="pm-field">
+                                        <div class="pm-toggle-row">
+                                            <div class="pm-toggle-label">
+                                                <lightning-icon icon-name="utility:shield" size="x-small"></lightning-icon>
+                                                Adversaire assuré
+                                            </div>
+                                            <lightning-input
+                                                type="checkbox"
+                                                label=""
+                                                checked={form.adversaireAssure}
+                                                data-field="adversaireAssure"
+                                                onchange={handleFieldChange}>
+                                            </lightning-input>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Modal Footer -->
+                        <div class="pm-modal__footer">
+                            <button class="pm-btn pm-btn--cancel" onclick={closeModal}>Annuler</button>
+                            <button
+                                class="pm-btn pm-btn--save"
+                                disabled={isSaving}
+                                onclick={handleSave}>
+                                <template lwc:if={isSaving}>
+                                    <lightning-spinner size="x-small" alternative-text="..."></lightning-spinner>
+                                </template>
+                                Enregistrer
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </template>
+
+            <!-- ════ POPUP Confirmation suppression ════ -->
+            <template lwc:if={showDeleteConfirm}>
+                <div class="pm-modal-overlay">
+                    <div class="pm-modal pm-modal--small">
+
+                        <div class="pm-modal__header pm-modal__header--danger">
+                            <div class="pm-modal__header-inner">
+                                <lightning-icon icon-name="utility:warning" size="small"></lightning-icon>
+                                <h2 class="pm-modal__title">Confirmer la suppression</h2>
+                            </div>
+                        </div>
+
+                        <div class="pm-modal__body pm-modal__body--confirm">
+                            <p>Êtes-vous sûr de vouloir supprimer ce véhicule adverse ?</p>
+                            <p class="pm-confirm__note">Cette action est irréversible et supprimera aussi le véhicule associé.</p>
+                        </div>
+
+                        <div class="pm-modal__footer">
+                            <button class="pm-btn pm-btn--cancel" onclick={cancelDelete}>Annuler</button>
+                            <button class="pm-btn pm-btn--danger" onclick={confirmDelete}>
+                                <lightning-icon icon-name="utility:delete" size="x-small"></lightning-icon>
+                                Supprimer
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </template>
+
+        </template>

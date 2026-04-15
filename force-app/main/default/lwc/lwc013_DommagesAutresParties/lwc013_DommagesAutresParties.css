@@ -1,0 +1,66 @@
+.header-summary-box {
+    background-color: #F3F3F3 !important;
+    color: #1A0273 !important;
+    font-weight: bold !important;
+    padding: 12px !important;
+    border: 1px solid #EAEAEA;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.main-title {
+    color: #00008F;
+    font-size: 1.4rem;
+    font-weight: bold;
+}
+
+.white-box {
+    background: #FFFFFF;
+    border: 1px solid #EAEAEA;
+    border-radius: 4px;
+    padding: 1.5rem !important;
+}
+
+.section-header {
+    color: #00008F;
+    font-weight: bold;
+    border-bottom: 1px solid #EAEAEA;
+    padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.btn-primary {
+    background-color: #00008F !important;
+    color: white !important;
+    padding: 8px 32px !important;
+    border-radius: 4px !important;
+    border: none !important;
+    font-weight: bold !important;
+}
+
+.btn-secondary {
+    background-color: white !important;
+    color: #00008F !important;
+    border: 1px solid #00008F !important;
+    padding: 8px 32px !important;
+    border-radius: 4px !important;
+    font-weight: bold !important;
+}
+
+.btn-outline {
+    background: white !important;
+    color: #1A0273 !important;
+    border: 2px solid #1A0273 !important;
+    padding: 6px 18px !important;
+    border-radius: 4px !important;
+    font-weight: bold !important;
+}
+
+.vehicle-added-card {
+    border-left: 4px solid #00008F;
+    background: #f9f9f9;
+    margin-bottom: 12px;
+    padding: 12px !important;
+}

@@ -1,0 +1,116 @@
+/* Badges état */
+.badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.badge-green  { background: #d4edda; color: #155724; }
+.badge-orange { background: #fff3cd; color: #856404; }
+.badge-red    { background: #f8d7da; color: #721c24; }
+.badge-gray   { background: #e2e3e5; color: #41464b; }
+
+/* Lien immatriculation */
+.reg-link {
+    color: #0176d3;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.reg-link:hover {
+    text-decoration: underline;
+    color: #014486;
+}
+
+/* Boutons action côte-à-côte */
+.action-btns {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+/* Spinner centré */
+.center-spinner {
+    display: flex;
+    justify-content: center;
+    padding: 2rem 0;
+    min-height: 80px;
+}
+
+/* État vide */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2.5rem 1rem;
+    color: var(--color-text-secondary);
+}
+
+.empty-msg {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+}
+
+/* Erreur inline */
+.error-inline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--color-background-danger);
+    border-radius: var(--border-radius-md);
+    color: var(--color-text-danger);
+    font-size: 0.875rem;
+    margin: 1rem 0;
+}
+
+/* Modal confirmation suppression */
+.modal-backdrop-confirm {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9100;
+}
+
+.confirm-box {
+    background: var(--color-background-primary);
+    border-radius: var(--border-radius-lg);
+    width: 420px;
+    max-width: 95vw;
+    padding: 1.5rem;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+
+.confirm-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1rem;
+}
+
+.confirm-title {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+    color: var(--color-text-primary);
+}
+
+.confirm-msg {
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.confirm-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}

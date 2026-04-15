@@ -1,0 +1,75 @@
+.cell-link {
+    color: #0070d2;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.cell-link:hover {
+    color: #005fb2;
+    text-decoration: underline;
+}
+
+.boolean-container {
+    display: flex;
+    justify-content: center;
+}
+
+.boolean-true {
+    background-color: rgba(4, 132, 75, 0.1);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #04844b;
+}
+
+.boolean-false {
+    background-color: rgba(194, 57, 52, 0.1);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #c23934;
+}
+
+.currency-container {
+    display: flex;
+    /* justify-content: flex-end; */
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.currency-symbol {
+    opacity: 0.7;
+}
+
+.currency-value {
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+}
+
+.number-container {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.html-formula-container {
+    display: flex;
+    align-items: center;
+}
+
+.html-formula-container img {
+    max-height: 25px;
+    vertical-align: middle;
+}
+.text-formula-container {
+    font-family: 'Salesforce Sans', Arial, sans-serif;
+    font-size: 0.8125rem;
+    color: #3e3e3c;
+    white-space: pre-line; /* Preserves line breaks in text */
+}

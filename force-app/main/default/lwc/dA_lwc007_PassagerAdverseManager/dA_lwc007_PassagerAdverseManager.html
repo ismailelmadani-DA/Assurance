@@ -1,0 +1,28 @@
+<template>
+    <lightning-card title="Véhicule et Passagers Adverses" icon-name="standard:groups">
+        <!-- Bouton Nouveau en haut à droite -->
+        <div slot="actions">
+            <lightning-button label="Nouveau" onclick={handleCreate} icon-name="utility:add"></lightning-button>
+        </div>
+
+        <div class="slds-p-horizontal_small">
+            <!-- Si la liste contient des données -->
+            <template if:true={hasRecords}>
+                <lightning-datatable
+                    key-field="Id"
+                    data={data}
+                    columns={columns}
+                    hide-checkbox-column="true"
+                    onrowaction={handleRowAction}>
+                </lightning-datatable>
+            </template>
+
+            <!-- Si la liste est vide (Critère d'acceptation) -->
+            <template if:false={hasRecords}>
+                <div class="slds-align_absolute-center slds-p-around_medium slds-text-color_weak">
+                    Il n'y a actuellement aucun passager à afficher.
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

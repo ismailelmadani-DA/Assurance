@@ -1,0 +1,97 @@
+<template>
+    <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container">
+
+            <!-- Header -->
+            <header class="slds-modal__header">
+                <button class="slds-button slds-button_icon slds-modal__close"
+                        onclick={handleClose}>
+                    <lightning-icon icon-name="utility:close"
+                                    alternative-text="Fermer"
+                                    size="small">
+                    </lightning-icon>
+                </button>
+                <h2 class="slds-modal__title">
+                    {modalTitle}
+                </h2>
+            </header>
+
+            <!-- Body -->
+            <div class="slds-modal__content slds-p-around_medium">
+                <lightning-combobox
+                    label="État du véhicule"
+                    value={formData.EtatVehicule__c}
+                    options={etatOptions}
+                    onchange={handleFieldChange}
+                    data-field="EtatVehicule__c"
+                    required>
+                </lightning-combobox>
+
+                <lightning-input
+                    label="Numéro d'immatriculation"
+                    value={formData.RegistrationNumber__c}
+                    onchange={handleFieldChange}
+                    data-field="RegistrationNumber__c"
+                    class="slds-m-top_small"
+                    required>
+                </lightning-input>
+
+                <lightning-input
+                    label="Marque et modèle"
+                    value={formData.Marque__c}
+                    onchange={handleFieldChange}
+                    data-field="Marque__c"
+                    class="slds-m-top_small">
+                </lightning-input>
+
+                <lightning-input
+                    type="number"
+                    label="Nombre de passagers blessés"
+                    value={formData.NbDePassagerBlesses__c}
+                    onchange={handleFieldChange}
+                    data-field="NbDePassagerBlesses__c"
+                    class="slds-m-top_small"
+                    min="0">
+                </lightning-input>
+
+                <lightning-input
+                    label="Compagnie adverse"
+                    value={formData.CompagnieAdverse__c}
+                    onchange={handleFieldChange}
+                    data-field="CompagnieAdverse__c"
+                    class="slds-m-top_small">
+                </lightning-input>
+
+                <lightning-input
+                    label="Pays"
+                    value={formData.Pays__c}
+                    onchange={handleFieldChange}
+                    data-field="Pays__c"
+                    class="slds-m-top_small">
+                </lightning-input>
+
+                <template if:true={errorMessage}>
+                    <div class="slds-notify slds-notify_alert slds-alert_error slds-m-top_small">
+                        <span>{errorMessage}</span>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Footer -->
+            <footer class="slds-modal__footer">
+                <lightning-button
+                    label="Annuler"
+                    onclick={handleClose}
+                    class="slds-m-right_small">
+                </lightning-button>
+                <lightning-button
+                    label="Enregistrer"
+                    variant="brand"
+                    onclick={handleSave}
+                    disabled={isSaving}>
+                </lightning-button>
+            </footer>
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>

@@ -1,0 +1,93 @@
+<template>
+    <div class="recap-container">
+        <div class="slds-notify slds-notify_alert slds-alert_info slds-m-bottom_medium slds-theme_info">
+            <lightning-icon icon-name="utility:info" size="small" variant="inverse" class="slds-m-right_small"></lightning-icon>
+            <h2>Veuillez vérifier les informations ci-dessous avant de clôturer définitivement le dossier.</h2>
+        </div>
+
+        <div class="slds-grid slds-wrap slds-gutters">
+            
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_medium">
+                <div class="recap-card">
+                    <h3 class="recap-header">
+                        <lightning-icon icon-name="standard:contract" size="small" class="slds-m-right_small"></lightning-icon>
+                        Police & Déclaration
+                    </h3>
+                    <div class="recap-content">
+                        <p><strong>N° Déclaration :</strong> <span class="badge-success">{caseNumber}</span></p>
+                        <p><strong>N° Police :</strong> {policy.PolicyNumber}</p>
+                        <p><strong>Véhicule Assuré :</strong> {policy.RegistrationNumber} ({policy.Brand})</p>
+                        <div class="divider"></div>
+                        <p><strong>Date de l'accident :</strong> {dateSurvenance}</p>
+                        <p><strong>Lieu :</strong> {caseData.city}, {caseData.country}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-m-bottom_medium">
+                <div class="recap-card">
+                    <h3 class="recap-header">
+                        <lightning-icon icon-name="standard:driver" size="small" class="slds-m-right_small"></lightning-icon>
+                        Conducteur & Assurés
+                    </h3>
+                    <div class="recap-content">
+                        <p><strong>Conducteur :</strong> {driver.FirstName} {driver.LastName}</p>
+                        <p><strong>N° Permis :</strong> {driver.LicenseNumber__c}</p>
+                        <p><strong>Date de délivrance :</strong> {driver.LicenseDate__c}</p>
+                        <div class="divider"></div>
+                        <p><strong>Passagers assurés impliqués :</strong> <span class="badge-info">{passengersCount}</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                <div class="recap-card">
+                    <h3 class="recap-header">
+                        <lightning-icon icon-name="standard:service_vehicle" size="small" class="slds-m-right_small"></lightning-icon>
+                        Véhicule(s) Adverse(s)
+                    </h3>
+                    <div class="recap-content">
+                        <template if:true={hasAdverseVehicles}>
+                            <template for:each={adverseVehicles} for:item="adv">
+                                <div key={adv.key} class="recap-item">
+                                    <div class="slds-grid slds-grid_align-spread">
+                                        <div><strong>{adv.RegistrationNumber__c}</strong> - {adv.Marque__c}</div>
+                                        <div><span class="badge-warning">{adv.NbDePassagerBlesses__c} blessé(s)</span></div>
+                                    </div>
+                                    <p class="slds-text-color_weak slds-text-body_small">Contrat : {adv.Numéro_de_contrat__c}</p>
+                                </div>
+                            </template>
+                        </template>
+                        <template if:false={hasAdverseVehicles}>
+                            <p class="empty-state">Aucun véhicule adverse déclaré.</p>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                <div class="recap-card">
+                    <h3 class="recap-header">
+                        <lightning-icon icon-name="standard:people" size="small" class="slds-m-right_small"></lightning-icon>
+                        Autres Parties & Dommages
+                    </h3>
+                    <div class="recap-content">
+                        <template if:true={hasOtherParties}>
+                            <template for:each={otherParties} for:item="party">
+                                <div key={party.key} class="recap-item">
+                                    <strong>{party.Prenom__c} {party.Nom__c}</strong> 
+                                    <span class="slds-badge slds-m-left_x-small">{party.OpposingParty__c}</span>
+                                    <p class="slds-text-color_weak slds-text-body_small">Ville : {party.Ville__c} | CNI : {party.CIN__c}</p>
+                                </div>
+                            </template>
+                        </template>
+                        <template if:false={hasOtherParties}>
+                            <p class="empty-state">Aucune autre partie déclarée.</p>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</template>

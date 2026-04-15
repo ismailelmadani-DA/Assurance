@@ -1,0 +1,226 @@
+<template>
+
+    <!-- CARTE PRINCIPALE -->
+    <div class="pm-card">
+
+        <!-- HEADER -->
+        <div class="pm-header">
+            <div class="pm-header__left">
+                <div class="pm-header__icon-wrap">
+                    <lightning-icon icon-name="standard:people" size="small" variant="inverse"></lightning-icon>
+                </div>
+                <div>
+                    <h2 class="pm-header__title">Autres Parties Adverses</h2>
+                    <span class="pm-header__subtitle">{totalLabel}</span>
+                </div>
+            </div>
+            <div class="pm-header__actions">
+                <button class="pm-btn pm-btn--add" onclick={handleAddPassager} title="Ajouter un participant">
+                    <lightning-icon icon-name="utility:add" size="xx-small"></lightning-icon>
+                    <span>Ajouter</span>
+                </button>
+                <button class="pm-btn pm-btn--icon" onclick={handleRefresh} title="Actualiser">
+                    <lightning-icon icon-name="utility:refresh" size="xx-small"></lightning-icon>
+                </button>
+            </div>
+        </div>
+
+        <!-- CONTENU -->
+        <div class="pm-body">
+
+            <!-- ERREUR -->
+            <template if:true={error}>
+                <div class="pm-alert pm-alert--error" role="alert">
+                    <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                    <span>{error}</span>
+                </div>
+            </template>
+
+            <!-- TABLE -->
+            <template if:true={hasPassagers}>
+                <div class="pm-table-wrap">
+                    <table class="pm-table" aria-label="Liste des autres parties adverses">
+                        <thead>
+                            <tr>
+                                <th class="pm-th" scope="col">Civilit&eacute;</th>
+                                <th class="pm-th" scope="col">Nom et Pr&eacute;nom</th>
+                                <th class="pm-th" scope="col">CIN</th>
+                                <th class="pm-th" scope="col">Pays</th>
+                                <th class="pm-th" scope="col">Ville</th>
+                                <th class="pm-th" scope="col">Type</th>
+                                <th class="pm-th" scope="col">&Eacute;tat du Participant</th>
+                                <th class="pm-th pm-th--center" scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={passagers} for:item="rec">
+                                <tr key={rec.Id}>
+                                    <td class="pm-td">{rec.Civilite__c}</td>
+                                    <td class="pm-td pm-td--name">{rec.Name__c}</td>
+                                    <td class="pm-td pm-td--mono">{rec.CIN__c}</td>
+                                    <td class="pm-td">{rec.Pays__c}</td>
+                                    <td class="pm-td">{rec.Ville__c}</td>
+                                    <td class="pm-td">{rec.TypeContact__c}</td>
+                                    <td class="pm-td">
+                                        <span class={rec.stateClass}>{rec.StateOfPerson__c}</span>
+                                    </td>
+                                    <td class="pm-td pm-td--actions">
+                                        <div class="pm-action-group">
+                                            <button class="pm-action-btn pm-action-btn--edit"
+                                                onclick={handleRowActionClick} data-id={rec.Id} data-action="edit"
+                                                title="Modifier">
+                                                <lightning-icon icon-name="utility:edit" size="xx-small"></lightning-icon>
+                                            </button>
+                                            <button class="pm-action-btn pm-action-btn--delete"
+                                                onclick={handleRowActionClick} data-id={rec.Id} data-action="delete"
+                                                title="Supprimer">
+                                                <lightning-icon icon-name="utility:delete" size="xx-small"></lightning-icon>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+
+            <!-- ETAT VIDE -->
+            <template if:false={hasPassagers}>
+                <template if:false={error}>
+                    <div class="pm-empty">
+                        <div class="pm-empty__icon">
+                            <lightning-icon icon-name="standard:person_account" size="large"></lightning-icon>
+                        </div>
+                        <p class="pm-empty__text">Aucun participant enregistr&eacute; pour ce sinistre.</p>
+                        <button class="pm-btn pm-btn--add pm-btn--outlined" onclick={handleAddPassager}>
+                            <lightning-icon icon-name="utility:add" size="xx-small"></lightning-icon>
+                            Ajouter le premier participant
+                        </button>
+                    </div>
+                </template>
+            </template>
+
+        </div>
+    </div>
+
+    <!-- MODALE AJOUT / MODIFICATION -->
+    <template if:true={showModal}>
+        <div class="pm-modal-overlay" onclick={handleOverlayClick}>
+            <section class="pm-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-form" onclick={stopPropagation}>
+
+                <!-- En-tete modale -->
+                <header class="pm-modal__header">
+                    <div class="pm-modal__header-inner">
+                        <lightning-icon icon-name="standard:people" size="small" variant="inverse"></lightning-icon>
+                        <h2 id="modal-title-form" class="pm-modal__title">{modalTitle}</h2>
+                    </div>
+                    <button class="pm-modal__close" onclick={handleCloseModal} title="Fermer">
+                        <lightning-icon icon-name="utility:close" size="x-small" variant="inverse"></lightning-icon>
+                    </button>
+                </header>
+
+                <!-- Corps modale -->
+                <div class="pm-modal__body">
+                    <lightning-record-edit-form
+                        object-api-name="Passager__c"
+                        record-id={editRecordId}
+                        onsubmit={handleFormSubmit}
+                        onsuccess={handleSuccess}
+                        onerror={handleError}
+                    >
+                        <!-- Section : Identite -->
+                        <div class="pm-section">
+                            <div class="pm-section__title">
+                                <span class="pm-section__num">01</span>
+                                Identit&eacute;
+                            </div>
+                            <div class="pm-grid">
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="Civilite__c"></lightning-input-field>
+                                </div>
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="Name__c"></lightning-input-field>
+                                </div>
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="CIN__c" required></lightning-input-field>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section : Coordonnees -->
+                        <div class="pm-section">
+                            <div class="pm-section__title">
+                                <span class="pm-section__num">02</span>
+                                Coordonn&eacute;es
+                            </div>
+                            <div class="pm-grid">
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="Pays__c"></lightning-input-field>
+                                </div>
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="Ville__c"></lightning-input-field>
+                                </div>
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="TypeContact__c" onchange={handleTypeContactChange}></lightning-input-field>
+                                </div>
+                                <template if:true={showContactField}>
+                                    <div class="pm-field">
+                                        <lightning-input-field field-name="ContactPassager__c" required></lightning-input-field>
+                                    </div>
+                                </template>
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="StateOfPerson__c"></lightning-input-field>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Champs caches -->
+                        <lightning-input-field field-name="Case__c" value={recordId} class="slds-hide"></lightning-input-field>
+                        <lightning-input-field field-name="Roles__c" value="Autres partie" class="slds-hide"></lightning-input-field>
+
+                        <!-- Footer modale -->
+                        <footer class="pm-modal__footer">
+                            <button type="button" class="pm-btn pm-btn--cancel" onclick={handleCloseModal}>Annuler</button>
+                            <button type="submit" class="pm-btn pm-btn--save">Enregistrer</button>
+                        </footer>
+                    </lightning-record-edit-form>
+                </div>
+
+            </section>
+        </div>
+    </template>
+
+    <!-- MODALE CONFIRMATION SUPPRESSION -->
+    <template if:true={showDeleteModal}>
+        <div class="pm-modal-overlay">
+            <section class="pm-modal pm-modal--small" role="dialog" aria-modal="true" aria-labelledby="modal-title-delete">
+                <header class="pm-modal__header pm-modal__header--danger">
+                    <div class="pm-modal__header-inner">
+                        <lightning-icon icon-name="utility:warning" size="small" variant="inverse"></lightning-icon>
+                        <h2 id="modal-title-delete" class="pm-modal__title">Confirmer la suppression</h2>
+                    </div>
+                    <button class="pm-modal__close" onclick={handleCloseDeleteModal} title="Fermer">
+                        <lightning-icon icon-name="utility:close" size="x-small" variant="inverse"></lightning-icon>
+                    </button>
+                </header>
+                <div class="pm-modal__body pm-modal__body--confirm">
+                    <p>&Ecirc;tes-vous s&ucirc;r de vouloir supprimer le participant <strong>{deleteRecordName}</strong> ?</p>
+                    <p class="pm-confirm__note">Cette action est irr&eacute;versible.</p>
+                </div>
+                <footer class="pm-modal__footer">
+                    <button class="pm-btn pm-btn--cancel" onclick={handleCloseDeleteModal}>Non, annuler</button>
+                    <button class="pm-btn pm-btn--danger" onclick={handleConfirmDelete} disabled={isDeleting}>
+                        <template if:true={isDeleting}>
+                            <lightning-spinner alternative-text="Suppression..." size="small" variant="inverse"></lightning-spinner>
+                        </template>
+                        <template if:false={isDeleting}>
+                            Oui, supprimer
+                        </template>
+                    </button>
+                </footer>
+            </section>
+        </div>
+    </template>
+
+</template>

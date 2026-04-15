@@ -1,0 +1,523 @@
+:host {
+    --wafa-green: #006233;
+    --wafa-yellow: #3a9e60;
+    --wafa-dark-green: #004824;
+    --wafa-deep: #002e18;
+    --wafa-light-green: #e6f2ec;
+    --wafa-pale-yellow: #d8f0e3;
+    --wafa-gold: #1a7a4a;
+
+    --wafa-grad: linear-gradient(90deg, #006233 0%, #3a9e60 50%, #7dc99a 100%);
+    --wafa-grad-diag: linear-gradient(135deg, #004824 0%, #006233 50%, #3a9e60 100%);
+
+    --text-main: #1a1a1a;
+    --text-mid: #444444;
+    --text-light: #707070;
+    --text-muted: #9a9a9a;
+    --bg-light: #F8F9FA;
+    --bg-surface: #fdfdfd;
+    --white: #FFFFFF;
+    --border: #e2e8e4;
+    --border-strong: #c5d5cc;
+
+    --pm-red: #c0392b;
+    --pm-red-bg: #fdf0ef;
+    --pm-orange: #d35400;
+    --pm-orange-bg: #fef5ec;
+    --pm-green-ok: #1a7a4a;
+    --pm-green-bg: #ebf7f1;
+
+    --shadow-xs: 0 1px 2px rgba(0, 98, 51, .06);
+    --shadow-sm: 0 2px 8px rgba(0, 98, 51, .08), 0 1px 3px rgba(0, 0, 0, .04);
+    --shadow-md: 0 6px 20px rgba(0, 98, 51, .12), 0 2px 6px rgba(0, 0, 0, .06);
+    --shadow-lg: 0 16px 48px rgba(0, 40, 20, .18), 0 4px 12px rgba(0, 0, 0, .08);
+    --shadow-yellow: 0 4px 16px rgba(58, 158, 96, .35);
+
+    --radius: 12px;
+    --radius-sm: 7px;
+    --radius-pill: 999px;
+    --ease: cubic-bezier(.4, 0, .2, 1);
+    --dur: .2s;
+
+    display: block;
+    font-family: 'DM Sans', 'Salesforce Sans', Arial, sans-serif;
+    color: var(--text-main);
+}
+
+/* =========================
+   CARD
+========================= */
+.pm-card {
+    background: var(--bg-surface);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 40px rgba(0, 98, 51, .08), 0 2px 8px rgba(0, 0, 0, .04);
+    border: 1px solid rgba(230, 242, 236, .5);
+    overflow: hidden;
+    position: relative;
+    transition: box-shadow .3s ease;
+}
+
+.pm-card:hover {
+    box-shadow: 0 15px 50px rgba(0, 98, 51, .12), 0 4px 12px rgba(0, 0, 0, .06);
+}
+
+/* =========================
+   HEADER
+========================= */
+.pm-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    padding: 1.3rem 1.6rem;
+    background: linear-gradient(135deg, #001f0f 0%, #004420 30%, #006233 60%, #00752a 100%);
+    position: relative;
+    overflow: hidden;
+    border-top: 3px solid #3a9e60;
+}
+
+.pm-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(125, 201, 154, .15) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: pm-shimmer 6s ease-in-out infinite;
+}
+
+.pm-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent 0%, #7dc99a 15%, #3a9e60 40%, #006233 70%, transparent 100%);
+    box-shadow: 0 0 20px rgba(125, 201, 154, .5), 0 0 40px rgba(58, 158, 96, .2);
+}
+
+.pm-header__left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+}
+
+.pm-header__icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(122, 210, 103, .25) 0%, rgba(58, 158, 96, .15) 100%);
+    backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(125, 201, 154, .4);
+    box-shadow: 0 8px 24px rgba(58, 158, 96, .3), inset 0 1px 2px rgba(255, 255, 255, .1), 0 0 20px rgba(125, 201, 154, .2);
+    transition: all .3s cubic-bezier(.34, 1.2, .64, 1);
+}
+
+.pm-header__icon-wrap lightning-icon {
+    --lwc-colorTextIconDefault: #ffffff;
+}
+
+.pm-header__title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0;
+    line-height: 1.1;
+    letter-spacing: -.02em;
+}
+
+.pm-header__subtitle {
+    font-size: .73rem;
+    color: rgba(230, 242, 236, .75);
+    display: block;
+    margin-top: 3px;
+    font-weight: 400;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.pm-header__actions {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+}
+
+/* =========================
+   BODY
+========================= */
+.pm-body {
+    padding: 1.1rem;
+    min-height: 140px;
+    position: relative;
+    background: var(--bg-surface);
+}
+
+/* =========================
+   DATATABLE WRAP
+========================= */
+.pm-table-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-xs);
+    background: var(--white);
+}
+
+/* =========================
+   EMPTY
+========================= */
+.pm-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-light);
+}
+
+.pm-empty__icon {
+    margin-bottom: 1rem;
+    opacity: .35;
+}
+
+.pm-empty__icon lightning-icon {
+    --lwc-colorTextIconDefault: var(--wafa-green);
+}
+
+.pm-empty__text {
+    font-size: .9rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-light);
+    font-weight: 300;
+}
+
+/* =========================
+   MODAL OVERLAY
+========================= */
+.pm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 30, 15, .6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9000;
+    padding: 1rem;
+    animation: pm-fade-in .18s var(--ease);
+}
+
+/* =========================
+   MODAL
+========================= */
+.pm-modal {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 780px;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: pm-slide-up .24s cubic-bezier(.34, 1.2, .64, 1);
+}
+
+/* Petite modale compte */
+.pm-modal--small {
+    max-width: 460px;
+    overflow: visible;
+}
+
+.pm-modal--small .pm-modal__body {
+    overflow: visible;
+}
+
+.pm-modal--small .pm-section,
+.pm-modal--small .pm-grid,
+.pm-modal--small .pm-field {
+    overflow: visible;
+}
+
+.pm-modal--small lightning-combobox {
+    position: relative;
+    z-index: 100;
+}
+
+.pm-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.1rem 1.4rem;
+    background: var(--wafa-dark-green);
+    color: var(--white);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.pm-modal__header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #3a9e60, transparent);
+}
+
+.pm-modal__header-inner {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+}
+
+.pm-modal__header-inner lightning-icon:first-child {
+    background: #3a9e60;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    --lwc-colorTextIconDefault: var(--white);
+    flex-shrink: 0;
+    padding: 4px;
+}
+
+.pm-modal__title {
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--white);
+    margin: 0;
+    letter-spacing: -.01em;
+}
+
+.pm-modal__body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 1.4rem;
+    position: relative;
+    background: #fafbfa;
+}
+
+.pm-modal__body::-webkit-scrollbar {
+    width: 5px;
+}
+
+.pm-modal__body::-webkit-scrollbar-thumb {
+    background: var(--wafa-green);
+    border-radius: 3px;
+}
+
+.pm-modal__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .75rem;
+    padding: 1rem 1.4rem;
+    border-top: 1px solid var(--border);
+    background: var(--bg-light);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+/* =========================
+   SECTION
+========================= */
+.pm-section {
+    margin-bottom: 1.1rem;
+    border-radius: var(--radius-sm);
+    overflow: visible; /* modifié */
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-xs);
+    background: var(--white);
+}
+
+.pm-section__title {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    padding: .6rem 1rem;
+    background: linear-gradient(90deg, #e6f2ec 0%, rgba(216, 240, 227, .6) 100%);
+    border-bottom: 1px solid var(--border-strong);
+    font-size: .69rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--wafa-dark-green);
+}
+
+.pm-section__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #3a9e60;
+    color: var(--white);
+    font-size: .64rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    box-shadow: 0 1px 4px rgba(58, 158, 96, .4);
+}
+
+/* =========================
+   GRID
+========================= */
+.pm-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .9rem;
+    padding: 1.1rem;
+    position: relative;
+    overflow: visible;
+}
+
+.pm-field {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.pm-field--full {
+    grid-column: 1 / -1;
+}
+
+/* Fix ciblé dropdown type contact */
+.pm-field--dropdown {
+    overflow: visible;
+    z-index: 200;
+}
+
+.pm-field--type-contact {
+    overflow: visible;
+    z-index: 300;
+}
+
+.pm-field--dropdown lightning-combobox,
+.pm-field--type-contact lightning-combobox {
+    position: relative;
+    z-index: 400;
+    overflow: visible;
+}
+
+/* =========================
+   LIGHTNING FIELDS
+========================= */
+lightning-record-edit-form {
+    display: block;
+}
+
+lightning-input-field,
+lightning-input,
+lightning-combobox {
+    --slds-c-input-radius-border: 10px;
+    --slds-c-input-color-border: var(--border-strong);
+    --slds-c-input-shadow-focus: 0 0 0 3px rgba(58, 158, 96, .15);
+    --slds-c-input-color-border-focus: var(--wafa-green);
+    --slds-c-combobox-radius-border: 10px;
+    --slds-c-combobox-shadow-focus: 0 0 0 3px rgba(58, 158, 96, .15);
+}
+
+lightning-button[variant="brand"] {
+    --slds-c-button-brand-color-background: var(--wafa-green);
+    --slds-c-button-brand-color-border: var(--wafa-green);
+    --slds-c-button-brand-text-color: var(--white);
+    --slds-c-button-brand-radius-border: var(--radius-pill);
+    --slds-c-button-brand-color-background-hover: var(--wafa-dark-green);
+    --slds-c-button-brand-color-border-hover: var(--wafa-dark-green);
+}
+
+lightning-button:not([variant="brand"]) {
+    --slds-c-button-neutral-radius-border: var(--radius-pill);
+    --slds-c-button-neutral-color-border: var(--border-strong);
+    --slds-c-button-neutral-color-background: var(--white);
+    --slds-c-button-neutral-text-color: var(--wafa-dark-green);
+    --slds-c-button-neutral-color-background-hover: var(--wafa-light-green);
+}
+
+/* =========================
+   ANIMATIONS
+========================= */
+@keyframes pm-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes pm-slide-up {
+    from {
+        opacity: 0;
+        transform: translateY(28px) scale(.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes pm-shimmer {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: .1;
+    }
+    50% {
+        opacity: .18;
+        transform: translate(20px, -10px) scale(1.1);
+    }
+    100% {
+        transform: translate(0, 0) scale(1);
+        opacity: .1;
+    }
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 640px) {
+    .pm-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pm-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .65rem;
+    }
+
+    .pm-header__actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .pm-modal {
+        max-height: 100dvh;
+        border-radius: 0;
+    }
+
+    .pm-modal__body {
+        padding: 1rem;
+    }
+
+    .pm-modal__footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pm-modal__footer lightning-button {
+        width: 100%;
+    }
+}

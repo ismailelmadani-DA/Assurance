@@ -1,0 +1,184 @@
+<template>
+    <lightning-card icon-name="standard:vehicle">
+        <span slot="title">Véhicules et passagers adverse</span>
+
+        <!-- Bouton Ajouter -->
+        <div slot="actions">
+            <lightning-button
+                label="Ajouter"
+                variant="brand"
+                icon-name="utility:add"
+                onclick={openAddModal}>
+            </lightning-button>
+        </div>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+
+            <!-- Spinner -->
+            <template if:true={isLoading}>
+                <div class="center-spinner">
+                    <lightning-spinner
+                        alternative-text="Chargement..."
+                        size="medium">
+                    </lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Erreur chargement -->
+            <template if:true={hasError}>
+                <div class="error-inline">
+                    <lightning-icon
+                        icon-name="utility:error"
+                        size="small"
+                        variant="error"
+                        alternative-text="Erreur">
+                    </lightning-icon>
+                    <span>{errorMessage}</span>
+                </div>
+            </template>
+
+            <!-- Liste vide -->
+            <template if:true={isEmpty}>
+                <div class="empty-state">
+                    <lightning-icon
+                        icon-name="standard:vehicle"
+                        size="large">
+                    </lightning-icon>
+                    <p class="empty-msg">
+                        Il n'y a actuellement aucun véhicule à afficher.
+                    </p>
+                </div>
+            </template>
+
+            <!-- Tableau -->
+            <template if:true={hasVehicles}>
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered slds-table_striped">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th scope="col" style="width: 140px">
+                                <div class="slds-truncate" title="État du véhicule">
+                                    État du véhicule
+                                </div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="N° immatriculation">
+                                    N° immatriculation
+                                </div>
+                            </th>
+                            <th scope="col">
+                                <div class="slds-truncate" title="Marque et modèle">
+                                    Marque et modèle
+                                </div>
+                            </th>
+                            <th scope="col" style="width: 80px">
+                                <div class="slds-truncate" title="Nb passagers">
+                                    Nb. passagers
+                                </div>
+                            </th>
+                            <th scope="col" style="width: 80px">
+                                <div class="slds-truncate">Actions</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={vehicles} for:item="v">
+                            <tr key={v.Id}>
+                                <!-- État -->
+                                <td>
+                                    <span class={v.etatBadgeClass}>
+                                        {v.EtatVehicule__c}
+                                    </span>
+                                </td>
+                                <!-- Immatriculation cliquable -->
+                                <td>
+                                    <a href="javascript:void(0);"
+                                       data-id={v.Id}
+                                       onclick={navigateToRecord}
+                                       class="reg-link">
+                                        {v.RegistrationNumber__c}
+                                    </a>
+                                </td>
+                                <!-- Marque -->
+                                <td>
+                                    <div class="slds-truncate">
+                                        {v.Marque__c}
+                                    </div>
+                                </td>
+                                <!-- Nb passagers -->
+                                <td class="slds-text-align_center">
+                                    {v.NbDePassagerBlesses__c}
+                                </td>
+                                <!-- Actions -->
+                                <td>
+                                    <div class="action-btns">
+                                        <lightning-button-icon
+                                            icon-name="utility:edit"
+                                            alternative-text="Modifier"
+                                            title="Modifier"
+                                            variant="border-filled"
+                                            size="small"
+                                            data-id={v.Id}
+                                            onclick={openEditModal}>
+                                        </lightning-button-icon>
+                                        <lightning-button-icon
+                                            icon-name="utility:delete"
+                                            alternative-text="Supprimer"
+                                            title="Supprimer"
+                                            variant="border-filled"
+                                            size="small"
+                                            data-id={v.Id}
+                                            onclick={openDeleteConfirm}>
+                                        </lightning-button-icon>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </template>
+        </div>
+    </lightning-card>
+
+    <!-- Modal Formulaire (Ajout / Modification) -->
+    <template if:true={showForm}>
+        <c-adverse-vehicle-form
+            claim-id={recordId}
+            record={selectedRecord}
+            onsaved={onFormSaved}
+            onclose={closeForm}>
+        </c-adverse-vehicle-form>
+    </template>
+
+    <!-- Modale confirmation suppression -->
+    <template if:true={showDeleteConfirm}>
+        <div class="modal-backdrop-confirm">
+            <div class="confirm-box">
+                <div class="confirm-header">
+                    <lightning-icon
+                        icon-name="utility:warning"
+                        size="small"
+                        variant="warning"
+                        alternative-text="Attention">
+                    </lightning-icon>
+                    <h3 class="confirm-title">Confirmer la suppression</h3>
+                </div>
+                <p class="confirm-msg">
+                    Êtes-vous sûr de vouloir supprimer ce véhicule adverse ?
+                    Cette action est irréversible.
+                </p>
+                <div class="confirm-footer">
+                    <lightning-button
+                        label="Annuler"
+                        onclick={cancelDelete}>
+                    </lightning-button>
+                    <lightning-button
+                        label="Supprimer"
+                        variant="destructive"
+                        onclick={confirmDelete}
+                        disabled={isDeleting}>
+                    </lightning-button>
+                </div>
+            </div>
+        </div>
+    </template>
+</template>

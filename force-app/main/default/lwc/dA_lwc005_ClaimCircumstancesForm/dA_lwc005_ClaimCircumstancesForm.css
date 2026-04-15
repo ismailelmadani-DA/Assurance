@@ -1,0 +1,68 @@
+/* --- TITRE --- */
+.main-title {
+    color: #00008F; /* Bleu profond professionnel identique à la mère */
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+/* --- BANDEAU RÉCAPITULATIF (HEADER) --- */
+.header-summary-box {
+    background-color: #F3F3F3 !important;
+    color: #1A0273 !important;
+    font-weight: bold !important;
+    padding: 12px !important;
+    border: 1px solid #EAEAEA;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+}
+
+.summary-item strong {
+    color: #1A0273; /* Valeurs en bleu pour cohérence */
+    margin-left: 5px;
+}
+
+/* --- SECTIONS ET TITRES DE BLOCS --- */
+/* Style spécifique pour le titre de la section "Points de choc" */
+.section-header {
+    background-color: #F3F3F3 !important;
+    color: #1A0273 !important;
+    font-weight: bold !important;
+    padding: 8px 12px !important;
+    border-radius: 4px;
+    border: 1px solid #EAEAEA;
+    display: block;
+    width: 100%;
+    margin-bottom: 10px; /* Espace avant le croquis */
+}
+
+/* --- ÉLÉMENTS DE FORMULAIRE --- */
+.slds-form-element__label {
+    color: #1A0273 !important;
+    font-weight: bold !important;
+}
+
+lightning-combobox, 
+lightning-input, 
+lightning-textarea {
+    --slds-c-input-spacing-vertical-start: 4px;
+    --slds-c-input-spacing-vertical-end: 4px;
+    margin-bottom: 10px;
+}
+
+/* --- INTEGRATION COMPOSANT ENFANT (LWC006) --- */
+.slds-section {
+    margin-top: 1.5rem;
+    clear: both; /* Assure que le croquis ne flotte pas mal */
+}
+
+/* Conteneur pour s'assurer que l'enfant lwc006 prend bien sa place */
+c-lwc006_-point-choc {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+}

@@ -1,0 +1,100 @@
+<template>
+    <div class="header-summary-box slds-m-bottom_medium">
+        <div class="slds-grid slds-wrap">
+            <div class="slds-col slds-size_1-of-4 summary-item">Date Survenance: <strong>{claimSummary.dateSurvenance}</strong></div>
+            <div class="slds-col slds-size_1-of-4 summary-item">N° Police: <strong>{claimSummary.policyNumber}</strong></div>
+            <div class="slds-col slds-size_1-of-4 summary-item">N° Immatriculation: <strong>{claimSummary.registrationNumber}</strong></div>
+            <div class="slds-col slds-size_1-of-4 summary-item">N° Déclaration: <strong>{claimSummary.caseNumber}</strong></div>
+        </div>
+    </div>
+
+    <h2 class="main-title slds-m-bottom_medium">Passager(s) assuré(s)</h2>
+
+    <div class="slds-box slds-m-bottom_medium white-box">
+        
+        <div class="slds-m-bottom_small slds-p-around_small">
+            <lightning-icon icon-name="custom:custom31" size="small"></lightning-icon>
+        </div>
+
+        <h3 class="info-group-title">Informations sur le véhicule</h3>
+        <div class="slds-grid slds-wrap slds-p-horizontal_small slds-p-bottom_small">
+            <div class="slds-col slds-size_1-of-2">
+                <div class="info-block"><span class="info-label">Marque :</span> <span class="info-value">{claimSummary.brand}</span></div>
+                <div class="info-block"><span class="info-label">Police d'assurance :</span> <span class="info-value">{claimSummary.policyNumber}</span></div>
+            </div>
+            <div class="slds-col slds-size_1-of-2">
+                <div class="info-block"><span class="info-label">Numéro d'immatriculation :</span> <span class="info-value">{claimSummary.registrationNumber}</span></div>
+                <div class="info-block"><span class="info-label">Numéro de véhicule :</span> <span class="info-value">{claimSummary.vehicleName}</span></div>
+            </div>
+        </div>
+
+        <h3 class="info-group-title">Conducteur</h3>
+        <div class="slds-p-horizontal_small slds-p-bottom_small">
+            <div class="info-block">
+                <span class="info-label">Conducteur sélectionné :</span> 
+                <span class="info-value">{claimSummary.driverName}</span>
+            </div>
+        </div>
+
+        <h3 class="info-group-title">Passagers ({passengersCount})</h3>
+        <div class="slds-p-horizontal_small slds-p-bottom_small">
+            
+            <template if:false={hasPassengers}>
+                <p class="empty-text">Aucun passager enregistré</p>
+            </template>
+            
+            <template if:true={hasPassengers}>
+                <table class="slds-table slds-table_cell-buffer slds-no-row-hover slds-m-top_x-small">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th scope="col"><div class="slds-truncate">Nom & Prénom</div></th>
+                            <th scope="col"><div class="slds-truncate">CIN</div></th>
+                            <th scope="col"><div class="slds-truncate">État</div></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={passengers} for:item="p">
+                            <tr key={p.key}>
+                                <td>{p.Name__c}</td>
+                                <td>{p.CIN__c}</td>
+                                <td>{p.StateOfPerson__c}</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </template>
+        </div>
+        
+        <div class="slds-grid slds-grid_align-end slds-p-around_medium">
+            <button class="btn-outline" onclick={showForm}>+ Ajouter passager</button>
+        </div>
+    </div>
+
+    <template if:true={isFormVisible}>
+        <div class="slds-box form-container slds-m-top_medium">
+            <h3 class="section-header slds-m-bottom_small">
+                <lightning-icon icon-name="utility:user" size="x-small" class="slds-m-right_small"></lightning-icon>
+                Ajouter un Passager
+            </h3>
+            <div class="slds-grid slds-wrap slds-p-around_small">
+                <div class="slds-col slds-size_1-of-2 slds-p-horizontal_small">
+                    <lightning-input label="Nom & Prénom" required data-field="Name__c" class="form-input" value={newPassager.Name__c} onchange={handleInputChange}></lightning-input>
+                    <lightning-combobox label="Civilité" options={civilityOptions} data-field="Civilite__c" value={newPassager.Civilite__c} onchange={handleInputChange}></lightning-combobox>
+                    <lightning-input label="CIN" data-field="CIN__c" value={newPassager.CIN__c} onchange={handleInputChange}></lightning-input>
+                    <lightning-combobox label="Pays" options={paysOptions} data-field="Pays__c" value={newPassager.Pays__c} onchange={handleInputChange}></lightning-combobox>
+                    <lightning-textarea label="Adresse" data-field="Adresse__c" value={newPassager.Adresse__c} onchange={handleInputChange}></lightning-textarea>
+                </div>
+                <div class="slds-col slds-size_1-of-2 slds-p-horizontal_small">
+                    <lightning-input type="date" label="Date de naissance" data-field="BirthDay__c" value={newPassager.BirthDay__c} onchange={handleInputChange}></lightning-input>
+                    <lightning-combobox label="Situation familiale" options={maritalOptions} data-field="MaritalStatus__c" value={newPassager.MaritalStatus__c} onchange={handleInputChange}></lightning-combobox>
+                    <lightning-combobox label="Ville" options={villeOptions} data-field="Ville__c" value={newPassager.Ville__c} onchange={handleInputChange}></lightning-combobox>
+                    <lightning-combobox label="État passager" options={stateOptions} data-field="StateOfPerson__c" value={newPassager.StateOfPerson__c} onchange={handleInputChange}></lightning-combobox>
+                </div>
+            </div>
+            <div class="slds-grid slds-grid_align-center slds-p-top_medium">
+                <button class="btn-secondary slds-m-right_small" onclick={hideForm}>Annuler</button>
+                <button class="btn-primary" onclick={handleAjouter}>Ajouter</button>
+            </div>
+        </div>
+    </template>
+</template>

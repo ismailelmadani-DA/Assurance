@@ -1,0 +1,74 @@
+<template>
+    <div class="header-summary-box slds-m-bottom_medium">
+        <div class="slds-grid slds-wrap">
+            <div class="slds-col slds-size_1-of-4 summary-item">Date Survenance: <strong>{claimSummary.dateSurvenance}</strong></div>
+            <div class="slds-col slds-size_1-of-4 summary-item">N° Police: <strong>{claimSummary.policyNumber}</strong></div>
+            <div class="slds-col slds-size_1-of-4 summary-item">N° Immat: <strong>{claimSummary.registrationNumber}</strong></div>
+            <div class="slds-col slds-size_1-of-4 summary-item">N° Déclaration: <strong>{claimSummary.caseNumber}</strong></div>
+        </div>
+    </div>
+
+    <h2 class="main-title slds-m-bottom_medium">Véhicule(s) et passager(s) adverse(s)</h2>
+
+    <template if:true={adverseVehicles.length}>
+        <div class="slds-m-bottom_medium">
+            <template for:each={adverseVehicles} for:item="veh">
+                <div key={veh.key} class="slds-box white-box slds-m-bottom_small vehicle-added-card">
+                    <div class="slds-grid slds-grid_vertical-align-center">
+                        <lightning-icon icon-name="custom:custom31" size="small" class="slds-m-right_small"></lightning-icon>
+                        <div class="slds-col">
+                            <p><strong>Immatriculation :</strong> {veh.RegistrationNumber__c} | <strong>Marque :</strong> {veh.Marque__c}</p>
+                            <p class="slds-text-color_weak">Passagers blessés : {veh.NbDePassagerBlesses__c}</p>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </template>
+
+    <template if:false={isFormVisible}>
+        <div class="slds-grid slds-grid_align-end slds-m-bottom_medium">
+            <button class="btn-outline" onclick={showForm}>+ Ajouter un autre véhicule</button>
+        </div>
+    </template>
+
+    <template if:true={isFormVisible}>
+        <div class="slds-box white-box slds-p-around_medium">
+            <h3 class="section-header slds-m-bottom_medium">
+                <lightning-icon icon-name="utility:car" size="x-small" class="slds-m-right_small"></lightning-icon>
+                Information du véhicule
+            </h3>
+            
+            <div class="slds-grid slds-wrap slds-gutters">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-combobox label="État véhicule" options={optionsEtat} value={formData.VehicleIsDamaged__c} data-field="VehicleIsDamaged__c" onchange={handleInputChange} required></lightning-combobox>
+                    <lightning-combobox label="Type véhicule" options={typeOptions} value={formData.TypeVehicule__c} data-field="TypeVehicule__c" onchange={handleInputChange}></lightning-combobox>
+                    <lightning-input type="date" label="Date de mise en circulation" value={formData.DateMiseEnCirculation__c} data-field="DateMiseEnCirculation__c" onchange={handleInputChange}></lightning-input>
+                    <lightning-input type="number" label="Nombre de passager blessés" value={formData.NbDePassagerBlesses__c} data-field="NbDePassagerBlesses__c" onchange={handleInputChange}></lightning-input>
+                    <lightning-input label="Numéro de contrat d'assurance" value={formData.Numéro_de_contrat__c} data-field="Numéro_de_contrat__c" onchange={handleInputChange}></lightning-input>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-combobox label="Adversaire assuré" options={optionsAssure} value={formData.Adversaire_Assure__c} data-field="Adversaire_Assure__c" onchange={handleInputChange} required></lightning-combobox>
+                    <lightning-input label="Numéro d'immatriculation" value={formData.RegistrationNumber__c} data-field="RegistrationNumber__c" onchange={handleInputChange} required></lightning-input>
+                    <lightning-input label="Marque" value={formData.Marque__c} data-field="Marque__c" onchange={handleInputChange}></lightning-input>
+                    
+                    <div class="slds-m-top_x-small">
+                        <lightning-record-picker
+                            label="Compagnie véhicule adverse"
+                            placeholder="Rechercher une compagnie..."
+                            object-api-name="Account"
+                            value={formData.CompagnieAdverse__c}
+                            onchange={handleLookupChange}>
+                        </lightning-record-picker>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slds-grid slds-grid_align-center slds-m-top_large">
+                <button class="btn-secondary slds-m-right_small" onclick={handleAnnuler}>Annuler</button>
+                <button class="btn-primary" onclick={handleAjouter}>Ajouter</button>
+            </div>
+        </div>
+    </template>
+</template>

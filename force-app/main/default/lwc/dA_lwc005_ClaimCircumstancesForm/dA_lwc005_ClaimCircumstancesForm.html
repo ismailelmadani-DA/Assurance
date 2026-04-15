@@ -1,0 +1,95 @@
+<template>
+    <div class="slds-m-top_medium">
+        <h1 class="main-title slds-m-bottom_medium">Informations des Circonstances</h1>
+
+        <div class="header-summary-box slds-m-bottom_medium slds-grid slds-wrap">
+            <div class="slds-col slds-size_1-of-4 summary-item">
+                Date Survenance: <strong>{claimSummary.dateSurvenance}</strong>
+            </div>
+            <div class="slds-col slds-size_1-of-4 summary-item">
+                N° Police: <strong>{claimSummary.policyNumber}</strong>
+            </div>
+            <div class="slds-col slds-size_1-of-4 summary-item">
+                N° Immatriculation: <strong>{claimSummary.registrationNumber}</strong>
+            </div>
+            <div class="slds-col slds-size_1-of-4 summary-item">
+                N° Déclaration: <strong>{claimSummary.caseNumber}</strong>
+            </div>
+        </div>
+
+        <div class="slds-section slds-is-open">
+            <h3 class="slds-section__title slds-theme_shade slds-p-horizontal_small section-header">
+                Causes et circonstances
+            </h3>
+            
+            <div class="slds-grid slds-wrap slds-p-around_small">
+                <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+                    <lightning-combobox 
+                        label="Evénement déclencheur de sinistre" 
+                        name="TriggeringEventOfClaim__c" 
+                        options={triggerOptions} 
+                        placeholder="Select an Option"
+                        required 
+                        onchange={handleChange}>
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+                    <lightning-combobox 
+                        label="Est-ce qu'il y a un dommage ?" 
+                        name="AnyDamage__c" 
+                        options={ouiNonOptions} 
+                        placeholder="Select an Option"
+                        onchange={handleChange}>
+                    </lightning-combobox>
+                </div>
+
+                <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+                    <lightning-combobox 
+                        label="Causes de sinistre" 
+                        name="CausesOfClaim__c" 
+                        options={causeOptions} 
+                        placeholder="Select an Option"
+                        required 
+                        onchange={handleChange}>
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+                    <lightning-input 
+                        type="number" 
+                        label="Nombre de véhicules impliqués" 
+                        name="NumberOfVehiclesInvolved__c" 
+                        onchange={handleChange}>
+                    </lightning-input>
+                </div>
+
+                <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+                    <lightning-combobox 
+                        label="Partie adverse" 
+                        name="OpposingParty__c" 
+                        options={partyOptions} 
+                        placeholder="Select an Option"
+                        onchange={handleChange}>
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+                    <lightning-textarea 
+                        label="Commentaire" 
+                        name="Commentaire__c" 
+                        onchange={handleChange}>
+                    </lightning-textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+    <template lwc:if={isDamageYes}>
+    <div class="slds-section slds-is-open slds-m-top_medium">
+        <h3 class="section-header slds-p-horizontal_small">
+            Sélectionnez les points de choc
+        </h3>
+        
+        <c-lwc006_-point-choc 
+            onpointchocchange={handlePointChocUpdate}>
+        </c-lwc006_-point-choc>
+    </div>
+</template>
+</template>

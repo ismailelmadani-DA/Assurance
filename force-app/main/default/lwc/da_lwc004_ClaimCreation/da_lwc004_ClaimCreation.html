@@ -1,0 +1,286 @@
+<template>
+    <div class="app-card">
+        <template lwc:if={isLoading}>
+            <lightning-spinner alternative-text="Traitement en cours..." size="medium"></lightning-spinner>
+        </template>
+
+        <div class="slds-grid slds-wrap main-grid">
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_9-of-12 slds-p-around_large">
+                
+                <template lwc:if={isStep1}>
+                    <h1 class="main-title">Identification police et véhicule</h1>
+                    <div class="slds-m-top_medium">
+                        <lightning-radio-group 
+                            name="isPoliceConnu"
+                            label="Le numéro de police est il connu ?"
+                            options={optionsOuiNon}
+                            value={isPoliceConnu}
+                            onchange={handlePoliceConnuChange}
+                            type="radio" required>
+                        </lightning-radio-group>
+
+                        <template lwc:if={isOuiSelected}>
+                            <div class="slds-grid slds-gutters slds-wrap slds-m-top_medium">
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-input data-id="police" label="Numéro de police" required></lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-input data-id="immat" label="Numéro d'immatriculation" required></lightning-input>
+                                </div>
+                            </div>
+                            <div class="slds-grid slds-gutters slds-wrap slds-m-top_medium">
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-input data-id="dateSurvenance" type="date" label="Date de survenance" required onchange={handleDateChange}></lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-input data-id="heureSurvenance" type="time" label="Heure de survenance"></lightning-input>
+                                </div>
+                            </div>
+                        </template>
+
+                        <template lwc:if={isNonSelected}>
+                            <div class="slds-m-top_medium">
+                                <lightning-radio-group name="searchType" label="Choisir votre critère de recherche" options={optionsCriteres} value={searchType} onchange={handleSearchTypeChange} type="radio" required></lightning-radio-group>
+                            </div>
+                            <template lwc:if={searchType}>
+                                <div class="slds-grid slds-gutters slds-wrap slds-m-top_medium">
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                                        <lightning-input data-id="critere" label={inputLabel} required></lightning-input>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                                        <lightning-input data-id="dateSurvenance" type="date" label="Date de survenance" required onchange={handleDateChange}></lightning-input>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                                        <lightning-input data-id="heureSurvenance" type="time" label="Heure de survenance"></lightning-input>
+                                    </div>
+                                </div>
+                            </template>
+                        </template>
+                    </div>
+                </template>
+
+                <template lwc:if={isStep2}>
+                    <h1 class="main-title slds-m-bottom_large">Résultat de recherche</h1>
+                    <div class="table-card">
+                        <div class="table-blue-header">Liste des Polices</div>
+                        <div class="slds-scrollable_x">
+                            <table class="custom-table slds-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px;">Sélection</th>
+                                        <th>N° de police</th>
+                                        <th>Nom et prénom de l'assuré</th>
+                                        <th>Catégorie</th>
+                                        <th>Situation Police</th>
+                                        <th>Situation Prime</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={searchResults} for:item="policy">
+                                        <tr key={policy.Id} onclick={handleRowClick} data-id={policy.Id} class="clickable-row">
+                                            <td><div class="radio-cell"><input type="radio" name="policeSelect" value={policy.Id} data-radio-id={policy.Id} class="custom-radio"></div></td>
+                                            <td>{policy.PolicyNumber}</td>
+                                            <td>{policy.InsuredName}</td>
+                                            <td>{policy.Category}</td>
+                                            <td>{policy.SituationPolice}</td>
+                                            <td>{policy.SituationPrime}</td>
+                                            <td>{policy.Status}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </template>
+
+                <template lwc:if={isStep3}>
+                    <h1 class="main-title slds-m-bottom_medium">Informations police et véhicule</h1>
+                    <div class="slds-section slds-is-open">
+                        <h3 class="slds-section__title slds-theme_shade slds-p-horizontal_small">Informations de la police</h3>
+                        <div class="slds-grid slds-wrap slds-p-around_small">
+                            <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small">
+                                <div class="info-block"><label class="info-label">Numéro de la police</label><p class="info-value">{selectedPolicyRecord.PolicyNumber}</p></div>
+                                <div class="info-block"><label class="info-label">Nature de la police (catégorie)</label><p class="info-value">{selectedPolicyRecord.Category}</p></div>
+                                <div class="info-block"><label class="info-label">Nom et prénom de l'assuré</label><p class="info-value">{selectedPolicyRecord.InsuredName}</p></div>
+                                <div class="info-block"><label class="info-label">Situation de la police</label><p class="info-value">{selectedPolicyRecord.SituationPolice}</p></div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2 slds-p-horizontal_x-small">
+                                <div class="info-block"><label class="info-label">Date d'effet</label><p class="info-value">{selectedPolicyRecord.DateEffet}</p></div>
+                                <div class="info-block"><label class="info-label">Date d’expiration</label><p class="info-value">{selectedPolicyRecord.DateExpiration}</p></div>
+                                <div class="info-block"><label class="info-label">Situation de la prime</label><p class="info-value">{selectedPolicyRecord.SituationPrime}</p></div>
+                                <div class="info-block"><label class="info-label">Quote part coassurance</label><p class="info-value">{selectedPolicyRecord.QuotePart}</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <template lwc:if={isStep4}>
+                    <h1 class="main-title slds-m-bottom_medium">Informations déclaration</h1>
+                    
+                    <div class="slds-box slds-theme_shade slds-m-bottom_medium slds-grid slds-wrap">
+                        <div class="slds-col slds-size_1-of-4">Date Survenance: <strong>{dateSurvenance}</strong></div>
+                        <div class="slds-col slds-size_1-of-4">N° Police: <strong>{selectedPolicyRecord.PolicyNumber}</strong></div>
+                        <div class="slds-col slds-size_1-of-4">N° Immatriculation: <strong>{selectedPolicyRecord.RegistrationNumber}</strong></div>
+                    </div>
+
+                    <div class="slds-section slds-is-open">
+                        <h3 class="slds-section__title slds-theme_shade slds-p-horizontal_small">Informations générales</h3>
+                        <div class="slds-grid slds-wrap slds-p-around_small">
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-horizontal_x-small">
+                                <lightning-combobox label="Pays de survenance" data-field="country" required options={optionsPays} onchange={handleCaseInputChange}></lightning-combobox>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-horizontal_x-small">
+                                <lightning-combobox label="Ville de survenance" data-field="city" required options={optionsVille} onchange={handleCaseInputChange}></lightning-combobox>
+                            </div>
+
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_6-of-12 slds-p-horizontal_x-small slds-m-top_x-small">
+                                <lightning-input label="Adresse de survenance" data-field="address" required onchange={handleCaseInputChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-p-horizontal_x-small slds-m-top_x-small">
+                                <lightning-input type="date" label="Date dépôt déclaration" data-field="dateDepot" required onchange={handleCaseInputChange}></lightning-input>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-p-horizontal_x-small slds-m-top_x-small">
+                                <lightning-input label="Date création déclaration" value="03-04-2026" read-only></lightning-input>
+                            </div>
+
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-horizontal_x-small slds-m-top_x-small">
+                                <lightning-combobox label="Déclarant du sinistre" data-field="declarant" required options={optionsDeclarant} onchange={handleCaseInputChange}></lightning-combobox>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-horizontal_x-small slds-m-top_x-small">
+                                <lightning-combobox label="PV de constat" data-field="pvConstat" options={optionsPV} onchange={handleCaseInputChange}></lightning-combobox>
+                            </div>
+
+                            <div class="slds-col slds-size_1-of-1 slds-p-around_x-small">
+                                <lightning-textarea label="Commentaire" data-field="commentaire" onchange={handleCaseInputChange}></lightning-textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slds-section slds-is-open slds-m-top_large">
+                        <h3 class="slds-section__title slds-theme_shade slds-p-horizontal_small">Informations de la personne à contacter</h3>
+                        <div class="slds-p-around_small">
+                            <lightning-radio-group label="Même personne que l'assuré ?" options={optionsContact} value={isSameAsInsuredString} onchange={handleContactToggle} type="button"></lightning-radio-group>
+                            <div class="slds-grid slds-wrap slds-m-top_small">
+                                <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+                                    <lightning-input label="Nom et prénom" value={caseData.nomContact} data-field="nomContact" onchange={handleCaseInputChange} required></lightning-input>
+                                    <lightning-input label="Numéro de téléphone" data-field="telContact" onchange={handleCaseInputChange}></lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
+                                    <lightning-combobox label="Moyen de notification" data-field="moyenNotification" options={optionsNotif} onchange={handleCaseInputChange}></lightning-combobox>
+                                    <lightning-input label="Adresse mail" data-field="mailContact" onchange={handleCaseInputChange}></lightning-input>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <template lwc:if={isStep5}>
+                    <h1 class="main-title slds-m-bottom_medium">Importation des documents</h1>
+
+                    <div class="slds-box slds-theme_shade slds-m-bottom_medium slds-grid slds-wrap">
+                        <div class="slds-col slds-size_1-of-4">Date Survenance: <strong>{dateSurvenance}</strong></div>
+                        <div class="slds-col slds-size_1-of-4">N° Police: <strong>{selectedPolicyRecord.PolicyNumber}</strong></div>
+                        <div class="slds-col slds-size_1-of-4">N° Immatriculation: <strong>{selectedPolicyRecord.RegistrationNumber}</strong></div>
+                        <div class="slds-col slds-size_1-of-4">N° Déclaration: <strong>(Case créé)</strong></div>
+                    </div>
+
+                    <div class="slds-section slds-is-open">
+                        <h3 class="slds-section__title slds-theme_shade slds-p-horizontal_small">Importation des documents</h3>
+                        <div class="slds-grid slds-gutters slds-wrap slds-p-around_small slds-grid_vertical-align-end">
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                                <lightning-combobox 
+                                    label="Répertoire" 
+                                    placeholder="Choisir un répertoire"
+                                    options={optionsDirectory} 
+                                    value={selectedDirectory} 
+                                    onchange={handleFolderChange} 
+                                    required>
+                                </lightning-combobox>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                                <lightning-combobox 
+                                    label="Type de document" 
+                                    placeholder="Choisir un document"
+                                    options={optionsDocType} 
+                                    value={selectedDocType} 
+                                    onchange={handleDocTypeChange} 
+                                    required>
+                                </lightning-combobox>
+                            </div>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                                <lightning-file-upload 
+                                    label="Sélectionner des fichiers" 
+                                    record-id={createdCaseId} 
+                                    onuploadfinished={handleUploadFinished} 
+                                    multiple 
+                                    disabled={isUploadDisabled}>
+                                </lightning-file-upload>
+                            </div>
+                        </div>
+                    </div>
+
+                    <template if:true={files.length}>
+                        <div class="slds-m-top_medium">
+                            <h3 class="slds-text-heading_small slds-m-bottom_small">Fichiers à indexer</h3>
+                            <div class="slds-box slds-theme_shade">
+                                <template for:each={files} for:item="file">
+                                    <div key={file.fileName} class="slds-grid slds-grid_align-spread slds-p-around_x-small border-bottom">
+                                        <div class="slds-col slds-size_4-of-12"><strong>{file.fileName}</strong></div>
+                                        <div class="slds-col slds-size_4-of-12"><span class="slds-badge">{file.repertoire}</span> / {file.typeDocument}</div>
+                                        <div class="slds-col slds-size_4-of-12 slds-text-align_right">
+                                            <button class="action-button btn-indexer" onclick={handleUploadSingle} data-id={file.fileName}>Indexer</button>
+                                            <button class="action-button btn-delete slds-m-left_x-small" onclick={handleRemoveFile} data-id={file.fileName}>Supprimer</button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </template>
+
+                <template lwc:if={isStepCircumstances}>
+                    <c-d-a_lwc005_-claim-circumstances-form
+                        date-survenance={dateSurvenance}
+                        policy-number={selectedPolicyRecord.PolicyNumber}
+                        registration-number={selectedPolicyRecord.RegistrationNumber}
+                        claim-number={createdCaseId}
+                        unite-gestion="4-MANDATAIRES AXA"
+                    ></c-d-a_lwc005_-claim-circumstances-form>
+                </template>
+
+                <div class="slds-m-top_xx-large slds-grid slds-grid_align-spread">
+                    <div class="slds-col">
+                        <template if:true={showPrecedent}>
+                            <button class="btn-secondary" onclick={handlePrecedent}>&larr; Précédent</button>
+                        </template>
+                    </div>
+                    <div class="slds-col">
+                        <template if:true={showFooter}>
+                            <template if:true={isStepStandard}>
+                                <button class="btn-primary" onclick={handleNext}>Suivant &rarr;</button>
+                            </template>
+                            <template if:true={isStep4}>
+                                <button class="btn-primary" onclick={handleNext}>Créer Prédéclaration &rarr;</button>
+                            </template>
+                            <template if:true={isStep5}>
+                                <button class="btn-primary" onclick={handleNext}>Terminer &rarr;</button>
+                            </template>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 steps-sidebar">
+                <h2 class="steps-header">Étapes</h2>
+                <div class="custom-stepper">
+                    <div class={step1Class}><div class="icon-column"><div class={step1IconClass}></div><div class="line"></div></div><div class="label-column">Identification police et véhicule</div></div>
+                    <div class={step2Class}><div class="icon-column"><div class={step2IconClass}></div><div class="line"></div></div><div class="label-column">Résultat de recherche</div></div>
+                    <div class={step3Class}><div class="icon-column"><div class={step3IconClass}></div><div class="line"></div></div><div class="label-column">Informations police et véhicule</div></div>
+                    <div class={step4Class}><div class="icon-column"><div class={step4IconClass}></div><div class="line"></div></div><div class="label-column">Informations déclaration</div></div>
+                    <div class={step5Class}><div class="icon-column"><div class={step5IconClass}></div></div><div class="label-column">Importation des documents</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>

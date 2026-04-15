@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>66.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__RecordPage</target>
+        <target>lightning__AppPage</target>
+        <target>lightning__HomePage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__RecordPage,lightning__AppPage,lightning__HomePage">
+ 
+            <!-- Objet -->
+            <property name="targetObjectApiName" type="String" label="API Name de l'objet à afficher" />
+ 
+            <!-- Champs -->
+            <property
+                name="fieldsApiNames"
+                type="String"
+                label="Champs à afficher (séparés par virgule)"
+                description="Ex: CaseNumber,Status,Account.Name,CreatedDate — Les champs de relation utilisent la notation pointée."
+                required="true"
+            />
+ 
+            <!-- Labels colonnes -->
+            <property
+                name="columnLabels"
+                type="String"
+                label="Labels des colonnes (séparés par virgule)"
+                description="Dans le même ordre que les champs. Ex: Numéro,Statut,Compte,Date création. Si vide, les labels de métadonnées sont utilisés."
+            />
+ 
+            <!-- Titre de la card -->
+            <property
+                name="cardTitle"
+                type="String"
+                label="Titre de la carte"
+                default="Enregistrements"
+            />
+ 
+            <!-- Filtre lookup -->
+            <property
+                name="filterField"
+                type="String"
+                label="Champ de filtre (lookup vers l'enregistrement courant)"
+                description="Ex: Claim__c, AccountId. Laisser vide pour afficher tous les enregistrements."
+            />
+ 
+            <!-- RecordType -->
+            <property
+                name="recordTypeDeveloperName"
+                type="String"
+                label="DeveloperName du RecordType (optionnel)"
+                description="Ex: request. Laisser vide pour ne pas filtrer par RecordType."
+            />
+ 
+            <!-- Tri -->
+            <property
+                name="orderByField"
+                type="String"
+                label="Champ de tri initial"
+                default="CreatedDate"
+            />
+            <property
+                name="orderDirection"
+                type="String"
+                label="Direction du tri initial (ASC / DESC)"
+                default="DESC"
+                datasource="ASC,DESC"
+            />
+ 
+            <!-- Pagination -->
+            <property
+                name="pageSize"
+                type="Integer"
+                label="Nombre de lignes par page"
+                default="10"
+                min="1"
+                max="50"
+            />
+ 
+            <!-- Limite SOQL -->
+            <property
+                name="limitSize"
+                type="Integer"
+                label="Nombre maximum d'enregistrements à charger"
+                default="200"
+                min="1"
+                max="2000"
+            />
+ 
+            <!-- Champ cliquable -->
+            <property
+                name="clickableField"
+                type="String"
+                label="Champ dont la valeur est cliquable (navigation vers le record)"
+                description="Ex: CaseNumber — clique sur la valeur de ce champ pour ouvrir l'enregistrement. Laisser vide = aucun lien."
+            />
+ 
+            <!-- Champ statut (badges) -->
+            <property
+                name="statusField"
+                type="String"
+                label="Champ de statut (pour les badges colorés et la coloration des lignes)"
+                description="Ex: Status. Laisser vide pour désactiver la coloration."
+            />
+ 
+            <!-- Compteur -->
+            <property
+                name="showRecordCount"
+                type="Boolean"
+                label="Afficher le nombre total dans le titre"
+                default="true"
+            />
+
+           
+ 
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

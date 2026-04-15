@@ -1,0 +1,114 @@
+<template>
+    <lightning-modal-header label={modalTitle}></lightning-modal-header>
+
+    <lightning-modal-body>
+        <div class="form-grid">
+
+            <!-- État du véhicule -->
+            <div class="form-col">
+                <lightning-combobox
+                    name="EtatVehicule__c"
+                    label="État du véhicule"
+                    value={formData.EtatVehicule__c}
+                    options={etatOptions}
+                    onchange={handleChange}
+                    placeholder="Sélectionner...">
+                </lightning-combobox>
+            </div>
+
+            <!-- Numéro immatriculation -->
+            <div class="form-col">
+                <lightning-input
+                    name="RegistrationNumber__c"
+                    label="Numéro d'immatriculation"
+                    value={formData.RegistrationNumber__c}
+                    onchange={handleChange}>
+                </lightning-input>
+            </div>
+
+            <!-- Marque et modèle -->
+            <div class="form-col">
+                <lightning-input
+                    name="Marque__c"
+                    label="Marque et modèle"
+                    value={formData.Marque__c}
+                    onchange={handleChange}>
+                </lightning-input>
+            </div>
+
+            <!-- Nombre de passagers -->
+            <div class="form-col">
+                <lightning-input
+                    type="number"
+                    name="NbDePassagerBlesses__c"
+                    label="Nombre de passagers blessés"
+                    value={formData.NbDePassagerBlesses__c}
+                    onchange={handleChange}
+                    min="0"
+                    step="1">
+                </lightning-input>
+            </div>
+
+            <!-- Compagnie adverse -->
+            <div class="form-col">
+                <lightning-input
+                    name="CompagnieAdverse__c"
+                    label="Compagnie adverse"
+                    value={formData.CompagnieAdverse__c}
+                    onchange={handleChange}>
+                </lightning-input>
+            </div>
+
+            <!-- Pays -->
+            <div class="form-col">
+                <lightning-input
+                    name="Pays__c"
+                    label="Pays"
+                    value={formData.Pays__c}
+                    onchange={handleChange}>
+                </lightning-input>
+            </div>
+
+            <!-- Adversaire assuré -->
+            <div class="form-col-full">
+                <lightning-input
+                    type="checkbox"
+                    name="AdversaireAssure__c"
+                    label="Adversaire assuré"
+                    checked={formData.AdversaireAssure__c}
+                    onchange={handleCheckbox}>
+                </lightning-input>
+            </div>
+
+            <!-- Erreur -->
+            <template if:true={errorMsg}>
+                <div class="form-col-full">
+                    <div class="error-banner">
+                        <lightning-icon
+                            icon-name="utility:error"
+                            size="x-small"
+                            variant="error"
+                            alternative-text="Erreur">
+                        </lightning-icon>
+                        <span>{errorMsg}</span>
+                    </div>
+                </div>
+            </template>
+
+        </div>
+    </lightning-modal-body>
+
+    <lightning-modal-footer>
+        <lightning-button
+            label="Annuler"
+            onclick={handleCancel}>
+        </lightning-button>
+        <lightning-button
+            label={saveLabel}
+            variant="brand"
+            onclick={handleSave}
+            disabled={isSaving}
+            class="slds-m-left_x-small">
+        </lightning-button>
+    </lightning-modal-footer>
+</template>

@@ -1,0 +1,99 @@
+<template>
+    <lightning-card icon-name="standard:vehicle">
+        <span slot="title">Véhicules adverses</span>
+
+        <div slot="actions">
+            <lightning-button
+                label="Ajouter"
+                variant="brand"
+                icon-name="utility:add"
+                onclick={openAddModal}>
+            </lightning-button>
+        </div>
+
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+
+            <template if:true={isLoading}>
+                <div class="center-spinner">
+                    <lightning-spinner alternative-text="Chargement..." size="medium">
+                    </lightning-spinner>
+                </div>
+            </template>
+
+            <template if:true={hasError}>
+                <div class="error-inline">
+                    <lightning-icon icon-name="utility:error" size="small"
+                        variant="error" alternative-text="Erreur">
+                    </lightning-icon>
+                    <span>{errorMessage}</span>
+                </div>
+            </template>
+
+            <template if:true={isEmpty}>
+                <div class="empty-state">
+                    <lightning-icon icon-name="standard:vehicle" size="large">
+                    </lightning-icon>
+                    <p class="empty-msg">
+                        Il n'y a actuellement aucun véhicule à afficher.
+                    </p>
+                </div>
+            </template>
+
+            <template if:true={hasVehicles}>
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered slds-table_striped">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th scope="col"><div class="slds-truncate">État du véhicule</div></th>
+                            <th scope="col"><div class="slds-truncate">N° immatriculation</div></th>
+                            <th scope="col"><div class="slds-truncate">Marque et modèle</div></th>
+                            <th scope="col"><div class="slds-truncate">Nb. passagers</div></th>
+                            <th scope="col"><div class="slds-truncate">Actions</div></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={vehicles} for:item="v">
+                            <tr key={v.Id}>
+                                <td>
+                                    <span class={v.etatBadgeClass}>{v.EtatVehicule__c}</span>
+                                </td>
+                                <td>
+                                    <a href="javascript:void(0);"
+                                       data-id={v.Id}
+                                       onclick={navigateToRecord}
+                                       class="reg-link">
+                                        {v.RegistrationNumber__c}
+                                    </a>
+                                </td>
+                                <td><div class="slds-truncate">{v.Marque__c}</div></td>
+                                <td class="slds-text-align_center">{v.NbDePassagerBlesses__c}</td>
+                                <td>
+                                    <div class="action-btns">
+                                        <lightning-button-icon
+                                            icon-name="utility:edit"
+                                            alternative-text="Modifier"
+                                            title="Modifier"
+                                            variant="border-filled"
+                                            size="small"
+                                            data-id={v.Id}
+                                            onclick={openEditModal}>
+                                        </lightning-button-icon>
+                                        <lightning-button-icon
+                                            icon-name="utility:delete"
+                                            alternative-text="Supprimer"
+                                            title="Supprimer"
+                                            variant="border-filled"
+                                            size="small"
+                                            data-id={v.Id}
+                                            onclick={openDeleteConfirm}>
+                                        </lightning-button-icon>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

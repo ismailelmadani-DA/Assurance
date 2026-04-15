@@ -1,0 +1,152 @@
+<template>
+    <div class="custom-card">
+
+        <!-- ── Spinner ── -->
+        <template lwc:if={isLoading}>
+            <div class="loading-overlay">
+                <lightning-spinner alternative-text="Chargement..." size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- ── Header ── -->
+        <div class="slds-card__header slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+            <div class="slds-media slds-media_center slds-grow slds-truncate">
+                <div class="slds-media__figure">
+                    <lightning-icon icon-name="standard:list" alternative-text="Données" size="medium"></lightning-icon>
+                </div>
+                <div class="slds-media__body">
+                    <h2 class="slds-card__header-title slds-text-heading_small">{headerTitle}</h2>
+                </div>
+            </div>
+            <div>
+                <button class="reload-button" onclick={handleRefresh} title="Actualiser" disabled={isRefreshing}>
+                    <lightning-icon icon-name="utility:refresh" size="x-small"></lightning-icon>
+                </button>
+            </div>
+        </div>
+
+        <!-- ── Body ── -->
+        <div class="main-content slds-p-around_medium">
+
+            <!-- Error -->
+            <template lwc:if={errorMessage}>
+                <div class="slds-notify slds-notify_alert slds-theme_error" role="alert">
+                    <h2 class="slds-text-heading_small">{errorMessage}</h2>
+                </div>
+            </template>
+
+            <!-- Table -->
+            <template lwc:if={hasData}>
+                <div class="table-wrapper">
+                    <div class="table-container">
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped"
+                            role="grid">
+
+                            <!-- ── En-têtes ── -->
+                            <thead>
+                                <tr>
+                                    <template for:each={columns} for:item="col">
+                                        <th key={col.fieldName} scope="col" class="slds-text-title_caps sortable-header"
+                                            onclick={handleSort} data-field={col.fieldName}
+                                            aria-sort={col.ariaSortValue}>
+                                            <span class="slds-truncate">{col.label}</span>
+                                            <template lwc:if={col.sortable}>
+                                                <lightning-icon icon-name={col.sortIcon} size="xx-small"
+                                                    class="slds-m-left_x-small">
+                                                </lightning-icon>
+                                            </template>
+                                        </th>
+                                    </template>
+                                </tr>
+                            </thead>
+
+                            <!-- ── Lignes ── -->
+                            <tbody>
+                                <template for:each={_pageData} for:item="row">
+                                    <tr key={row.Id} class={row._statusClass}>
+                                        <template for:each={row._cells} for:item="cell">
+                                            <td key={cell.key}>
+
+                                                <!-- Lien cliquable -->
+                                                <template lwc:if={cell.isClickable}>
+                                                    <a onclick={handleRowClick} data-id={cell.navigateId}
+                                                        class="slds-text-link_reset record-link">
+                                                        {cell.displayValue}
+                                                    </a>
+                                                </template>
+
+                                                <!-- Date -->
+                                                <template lwc:elseif={cell.isDate}>
+                                                    <lightning-formatted-date-time value={cell.dateValue} year="numeric"
+                                                        month="2-digit" day="2-digit">
+                                                    </lightning-formatted-date-time>
+                                                </template>
+
+                                                <!-- DateTime -->
+                                                <template lwc:elseif={cell.isDateTime}>
+                                                    <lightning-formatted-date-time value={cell.dateValue} year="numeric"
+                                                        month="2-digit" day="2-digit" hour="2-digit" minute="2-digit">
+                                                    </lightning-formatted-date-time>
+                                                </template>
+
+                                                <!-- Texte/Picklist (avec badge si c'est le statusField) -->
+                                                <template lwc:else>
+                                                    <div class="slds-truncate">{cell.displayValue}</div>
+                                                </template>
+
+                                            </td>
+                                        </template>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ── Pagination ── -->
+                <template lwc:if={showPagination}>
+                    <div class="slds-text-align_center">
+                        <nav class="pagination-nav" aria-label="Pagination">
+                            <div class="pagination-buttons">
+                                <a onclick={handlePrevious} class={previousClass} aria-label="Page précédente">
+                                    &#8592; Précédent
+                                </a>
+
+                                <template for:each={displayedPages} for:item="page">
+                                    <template lwc:if={page.isNumber}>
+                                        <a key={page.value} onclick={handlePageChange} data-page={page.value}
+                                            class={page.class} aria-label={page.ariaLabel}
+                                            aria-current={page.ariaCurrent}>
+                                            {page.value}
+                                        </a>
+                                    </template>
+                                    <template lwc:if={page.isEllipsis}>
+                                        <span key={page.value} class="pagination-ellipsis">...</span>
+                                    </template>
+                                </template>
+
+                                <a onclick={handleNext} class={nextClass} aria-label="Page suivante">
+                                    Suivant &#8594;
+                                </a>
+                            </div>
+                        </nav>
+                    </div>
+                </template>
+            </template>
+
+            <!-- Empty state -->
+            <template lwc:if={isEmpty}>
+                <div class="slds-illustration slds-illustration_small">
+                    <div class="empty-icon">
+                        <lightning-icon icon-name="utility:search" size="large"
+                            class="empty-search-icon"></lightning-icon>
+                    </div>
+                    <h3 class="slds-text-heading_medium slds-text-align_center">
+                        Aucun enregistrement trouvé.
+                    </h3>
+                </div>
+            </template>
+
+        </div><!-- /.main-content -->
+    </div><!-- /.custom-card -->
+</template>

@@ -1,0 +1,41 @@
+.launcher-container {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #EAEAEA;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.launcher-container:hover {
+    background: #F9F9F9;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Le conteneur vert du logo */
+.custom-icon-container {
+    background-color: #27A770 !important; /* Le vert vif de ton modèle */
+    border-radius: 6px;
+    padding: 6px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+}
+
+/* Force l'icône en blanc */
+.custom-icon-container lightning-icon {
+    --slds-c-icon-color-foreground-default: white;
+}
+
+.btn-launcher {
+    font-weight: 700;
+    color: #444;
+    font-size: 0.95rem;
+    border: none;
+    background: transparent;
+    padding-left: 12px;
+    cursor: pointer;
+}

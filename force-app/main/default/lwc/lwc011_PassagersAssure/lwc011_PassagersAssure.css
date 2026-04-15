@@ -1,0 +1,118 @@
+/* --- BANDEAU RÉCAPITULATIF (HEADER) --- */
+.header-summary-box {
+    background-color: #F3F3F3 !important;
+    color: #1A0273 !important;
+    font-weight: bold !important;
+    padding: 12px !important;
+    border: 1px solid #EAEAEA;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.summary-item strong { 
+    color: #1A0273; 
+    margin-left: 5px; 
+}
+
+/* --- TITRES ET CONTENEURS --- */
+.main-title { 
+    color: #00008F; 
+    font-size: 1.4rem; 
+    font-weight: 700; 
+}
+
+.white-box { 
+    background: #FFFFFF; 
+    border: 1px solid #EAEAEA; 
+    border-radius: 4px; 
+}
+
+.form-container { 
+    border: 1px solid #1A0273; 
+    border-top: 4px solid #1A0273; 
+    background: #FFFFFF; 
+}
+
+.section-header { 
+    background-color: #F3F3F3 !important; 
+    color: #1A0273 !important; 
+    font-weight: bold !important; 
+    padding: 8px 12px !important; 
+    border-radius: 4px; 
+    display: block; 
+    width: 100%; 
+}
+
+/* --- SOUS-TITRES (Informations, Conducteur, Passagers) --- */
+.info-group-title {
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #000000;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    padding-left: 12px;
+}
+
+/* --- TEXTE "AUCUN PASSAGER" --- */
+.empty-text {
+    color: #706e6b;
+    font-size: 0.85rem;
+    font-style: italic;
+    margin-left: 12px;
+}
+
+/* --- ALIGNEMENT DES BLOCS D'INFO (Style Image 2) --- */
+.info-block { 
+    margin-bottom: 8px; 
+    font-size: 0.85rem; 
+}
+
+.info-label { 
+    color: #706e6b; /* Gris clair pour les labels */
+    font-weight: bold; 
+    display: inline-block; 
+    width: 180px; /* Largeur fixe pour aligner parfaitement les valeurs sur la même ligne */
+}
+
+.info-value { 
+    color: #000000; 
+    font-weight: 500;
+    display: inline-block; 
+}
+
+/* --- BOUTONS --- */
+.btn-outline { 
+    background: white; 
+    color: #1A0273; 
+    border: 2px solid #1A0273; 
+    padding: 6px 18px; 
+    border-radius: 4px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    transition: 0.3s; 
+}
+
+.btn-outline:hover { 
+    background: #1A0273; 
+    color: white; 
+}
+
+.btn-primary { 
+    background-color: #00008F; 
+    color: white; 
+    border: none; 
+    padding: 10px 20px; 
+    border-radius: 4px; 
+    font-weight: bold; 
+    cursor: pointer; 
+}
+
+.btn-secondary { 
+    background-color: transparent; 
+    color: #00008F; 
+    border: 1px solid #00008F; 
+    padding: 10px 20px; 
+    border-radius: 4px; 
+    font-weight: bold; 
+    cursor: pointer; 
+}

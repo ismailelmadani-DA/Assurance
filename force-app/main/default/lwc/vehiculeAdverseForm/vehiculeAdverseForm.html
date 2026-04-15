@@ -1,0 +1,81 @@
+<template>
+    <section role="dialog" tabindex="-1"
+             aria-labelledby="modal-heading"
+             class="slds-modal slds-fade-in-open">
+        <div class="slds-modal__container">
+
+            <header class="slds-modal__header">
+                <button
+                    class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                    title="Fermer"
+                    onclick={handleClose}>
+                    <span style="font-size:1.1rem;">&#x2715;</span>
+                </button>
+                <h2 id="modal-heading" class="slds-modal__title">{modalTitle}</h2>
+            </header>
+
+            <div class="slds-modal__content slds-p-around_medium">
+
+                <!-- Erreur inline -->
+                <template if:true={hasError}>
+                    <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_medium"
+                         role="alert">
+                        <span class="slds-assistive-text">Erreur</span>
+                        <p>{errorMessage}</p>
+                    </div>
+                </template>
+
+                <!-- Spinner pendant sauvegarde -->
+                <template if:true={isSaving}>
+                    <div class="slds-is-relative" style="height:3rem;">
+                        <lightning-spinner size="small" alternative-text="Enregistrement...">
+                        </lightning-spinner>
+                    </div>
+                </template>
+
+                <div class="slds-m-bottom_medium">
+                    <lightning-combobox
+                        name="etatVehicule"
+                        label="État du véhicule"
+                        value={etatVehicule}
+                        placeholder="Sélectionner un état"
+                        options={etatOptions}
+                        onchange={handleEtatChange}
+                        required>
+                    </lightning-combobox>
+                </div>
+
+                <div>
+                    <lightning-input
+                        type="number"
+                        name="nbPassagers"
+                        label="Nombre de passagers blessés"
+                        value={nbPassagers}
+                        min="0"
+                        step="1"
+                        onchange={handleNbChange}>
+                    </lightning-input>
+                </div>
+
+            </div>
+
+            <footer class="slds-modal__footer">
+                <lightning-button
+                    label="Annuler"
+                    variant="neutral"
+                    disabled={isSaving}
+                    onclick={handleClose}>
+                </lightning-button>
+                <lightning-button
+                    label="Enregistrer"
+                    variant="brand"
+                    disabled={isSaving}
+                    class="slds-m-left_x-small"
+                    onclick={handleSave}>
+                </lightning-button>
+            </footer>
+
+        </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+</template>

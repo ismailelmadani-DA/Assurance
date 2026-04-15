@@ -1,0 +1,312 @@
+/* --- CARTE ET STRUCTURE PRINCIPALE --- */
+.app-card {
+    background: #FFFFFF;
+    border: 1px solid #EAEAEA;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    min-height: 600px;
+}
+
+.main-grid {
+    min-height: 600px;
+}
+
+.main-title {
+    color: #00008F; /* Bleu profond professionnel */
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+/* --- SIDEBAR DES ÉTAPES (STEPPER) --- */
+.steps-sidebar {
+    background-color: #F8F9FA;
+    border-left: 1px solid #E9ECEF;
+    padding: 2rem 1.5rem;
+}
+
+.steps-header {
+    color: #00008F;
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.step {
+    display: flex;
+    min-height: 65px;
+}
+
+.icon-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 20px;
+    margin-right: 15px;
+}
+
+/* Icônes du Stepper */
+.circle-ring {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #00008F;
+    border-radius: 50%;
+    background: white;
+    flex-shrink: 0;
+}
+
+.circle-check { 
+    width: 18px; 
+    height: 18px; 
+    background: #1A0273; 
+    border-radius: 50%; 
+    position: relative; 
+    flex-shrink: 0;
+}
+
+.circle-check::after { 
+    content: '✓'; 
+    color: white; 
+    position: absolute; 
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%); 
+    font-size: 10px;
+}
+
+.square-gray {
+    width: 10px;
+    height: 10px;
+    background-color: #ADB5BD;
+    flex-shrink: 0;
+}
+
+.line {
+    width: 2px;
+    flex-grow: 1;
+    background-color: #DEE2E6;
+    margin: 4px 0;
+}
+
+.label-column {
+    font-size: 0.85rem;
+    color: #6C757D;
+    padding-top: 2px;
+}
+
+.step.active .label-column {
+    font-weight: bold;
+    color: #212529;
+}
+
+.step.completed .label-column {
+    color: #1A0273;
+}
+
+/* --- FORMULAIRES ET LABELS --- */
+.slds-form-element__label,
+abbr.slds-required, 
+.slds-required {
+    color: #000000 !important;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+lightning-input, 
+lightning-combobox, 
+lightning-radio-group,
+lightning-textarea {
+    --slds-c-input-spacing-vertical-start: 4px;
+    --slds-c-input-spacing-vertical-end: 4px;
+}
+
+/* --- TABLEAU DE RÉSULTATS (ÉTAPE 2) --- */
+.table-card {
+    border: 1px solid #EAEAEA;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.table-blue-header {
+    background-color: #1A0273;
+    color: white;
+    padding: 12px;
+    font-weight: bold;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.custom-table th {
+    background-color: #F3F3F3;
+    padding: 12px;
+    font-weight: bold;
+    color: #1A0273;
+    border-bottom: 2px solid #EAEAEA;
+    text-align: left;
+}
+
+.custom-table td {
+    padding: 12px;
+    border-bottom: 1px solid #EAEAEA;
+    color: #333;
+}
+
+.clickable-row {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.clickable-row:hover {
+    background-color: #F3F4FF !important;
+}
+
+.row-selected {
+    background-color: #E8EAF6 !important;
+}
+
+/* --- SECTIONS RÉCAPITULATIF (ÉTAPE 3) --- */
+.slds-theme_shade {
+    background-color: #F3F3F3 !important;
+    color: #1A0273 !important;
+    font-weight: bold !important;
+    padding: 8px 12px !important;
+    border-radius: 4px;
+}
+
+.info-block {
+    margin-bottom: 20px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #F0F0F0;
+    display: block; 
+    min-height: 55px; 
+}
+
+.info-label {
+    display: block;
+    color: #000000;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.info-value {
+    display: block;
+    color: #555555;
+    font-size: 0.95rem;
+}
+
+/* --- IMPORTATION DOCUMENTS (ÉTAPE 5) --- */
+
+.border-bottom {
+    border-bottom: 1px solid #E9ECEF;
+}
+
+.border-bottom:last-child {
+    border-bottom: none;
+}
+
+.action-button {
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    margin-left: 5px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-indexer {
+    background-color: #1A0273;
+    color: white;
+}
+
+.btn-indexer:hover {
+    background-color: #000066;
+}
+
+.btn-view {
+    background-color: #FFFFFF;
+    color: #1A0273;
+    border: 1px solid #1A0273;
+}
+
+.btn-view:hover {
+    background-color: #F3F4FF;
+}
+
+.btn-delete {
+    background-color: #FFFFFF;
+    color: #BA0517; /* Rouge Salesforce */
+    border: 1px solid #BA0517;
+}
+
+.btn-delete:hover {
+    background-color: #FFF5F5;
+}
+
+.action-button lightning-icon {
+    --slds-c-icon-color-foreground: currentColor;
+    margin-right: 4px;
+}
+
+.slds-badge {
+    background-color: #E8EAF6;
+    color: #1A0273;
+    font-weight: bold;
+    border: 1px solid #C5CAE9;
+}
+
+/* --- BOUTONS DE NAVIGATION --- */
+.btn-primary {
+    background-color: #1A0273;
+    color: white;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #000066;
+}
+
+.btn-secondary {
+    color: #1A0273;
+    background: white;
+    border: 1px solid #1A0273;
+    padding: 10px 30px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-secondary:hover {
+    background-color: #F3F4FF;
+}
+
+/* --- ALERTES ET ERREURS --- */
+.error-container {
+    background-color: #FFF5F5;
+    border: 1px solid #FF0000;
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.error-message {
+    color: #BA0517;
+    font-weight: bold;
+}

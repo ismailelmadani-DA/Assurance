@@ -1,0 +1,368 @@
+:host {
+    --primary-color: #0047ab;
+    --primary-dark: #003380;
+    --primary-light: #e6f0ff;
+    --accent-color: #ff4500;
+    --accent-light: #fff1eb;
+    --text-dark: #2c3e50;
+    --text-light: #ecf0f1;
+    --grey-light: #f5f5f7;
+    --grey-medium: #e0e0e0;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    --border-radius: 12px;
+    --animation-duration: 0.3s;
+}
+
+.custom-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    overflow: hidden;
+    transition: transform var(--animation-duration), box-shadow var(--animation-duration);
+    margin-bottom: 2rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.custom-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.12);
+}
+
+.custom-card .slds-card__header {
+    background: #00008f;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    border-bottom: none;
+}
+
+.custom-card .slds-card__header::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    right: -50px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    pointer-events: none;
+}
+
+.custom-card .slds-card__header::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: -30px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
+
+.slds-card__header-title {
+    color: var(--text-light);
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.slds-text-heading_medium {
+    font-size: 1.25rem;
+}
+
+.custom-card .slds-card__header .slds-icon {
+    --sds-c-icon-color-foreground-default: var(--text-light) !important;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.custom-card .slds-card__header lightning-button-icon {
+    --sds-c-button-color-border: transparent;
+    --sds-c-button-color-background: rgba(255, 255, 255, 0.2);
+    --sds-c-button-color-background-hover: rgba(255, 255, 255, 0.3);
+    --sds-c-icon-color-foreground-default: var(--text-light) !important;
+    transition: transform 0.2s ease;
+}
+
+.custom-card .slds-card__header lightning-button-icon:hover {
+    transform: rotate(30deg);
+}
+
+.slds-m-around_medium {
+    padding: 5px;
+}
+
+.table-container {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all var(--animation-duration);
+}
+
+.table-container:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.slds-table {
+    font-size: 0.875rem;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.slds-table th {
+    background: var(--grey-light) !important;
+    color: var(--text-dark) !important;
+    font-weight: 600;
+    padding: 1rem 0.75rem !important;
+    border: none;
+    position: relative;
+    transition: background-color 0.2s;
+}
+
+.slds-table th:hover {
+    background: var(--primary-light) !important;
+}
+
+.slds-table th lightning-icon {
+    --sds-c-icon-color-foreground-default: var(--primary-color) !important;
+    transition: transform 0.2s;
+}
+
+.slds-is-sorted_asc lightning-icon {
+    transform: rotate(0deg);
+}
+
+.slds-is-sorted_desc lightning-icon {
+    transform: rotate(180deg);
+}
+
+.slds-table td {
+    padding: 0.875rem 0.75rem !important;
+    border-bottom: 1px solid var(--grey-medium);
+    color: var(--text-dark);
+    transition: background-color 0.2s;
+}
+
+.slds-table tr {
+    transition: background-color 0.2s;
+}
+
+.slds-table tr:hover {
+    background-color: var(--primary-light);
+}
+
+.slds-table a {
+    color: var(--primary-color);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s;
+    position: relative;
+}
+
+.slds-table a:hover {
+    color: var(--primary-dark);
+}
+
+.slds-table a::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background-color: var(--primary-color);
+    transform: scaleX(0);
+    transform-origin: bottom right;
+    transition: transform 0.3s;
+}
+
+.slds-table a:hover::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+}
+
+.pagination-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    background: var(--grey-light);
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.pagination-nav a {
+    color: var(--text-dark);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.pagination-nav a.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 71, 171, 0.4);
+}
+
+.pagination-nav a:not(.active):not(.disabled):hover {
+    background: rgba(0, 71, 171, 0.1);
+}
+
+.pagination-nav a.disabled {
+    color: #b0b0b0;
+    cursor: not-allowed;
+}
+
+.slds-illustration {
+    padding: 3rem 1rem;
+    text-align: center;
+    background: var(--grey-light);
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.slds-illustration:hover {
+    transform: scale(1.02);
+}
+
+.slds-illustration .slds-text-heading_medium {
+    color: var(--text-dark);
+    font-weight: 500;
+    position: relative;
+    display: inline-block;
+}
+
+.slds-illustration .slds-text-heading_medium::after {
+    content: '';
+    position: absolute;
+    width: 50px;
+    height: 3px;
+    background: var(--accent-color);
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 3px;
+}
+
+.custom-card lightning-spinner {
+    --sds-c-spinner-color-background: var(--primary-color);
+    --sds-c-spinner-color-brand: white;
+}
+
+.slds-notify_alert {
+    background: var(--danger-color);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+@media screen and (max-width: 768px) {
+    .slds-card__header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .slds-media__figure {
+        margin-bottom: 0.5rem;
+    }
+    
+    .slds-no-flex {
+        margin-top: 0.5rem;
+        align-self: flex-end;
+    }
+    
+    .slds-table th, .slds-table td {
+        padding: 0.5rem !important;
+    }
+}
+
+.slds-table tr.status-success td:first-child {
+    border-left: 4px solid var(--success-color);
+}
+
+.slds-table tr.status-warning td:first-child {
+    border-left: 4px solid var(--warning-color);
+}
+
+.slds-table tr.status-danger td:first-child {
+    border-left: 4px solid var(--danger-color);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.custom-card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.slds-table tr {
+    position: relative;
+    overflow: hidden;
+}
+
+.slds-table tr::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 71, 171, 0.05), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+    pointer-events: none;
+}
+
+.slds-table tr:hover::before {
+    transform: translateX(100%);
+}
+.custom-button-add {
+    background-color: #fff;
+    color: #00008f;
+    font-weight: bold;
+    padding: 8px 16px;
+    border-radius: 9px;
+    cursor: pointer;
+    text-align: center;
+    border: 1px solid;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s ease;
+}
+/* Ajustements pour l'alignement des boutons */
+.slds-no-flex {
+    display: flex;
+    align-items: center;
+}
+
+.custom-button-add, 
+.custom-button-cancel {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    height: 39px; /* Hauteur fixe pour tous les boutons */
+}
+
+lightning-button-icon {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+}

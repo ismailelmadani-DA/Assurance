@@ -1,0 +1,106 @@
+/* --- BANDEAU RÉCAPITULATIF (HEADER) --- */
+.header-summary-box {
+    background-color: #F3F3F3 !important;
+    color: #1A0273 !important;
+    font-weight: bold !important;
+    padding: 12px !important;
+    border: 1px solid #EAEAEA;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.summary-item strong { 
+    color: #1A0273; 
+    margin-left: 5px; 
+}
+
+/* --- TITRES --- */
+.main-title {
+    color: #00008F;
+    font-size: 1.4rem;
+    font-weight: bold;
+}
+
+/* --- CONTENEUR BLANC (FORMULAIRE & CARTES) --- */
+.white-box {
+    background: #FFFFFF;
+    border: 1px solid #EAEAEA;
+    border-radius: 4px; /* Cohérence avec les étapes précédentes */
+    padding: 1.5rem !important; /* Fixe le positionnement interne */
+}
+
+.section-header {
+    color: #00008F;
+    font-weight: bold;
+    border-bottom: 1px solid #EAEAEA;
+    padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+/* --- STYLE DES LABELS (STYLE AXA) --- */
+:host {
+    --lwc-formLabelFontSize: 0.8rem;
+    --lwc-colorTextLabel: #1A0273;
+    --lwc-fontWeightLabel: bold;
+}
+
+/* --- CARTES DES VÉHICULES AJOUTÉS (STYLE IMAGE 2) --- */
+.vehicle-added-card {
+    border-left: 4px solid #00008F; /* Liseré bleu à gauche */
+    background: #f9f9f9;
+    margin-bottom: 12px;
+    padding: 12px !important;
+}
+
+.vehicle-added-card strong {
+    color: #1A0273;
+}
+
+/* --- BOUTONS --- */
+/* Bouton bleu plein (Ajouter) */
+.btn-primary {
+    background-color: #00008F !important;
+    color: white !important;
+    padding: 8px 32px !important;
+    border-radius: 4px !important;
+    border: none !important;
+    font-weight: bold !important;
+    cursor: pointer;
+}
+
+/* Bouton blanc bordure bleue (Annuler) */
+.btn-secondary {
+    background-color: white !important;
+    color: #00008F !important;
+    border: 1px solid #00008F !important;
+    padding: 8px 32px !important;
+    border-radius: 4px !important;
+    font-weight: bold !important;
+    cursor: pointer;
+}
+
+/* Bouton Outline (Ajouter un autre véhicule) - STYLE IDENTIQUE ÉTAPE 8 */
+.btn-outline {
+    background: white !important;
+    color: #1A0273 !important;
+    border: 2px solid #1A0273 !important;
+    padding: 6px 18px !important;
+    border-radius: 4px !important;
+    font-weight: bold !important;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-outline:hover {
+    background: #1A0273 !important;
+    color: white !important;
+}
+
+/* --- SPÉCIFIQUE RECORD PICKER --- */
+/* Pour s'assurer que le texte d'erreur éventuel ne casse pas le layout */
+.slds-form-element__help {
+    color: #ea001e;
+    font-weight: normal;
+}

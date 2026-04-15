@@ -1,0 +1,272 @@
+<template>
+    <div class="custom-card">
+        <!-- Loading Spinner -->
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Chargement" size="medium"></lightning-spinner>
+        </template>
+        <!-- Header -->
+        <div class="slds-card__header slds-grid">
+            <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                <div class="slds-media__figure">
+                    <template if:true={selectedSObject}>
+                        <lightning-icon icon-name={objectLogo} alternative-text="Object Icon"
+                            size="medium"></lightning-icon>
+                    </template>
+                    <template if:false={selectedSObject}>
+                        <lightning-icon icon-name="standard:list" alternative-text="Liste"
+                            size="medium"></lightning-icon>
+                    </template>
+                </div>
+                <div class="slds-media__body">
+                    <h2 class="slds-card__header-title">
+                        <template if:true={selectedSObject}>
+                            <span class="slds-text-heading_medium slds-truncate">{selectedSObject}</span>
+                        </template>
+                        <template if:false={selectedSObject}>
+                            <span class="slds-text-heading_medium slds-truncate">Liste de vues dynamique</span>
+                        </template>
+                    </h2>
+                </div>
+                <div class="slds-no-flex slds-p-horizontal_small">
+                    <!-- Conteneur flex pour aligner les boutons -->
+                    <div class="slds-grid slds-grid_vertical-align-center">
+                        <button class="custom-button-add slds-m-right_x-small" onclick={refreshWithFeedback}
+                            disabled={isLoading}>
+                            <lightning-icon icon-name="utility:refresh" size="x-small"
+                                class="slds-m-right_x-small"></lightning-icon>
+                            Actualiser
+                        </button>
+                        <template if:true={showExport}>
+                            <!-- Décommentez cette section si vous souhaitez ajouter le bouton d'exportation  -->
+                            <button class="custom-button-add slds-m-right_x-small" onclick={exportToCSV}
+                                disabled={isLoading}>
+                                <lightning-icon icon-name="utility:download" size="x-small"
+                                    class="slds-m-right_x-small"></lightning-icon>
+                                Exporter
+                            </button>
+                        </template>
+
+                    </div>
+                </div>
+            </header>
+        </div>
+
+        <!-- Main Content -->
+        <div class="slds-m-around_medium">
+            <!-- Filters Section -->
+            <div class="filter-section">
+                <div class="slds-grid slds-grid_align-spread slds-p-bottom_small">
+                    <div class="slds-col">
+                        <h3 class="slds-text-title_caps slds-text-color_default">Filtres et options</h3>
+                    </div>
+                </div>
+
+                <!-- Filter Controls in Responsive Grid -->
+                <div class="slds-grid slds-gutters slds-wrap">
+                    <!-- SObject Selection -->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-vertical_x-small">
+                        <div class="select-container">
+                            <label for="object-select" class="slds-form-element__label">Menu</label>
+                            <div class="slds-form-element__control">
+                                <lightning-combobox id="object-select" name="object" value={selectedSObject}
+                                    options={sObjectOptions} onchange={handleSObjectChange}
+                                    disabled={disableSObjectSelection} variant="label-hidden" class="custom-combobox">
+                                </lightning-combobox>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- List View Selection -->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-vertical_x-small">
+                        <div class="select-container">
+                            <label for="view-select" class="slds-form-element__label">Liste</label>
+                            <div class="slds-form-element__control">
+                                <lightning-combobox id="view-select" name="view" value={selectedListView}
+                                    options={listViewOptions} onchange={handleListViewChange}
+                                    disabled={disableListViewSelection} variant="label-hidden" class="custom-combobox">
+                                </lightning-combobox>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Input -->
+                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3 slds-p-vertical_x-small">
+                        <div class="search-container">
+                            <label for="search-input" class="slds-form-element__label">Rechercher</label>
+                            <div class="slds-form-element__control">
+                                <lightning-input id="search-input" type="search"
+                                    placeholder="Rechercher dans tous les enregistrements..." value={searchTerm}
+                                    onchange={handleSearchChange} disabled={disableSearch} variant="label-hidden"
+                                    class="custom-search">
+                                </lightning-input>
+                            </div>
+                            <!-- Search hint -->
+                            <!-- <template if:true={searchTerm}>
+                                <div class="slds-form-element__help slds-m-top_xxx-small">
+                                    <lightning-icon icon-name="utility:info" size="xx-small"
+                                        class="slds-m-right_xx-small"></lightning-icon>
+                                    Recherche active sur tous les enregistrements
+                                </div>
+                            </template> -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Bar -->
+                <template if:true={filteredData.length}>
+                    <div
+                        class="stats-bar slds-grid slds-grid_align-spread slds-p-top_small slds-m-top_small slds-border_top">
+                        <div class="slds-col">
+                            <div class="slds-grid slds-grid_vertical-align-center">
+                                <lightning-icon icon-name="utility:table" size="x-small" alternative-text="Records"
+                                    class="slds-m-right_x-small"></lightning-icon>
+                                <span class="slds-text-body_small">
+                                    <template if:true={searchTerm}>
+                                        {totalRecords} résultat(s) de recherche
+                                    </template>
+                                    <template if:false={searchTerm}>
+                                        {totalRecords} enregistrements
+                                    </template>
+                                </span>
+                                <template if:true={searchTerm}>
+                                    <lightning-badge label={searchTerm} class="slds-m-left_small"></lightning-badge>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-text-align_right">
+                            <div class="slds-text-body_small slds-text-color_weak">
+                                <template if:true={isLoading}>Recherche en cours...</template>
+                                <template if:false={isLoading}>Dernière mise à jour: à l'instant</template>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Data Table Section -->
+            <template if:false={isLoading}>
+                <div class="data-container">
+                    <template if:true={filteredData.length}>
+                        <!-- Data Table -->
+                        <div class="table-container slds-m-top_medium">
+                            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped"
+                                role="grid">
+                                <thead>
+                                    <tr class="slds-line-height_reset">
+                                        <!-- Generate table headers dynamically -->
+                                        <template for:each={columns} for:item="column">
+                                            <th key={column.fieldName} class={column.classes}
+                                                onclick={handleColumnClick} data-field={column.fieldName}>
+                                                <div
+                                                    class="slds-grid slds-grid_vertical-align-center slds-has-flexi-truncate">
+                                                    <span class="slds-truncate"
+                                                        title={column.label}>{column.label}</span>
+                                                    <template if:true={column.isSorted}>
+                                                        <lightning-icon icon-name={column.sortIconName} size="xx-small"
+                                                            class="slds-m-left_x-small">
+                                                        </lightning-icon>
+                                                    </template>
+                                                </div>
+                                            </th>
+                                        </template>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Generate table rows dynamically -->
+                                    <template for:each={paginatedData} for:item="row">
+                                        <tr key={row.Id} data-id={row.Id} class="slds-hint-parent">
+                                            <!-- Generate table cells dynamically -->
+                                            <template for:each={columns} for:item="column">
+                                                <td key={column.fieldName} class={column.cellClass}
+                                                    data-label={column.label}>
+                                                    <c-table-cell record={row} field-name={column.fieldName}
+                                                        display-field={column.displayField} is-url={column.isUrl}
+                                                        is-boolean={column.isBoolean} is-currency={column.isCurrency}
+                                                        is-number={column.isNumber} is-text={column.isText}
+                                                        is-string={column.isString} is-date={column.isDate}
+                                                        currency-code={userCurrencyCode}
+                                                        is-html-formula={column.isHtmlFormula}
+                                                        is-text-formula={column.isTextFormula}
+                                                        is-picklist={column.isPicklist}
+                                                        is-multi-picklist={column.isMultiPicklist}
+                                                        is-text-area={column.isTextArea} record-id={row.Id}
+                                                        onlinkclick={handleCellLinkClick}>
+                                                    </c-table-cell>
+                                                </td>
+                                            </template>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Enhanced Pagination -->
+                        <div class="slds-m-top_medium slds-text-align_center">
+                            <nav class="pagination-nav" role="navigation">
+                                <a href="javascript:void(0);" onclick={handlePrevious} class={prevPageClass}>
+                                    Précédent
+                                </a>
+
+                                <!-- First page if not in view -->
+                                <template if:true={showFirstPageLink}>
+                                    <a href="javascript:void(0);" onclick={handlePageClick} data-page="1"
+                                        class="page-link">
+                                        1
+                                    </a>
+                                    <span class="pagination-ellipsis">...</span>
+                                </template>
+
+                                <!-- Number buttons -->
+                                <template for:each={visiblePages} for:item="page">
+                                    <a href="javascript:void(0);" key={page.number} onclick={handlePageClick}
+                                        data-page={page.number} class={page.cssClass}>
+                                        {page.number}
+                                    </a>
+                                </template>
+
+                                <!-- Last page if not in view -->
+                                <template if:true={showLastPageLink}>
+                                    <span class="pagination-ellipsis">...</span>
+                                    <a href="javascript:void(0);" onclick={handlePageClick} data-page={totalPages}
+                                        class="page-link">
+                                        {totalPages}
+                                    </a>
+                                </template>
+
+                                <a href="javascript:void(0);" onclick={handleNext} class={nextPageClass}>
+                                    Suivant
+                                </a>
+                            </nav>
+                        </div>
+                    </template>
+
+                    <!-- Empty State -->
+                    <template if:false={filteredData.length}>
+                        <div class="slds-illustration slds-illustration_small" aria-hidden="true">
+                            <div class="slds-text-longform slds-text-align_center">
+                                <div class="slds-m-vertical_medium">
+                                    <lightning-icon icon-name="utility:filterList" size="large"
+                                        alternative-text="Aucune donnée"></lightning-icon>
+                                </div>
+                                <h3 class="slds-text-heading_medium slds-m-vertical_small">Aucune donnée disponible</h3>
+                                <p class="slds-text-body_regular slds-m-bottom_large">
+                                    <template if:true={selectedListView}>
+                                        Aucun enregistrement trouvé pour cette vue.
+                                    </template>
+                                    <template if:false={selectedListView}>
+                                        Veuillez sélectionner une liste de vue pour afficher les données.
+                                    </template>
+                                </p>
+                                <template if:true={selectedSObject}>
+                                    <lightning-button variant="brand" label="Actualiser" title="Actualiser"
+                                        onclick={refreshData} icon-name="utility:refresh" class="slds-m-vertical_small">
+                                    </lightning-button>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>

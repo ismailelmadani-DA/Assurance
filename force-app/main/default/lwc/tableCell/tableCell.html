@@ -1,0 +1,83 @@
+<template>
+    <!-- URL Field -->
+    <template if:true={isUrl}>
+        <a href="javascript:void(0);" onclick={handleClick} class="cell-link">
+            {displayValue}
+        </a>
+    </template>
+    
+    <!-- Boolean Field -->
+    <template if:true={isBoolean}>
+        <div class="boolean-container">
+            <span class={booleanClass}>
+                <lightning-icon icon-name={booleanIcon} size="x-small"></lightning-icon>
+            </span>
+        </div>
+    </template>
+    
+    <!-- Currency Field -->
+    <template if:true={isCurrency}>
+        <div class="currency-container right-align">
+            {formattedCurrency}
+        </div>
+    </template>
+
+    <!-- Number Field -->
+    <template if:true={isNumber}>
+        <div class="number-container right-align">
+            {formattedNumber}
+        </div>
+    </template>
+
+    <!-- HTML Formula Field -->
+    <template if:true={isHtmlFormula}>
+        <div class="html-formula-container" lwc:dom="manual"></div>
+    </template>
+
+    <!-- Text Formula Field -->
+    <template if:true={isTextFormula}>
+        <div class="text-formula-container">
+            {fieldValue}
+        </div>
+    </template>
+
+    <!-- Picklist Field -->
+    <template if:true={isPicklist}>
+        <div class="picklist-container">
+            <span class="picklist-value">{fieldValue}</span>
+        </div>
+    </template>
+
+    <!-- Multi-select Picklist Field -->
+    <template if:true={isMultiPicklist}>
+        <div class="multipicklist-container">
+            <template for:each={multiPicklistValues} for:item="value">
+                <span key={value} class="multipicklist-pill">{value}</span>
+            </template>
+        </div>
+    </template>
+
+    <!-- Text Area Field - Enhanced with expand/collapse -->
+    <template if:true={isTextArea}>
+        <div class="textarea-container">
+            <div class="textarea-content">{fieldValue}</div>
+            <template if:true={fieldValue}>
+                <button class="textarea-expand-button" onclick={handleTextAreaClick}>
+                    Voir plus
+                </button>
+            </template>
+        </div>
+    </template>
+    
+    <!-- Date Field -->
+    <template if:true={isDate}>
+        <div class="date-container">
+            {fieldValue}
+        </div>
+    </template>
+    
+    <!-- Default Text Field -->
+    <template if:true={isText}>
+        {fieldValue}
+    </template>
+</template>

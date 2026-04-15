@@ -1,0 +1,333 @@
+<template>
+    <div class="pm-card">
+        <div class="pm-header">
+            <div class="pm-header__left">
+                <div class="pm-header__icon-wrap">
+                    <lightning-icon icon-name="standard:people" size="small"></lightning-icon>
+                </div>
+                <div>
+                    <h2 class="pm-header__title">Passagers Assurés</h2>
+                    <span class="pm-header__subtitle">Gestion des participants assurés</span>
+                </div>
+            </div>
+
+            <div class="pm-header__actions">
+                <lightning-button
+                    label="Ajouter un passager"
+                    variant="brand"
+                    onclick={handleAdd}>
+                </lightning-button>
+            </div>
+        </div>
+
+        <div class="pm-body">
+            <template if:true={hasPassengers}>
+                <div class="pm-table-wrap">
+                    <lightning-datatable
+                        key-field="Id"
+                        data={passengers}
+                        columns={columns}
+                        onrowaction={handleRowAction}>
+                    </lightning-datatable>
+                </div>
+            </template>
+
+            <template if:false={hasPassengers}>
+                <div class="pm-empty">
+                    <div class="pm-empty__icon">
+                        <lightning-icon icon-name="standard:people" size="large"></lightning-icon>
+                    </div>
+                    <p class="pm-empty__text">Il n'y a actuellement aucun passager à afficher.</p>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <template if:true={isAccountModalOpen}>
+        <div class="pm-modal-overlay">
+            <div class="pm-modal pm-modal--small">
+                <div class="pm-modal__header">
+                    <div class="pm-modal__header-inner">
+                        <lightning-icon icon-name="standard:account" size="small"></lightning-icon>
+                        <h2 class="pm-modal__title">Choisir ou créer un compte</h2>
+                    </div>
+                </div>
+
+                <div class="pm-modal__body">
+                    <template if:true={showAccountSelector}>
+                        <div class="pm-section">
+                            <div class="pm-section__title">
+                                <span class="pm-section__num">1</span>
+                                <span>Sélection du compte</span>
+                            </div>
+
+                            <div class="pm-grid">
+                                <div class="pm-field pm-field--full">
+                                    <lightning-combobox
+                                        name="selectedAccount"
+                                        label="Compte du participant"
+                                        value={selectedAccountId}
+                                        placeholder="Sélectionner un compte"
+                                        options={accountOptions}
+                                        onchange={handleAccountChange}>
+                                    </lightning-combobox>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pm-modal__footer">
+                            <lightning-button
+                                label="Annuler"
+                                onclick={closeAccountModal}>
+                            </lightning-button>
+
+                            <lightning-button
+                                label="Nouveau compte"
+                                onclick={handleOpenNewAccountForm}>
+                            </lightning-button>
+
+                            <lightning-button
+                                variant="brand"
+                                label="Continuer"
+                                onclick={handleContinueWithAccount}>
+                            </lightning-button>
+                        </div>
+                    </template>
+
+                    <template if:true={showNewAccountForm}>
+                        <lightning-record-edit-form
+                            object-api-name="Account"
+                            onsuccess={handleAccountCreated}
+                            onerror={handleAccountError}>
+
+                            <lightning-messages></lightning-messages>
+
+                            <div class="pm-section">
+                                <div class="pm-section__title">
+                                    <span class="pm-section__num">1</span>
+                                    <span>Nouveau compte</span>
+                                </div>
+
+                                <div class="pm-grid">
+                                    <div class="pm-field pm-field--full">
+                                        <lightning-input-field field-name="Name"></lightning-input-field>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pm-modal__footer">
+                                <lightning-button
+                                    label="Annuler"
+                                    onclick={closeAccountModal}>
+                                </lightning-button>
+
+                                <lightning-button
+                                    label="Retour"
+                                    onclick={handleBackToAccountSelector}>
+                                </lightning-button>
+
+                                <lightning-button
+                                    type="submit"
+                                    variant="brand"
+                                    label="Créer le compte">
+                                </lightning-button>
+                            </div>
+                        </lightning-record-edit-form>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template if:true={isModalOpen}>
+        <div class="pm-modal-overlay">
+            <div class="pm-modal">
+                <div class="pm-modal__header">
+                    <div class="pm-modal__header-inner">
+                        <lightning-icon icon-name="standard:people" size="small"></lightning-icon>
+                        <h2 class="pm-modal__title">{modalTitle}</h2>
+                    </div>
+                </div>
+
+                <div class="pm-modal__body">
+                    <lightning-record-edit-form
+                        object-api-name="Passager__c"
+                        record-id={editedPassengerId}
+                        onsubmit={handleSubmit}>
+
+                        <lightning-messages></lightning-messages>
+
+                        <div class="pm-section">
+                            <div class="pm-section__title">
+                                <span class="pm-section__num">1</span>
+                                <span>Identité</span>
+                            </div>
+
+                            <div class="pm-grid">
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="Name" value={prefillName}></lightning-input-field>
+                                </div>
+
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="Civilite__c" value={prefillCivilite}></lightning-input-field>
+                                </div>
+
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="Sexe__c" value={prefillSexe}></lightning-input-field>
+                                </div>
+
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="MaritalStatus__c" value={prefillMaritalStatus}></lightning-input-field>
+                                </div>
+
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="BirthDay__c"></lightning-input-field>
+                                </div>
+
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="Passager_mineurisMinorPassenger__c"></lightning-input-field>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pm-section">
+                            <div class="pm-section__title">
+                                <span class="pm-section__num">2</span>
+                                <span>Coordonnées</span>
+                            </div>
+
+                            <div class="pm-grid">
+                                <div class="pm-field pm-field--full">
+                                    <lightning-input-field field-name="Adresse__c" value={prefillAdresse}></lightning-input-field>
+                                </div>
+
+                                <div class="pm-field">
+                                    <lightning-combobox
+                                        name="pays"
+                                        label="Pays"
+                                        value={selectedPays}
+                                        placeholder="Sélectionner un pays"
+                                        options={paysOptions}
+                                        onchange={handlePaysChange}>
+                                    </lightning-combobox>
+                                </div>
+
+                                <div class="pm-field">
+                                    <lightning-combobox
+                                        name="ville"
+                                        label="Ville"
+                                        value={selectedVille}
+                                        placeholder="Sélectionner une ville"
+                                        options={villeOptions}
+                                        onchange={handleVilleChange}
+                                        disabled={isVilleDisabled}>
+                                    </lightning-combobox>
+                                </div>
+                <div class="pm-field pm-field--dropdown pm-field--type-contact">
+    <lightning-combobox
+        name="typeContact"
+        label="Type de Contact"
+        value={selectedTypeContact}
+        placeholder="Sélectionner un type"
+        options={typeContactOptions}
+        onchange={handleTypeContactChange}>
+    </lightning-combobox>
+</div>
+                                <template if:true={isPhoneContact}>
+                                    <div class="pm-field">
+                                        <lightning-input
+                                            type="tel"
+                                            name="phoneContact"
+                                            label="Numéro de téléphone"
+                                            value={contactValue}
+                                            onchange={handleContactValueChange}>
+                                        </lightning-input>
+                                    </div>
+                                </template>
+
+                                <template if:true={isEmailContact}>
+                                    <div class="pm-field">
+                                        <lightning-input
+                                            type="email"
+                                            name="emailContact"
+                                            label="Adresse email"
+                                            value={contactValue}
+                                            onchange={handleContactValueChange}>
+                                        </lightning-input>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="pm-section">
+                            <div class="pm-section__title">
+                                <span class="pm-section__num">3</span>
+                                <span>Pièces et permis</span>
+                            </div>
+
+                            <div class="pm-grid">
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="CIN__c"></lightning-input-field>
+                                </div>
+
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="DateOfIssue__c"></lightning-input-field>
+                                </div>
+
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="PermisNumber__c"></lightning-input-field>
+                                </div>
+
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="PermisType__c"></lightning-input-field>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pm-section">
+                            <div class="pm-section__title">
+                                <span class="pm-section__num">4</span>
+                                <span>Informations participant</span>
+                            </div>
+
+                            <div class="pm-grid">
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="StateOfPerson__c"></lightning-input-field>
+                                </div>
+
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="isDriver__c"></lightning-input-field>
+                                </div>
+
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="ITT__c"></lightning-input-field>
+                                </div>
+
+                                <div class="pm-field">
+                                    <lightning-input-field field-name="IPP__c"></lightning-input-field>
+                                </div>
+
+                                <div class="pm-field pm-field--full">
+                                    <lightning-input-field field-name="Description__c"></lightning-input-field>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pm-modal__footer">
+                            <lightning-button
+                                label="Annuler"
+                                onclick={closeModal}>
+                            </lightning-button>
+
+                            <lightning-button
+                                type="submit"
+                                variant="brand"
+                                label={submitLabel}>
+                            </lightning-button>
+                        </div>
+                    </lightning-record-edit-form>
+                </div>
+            </div>
+        </div>
+    </template>
+</template>

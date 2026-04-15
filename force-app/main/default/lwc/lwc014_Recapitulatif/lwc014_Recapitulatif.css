@@ -1,0 +1,78 @@
+.recap-container {
+    padding: 10px;
+}
+
+.recap-card {
+    background: #ffffff;
+    border: 1px solid #d8dde6;
+    border-radius: 8px;
+    height: 100%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.recap-header {
+    background: #f3f3f3;
+    padding: 12px 15px;
+    border-bottom: 1px solid #d8dde6;
+    font-weight: 700;
+    font-size: 14px;
+    color: #1b5297;
+    display: flex;
+    align-items: center;
+}
+
+.recap-content {
+    padding: 15px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.recap-content p {
+    margin-bottom: 4px;
+}
+
+.divider {
+    height: 1px;
+    background: #e5e5e5;
+    margin: 10px 0;
+}
+
+.recap-item {
+    padding: 10px;
+    border-left: 4px solid #1b5297;
+    background: #f4f6f9;
+    margin-bottom: 8px;
+    border-radius: 0 4px 4px 0;
+}
+
+.badge-success {
+    background: #2e844a;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+}
+
+.badge-info {
+    background: #0070d2;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+}
+
+.badge-warning {
+    background: #e5673d;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+}
+
+.empty-state {
+    font-style: italic;
+    color: #706e6b;
+    text-align: center;
+    padding: 10px;
+}

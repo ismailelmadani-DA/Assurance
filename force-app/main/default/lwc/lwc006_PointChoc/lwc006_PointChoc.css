@@ -1,0 +1,100 @@
+/* --- CONTENEUR PRINCIPAL --- */
+.parent-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 20px;
+    background-color: #ffffff;
+    padding: 15px;
+    transition: all 0.5s ease-in-out;
+}
+
+/* --- SECTION VOITURE (SVG) --- */
+.my-car-container {
+    width: 50%; /* On fixe à 50% pour laisser la place aux badges */
+    transition: width 0.5s ease;
+}
+
+/* État si jamais vous voulez qu'elle soit centrée au début */
+.car-initial {
+    margin: 0 auto;
+}
+
+/*.car-with-details {
+    /* Style optionnel si vous changez la taille dynamiquement 
+}*/
+
+.parts {
+    cursor: pointer;
+    stroke: #000000;
+    stroke-width: 1.5px;
+    transition: fill 0.2s ease;
+}
+
+/* Couleur au survol */
+.parts:hover {
+    fill: #FF0000 !important;
+    fill-opacity: 0.3 !important;
+}
+
+/* --- SECTION DETAILS (BADGES) --- */
+.my-details-container {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Le conteneur parent */
+.info-container {
+    display: flex;
+    flex-wrap: wrap; /* Permet le passage à la ligne */
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 8px; /* Espace fixe entre les badges */
+    padding-top: 20px;
+    width: 100%;
+}
+
+/* Le badge individuel */
+.info {
+    /* Calcul : 50% de la largeur moins la moitié du gap pour que ça tienne */
+    width: calc(50% - 4px); 
+    
+    /* Important : inclure le padding dans le calcul de la largeur */
+    box-sizing: border-box; 
+    
+    padding: 10px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: #00048F 0px 0px 0px 2px; /* Votre bordure bleue AXA */
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+}
+
+/* Ajustement du texte pour éviter qu'il ne pousse la croix dehors */
+.info__title {
+    font-weight: bold;
+    font-size: 12px;
+    color: #000000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1; /* Prend toute la place libre à gauche de l'icône */
+    margin-right: 5px;
+}
+
+.fullwidth {
+    width: 100%;
+}
+
+.pointer {
+    cursor: pointer;
+    flex-shrink: 0; /* Empêche l'icône de rétrécir */
+}
+
+/* --- ZONE DE TEXTE --- */
+.areaDiv {
+    margin-top: 20px;
+    padding: 0 15px;
+}
