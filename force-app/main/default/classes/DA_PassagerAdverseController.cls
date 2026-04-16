@@ -168,8 +168,8 @@ public with sharing class DA_PassagerAdverseController {
     }
 
     @AuraEnabled
-    public static Boolean checkDuplicate(String nom, String prenom, Id claimId, Id excludeId) {
-        if (String.isBlank(nom) || String.isBlank(prenom) || claimId == null) {
+    public static Boolean checkDuplicate(String nomComplet, Id claimId, Id excludeId) {
+        if (String.isBlank(nomComplet) || claimId == null) {
             return false;
         }
         try {
@@ -177,7 +177,7 @@ public with sharing class DA_PassagerAdverseController {
             if (resolvedId == null) {
                 return false;
             }
-            String fullName = String.escapeSingleQuotes(nom.trim() + ' ' + prenom.trim());
+            String fullName = String.escapeSingleQuotes(nomComplet.trim());
             String safeClaimId = String.escapeSingleQuotes(String.valueOf(resolvedId));
             String conditions = 'Claim__c = \'' + safeClaimId + '\' AND Roles__c = \'' + ROLE_ADVERSE +
                 '\' AND ParticipantAccount__r.Name = \'' + fullName + '\'';
@@ -192,12 +192,18 @@ public with sharing class DA_PassagerAdverseController {
     }
 
     @AuraEnabled
-    public static Map<String, Object> upsertPassager(Map<String, Object> formData, Id claimId, Boolean isUpdateMode) {
+    public static Map<String, Object> upsertPassager(Map<String, Object> formData, Id claimId, Boolean isUpdateMode, Id accountId) {
         Map<String, Object> response = new Map<String, Object>();
 
         if (claimId == null) {
             response.put('success', false);
             response.put('message', 'L\'identifiant du sinistre est requis.');
+            return response;
+        }
+
+        if (accountId == null) {
+            response.put('success', false);
+            response.put('message', 'Le compte du participant est obligatoire.');
             return response;
         }
 
@@ -208,15 +214,6 @@ public with sharing class DA_PassagerAdverseController {
                 response.put('message', 'Aucun sinistre trouvé pour cet enregistrement.');
                 return response;
             }
-
-            String cni = (String) formData.get('cni');
-            if (String.isBlank(cni)) {
-                response.put('success', false);
-                response.put('message', 'Le CNI est obligatoire.');
-                return response;
-            }
-
-            Id accountId = resolveAccount(formData);
 
             ClaimParticipant__c participant;
             if (isUpdateMode && formData.get('participantId') != null) {
@@ -233,7 +230,6 @@ public with sharing class DA_PassagerAdverseController {
             }
 
             participant.ParticipantAccount__c = accountId;
-            participant.ParticipantCNI__c = cni;
             participant.Sexe__c = (String) formData.get('sexe');
             participant.MaritalStatus__c = (String) formData.get('situationFamiliale');
             participant.Pays__c = (String) formData.get('pays');
@@ -279,7 +275,7 @@ public with sharing class DA_PassagerAdverseController {
 
         } catch (Exception e) {
             response.put('success', false);
-            response.put('message', friendlyError(e));
+            response.put('message', e.getMessage());
             return response;
         }
     }
@@ -304,52 +300,4 @@ public with sharing class DA_PassagerAdverseController {
         }
     }
 
-    private static Id resolveAccount(Map<String, Object> formData) {
-        String cni = (String) formData.get('cni');
-        String nom = (String) formData.get('nom');
-        String prenom = (String) formData.get('prenom');
-
-        String safeCni = String.escapeSingleQuotes(cni);
-        List<SObject> existing = DM_DataManager.query('Id', ACCOUNT, 'CIN__c = \'' + safeCni + '\'', null, 1);
-
-        if (!existing.isEmpty()) {
-            return existing[0].Id;
-        }
-
-        Account newAcc = new Account();
-        newAcc.Name = (nom != null ? nom.trim() : '') + ' ' + (prenom != null ? prenom.trim() : '');
-        newAcc.Nom__c = nom != null ? nom.trim() : '';
-        newAcc.Prenom__c = prenom != null ? prenom.trim() : '';
-        newAcc.CIN__c = cni;
-
-        String civility = (String) formData.get('civility');
-        if (String.isNotBlank(civility)) { newAcc.Civility__c = civility; }
-
-        String sexe = (String) formData.get('sexe');
-        if (String.isNotBlank(sexe)) { newAcc.Sexe__c = sexe; }
-
-        String pays = (String) formData.get('pays');
-        if (String.isNotBlank(pays)) { newAcc.Pays__c = pays; }
-
-        String ville = (String) formData.get('ville');
-        if (String.isNotBlank(ville)) { newAcc.Ville__c = ville; }
-
-        String adresse = (String) formData.get('adresse');
-        if (String.isNotBlank(adresse)) { newAcc.Adresse__c = adresse; }
-
-        String email = (String) formData.get('email');
-        if (String.isNotBlank(email)) { newAcc.Email__c = email; }
-
-        String situationFamiliale = (String) formData.get('situationFamiliale');
-        if (String.isNotBlank(situationFamiliale)) { newAcc.MaritalStatus__c = situationFamiliale; }
-
-        String typeContact = (String) formData.get('typeContact');
-        if (String.isNotBlank(typeContact)) { newAcc.MoyenNotification__c = typeContact; }
-
-        String dateNaissStr = (String) formData.get('dateNaissance');
-        if (String.isNotBlank(dateNaissStr)) { newAcc.DateDeNaissance__c = Date.valueOf(dateNaissStr); }
-
-        insert newAcc;
-        return newAcc.Id;
-    }
 }

@@ -3,10 +3,9 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 import getAdverseVehicles from '@salesforce/apex/DA_PassagerAdverseController.getAdverseVehicles';
 import getParticipants from '@salesforce/apex/DA_PassagerAdverseController.getParticipants';
-import getParticipantById from '@salesforce/apex/DA_PassagerAdverseController.getParticipantById';
 import upsertPassager from '@salesforce/apex/DA_PassagerAdverseController.upsertPassager';
-import deletePassager from '@salesforce/apex/DA_PassagerAdverseController.deletePassager';
 import checkDuplicate from '@salesforce/apex/DA_PassagerAdverseController.checkDuplicate';
+import resolveAccountByCIN from '@salesforce/apex/PassagerController.resolveAccountByCIN';
 
 const PAGE_SIZE = 10;
 
@@ -30,7 +29,7 @@ const SITUATION_OPTIONS = [
 ];
 
 const NOTIFICATION_OPTIONS = [
-    { label: 'Email', value: 'Email' },
+    { label: 'Mail', value: 'Mail' },
     { label: 'SMS', value: 'SMS' },
     { label: 'Téléphone', value: 'Téléphone' }
 ];
@@ -58,8 +57,7 @@ const ETAT_OPTIONS = [
 const EMPTY_FORM = () => ({
     participantId: '',
     vehiculeId: '',
-    nom: '',
-    prenom: '',
+    nomComplet: '',
     civility: '',
     sexe: '',
     dateNaissance: '',
@@ -80,7 +78,7 @@ const EMPTY_FORM = () => ({
 });
 
 const EMPTY_ERRORS = () => ({
-    nom: '', prenom: '', civility: '', cni: '',
+    nomComplet: '', civility: '', cni: '',
     pays: '', ville: '', etatPassager: ''
 });
 
@@ -98,7 +96,6 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
     @track errorMessage = '';
 
     @track showFormModal = false;
-    @track showDeleteModal = false;
     @track isUpdateMode = false;
 
     @track form = EMPTY_FORM();
@@ -107,8 +104,6 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
 
     @track currentPage = 1;
 
-    selectedParticipantId = null;
-    selectedParticipantName = '';
 
     civiliteOptions = CIVILITY_OPTIONS;
     sexeOptions = SEXE_OPTIONS;
@@ -204,34 +199,6 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
 
     handleRefresh() { this.loadParticipants(); }
 
-    async handleRowAction(e) {
-        const { id, action } = e.currentTarget.dataset;
-        if (action === 'edit') this._openEditModal(id);
-        if (action === 'delete') this._openDeleteModal(id);
-    }
-
-    async _openEditModal(participantId) {
-        this.isFormLoading = true;
-        this.showFormModal = true;
-        this.isUpdateMode = true;
-        this.errors = EMPTY_ERRORS();
-        try {
-            const data = await getParticipantById({ participantId });
-            this.form = { ...EMPTY_FORM(), ...data, participantId };
-        } catch (e) {
-            this._toast('Erreur', this._cleanError(e), 'error');
-            this.showFormModal = false;
-        } finally {
-            this.isFormLoading = false;
-        }
-    }
-
-    _openDeleteModal(participantId) {
-        this.selectedParticipantId = participantId;
-        const rec = this.records.find(r => r.Id === participantId);
-        this.selectedParticipantName = rec?.accountName || participantId;
-        this.showDeleteModal = true;
-    }
 
     handleFieldChange(e) {
         const name = e.target.name;
@@ -259,8 +226,7 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
         const e = EMPTY_ERRORS();
         let ok = true;
 
-        if (!this.form.nom?.trim()) { e.nom = 'Obligatoire'; ok = false; }
-        if (!this.form.prenom?.trim()) { e.prenom = 'Obligatoire'; ok = false; }
+        if (!this.form.nomComplet?.trim()) { e.nomComplet = 'Obligatoire'; ok = false; }
         if (!this.form.civility) { e.civility = 'Obligatoire'; ok = false; }
         if (!this.form.cni?.trim()) { e.cni = 'Obligatoire'; ok = false; }
         if (!this.form.pays) { e.pays = 'Obligatoire'; ok = false; }
@@ -277,22 +243,34 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
         try {
             if (!this.isUpdateMode) {
                 const isDup = await checkDuplicate({
-                    nom: this.form.nom,
-                    prenom: this.form.prenom,
+                    nomComplet: this.form.nomComplet,
                     claimId: this.recordId,
                     excludeId: null,
                 });
                 if (isDup) {
-                    this._toast('Doublon détecté', `Un passager adverse "${this.form.nom} ${this.form.prenom}" existe déjà.`, 'warning', 'sticky');
+                    this._toast('Doublon détecté', `Un passager adverse "${this.form.nomComplet}" existe déjà.`, 'warning', 'sticky');
                     this.isSaving = false;
                     return;
                 }
+            }
+
+            let accountId;
+            try {
+                accountId = await resolveAccountByCIN({
+                    cin: this.form.cni.trim(),
+                    nom: this.form.nomComplet.trim()
+                });
+            } catch (err) {
+                this._toast('Erreur', err.body?.message || 'Erreur lors de la résolution du compte.', 'error');
+                this.isSaving = false;
+                return;
             }
 
             const result = await upsertPassager({
                 formData: this.form,
                 claimId: this.recordId,
                 isUpdateMode: this.isUpdateMode,
+                accountId: accountId
             });
 
             if (result.success) {
@@ -309,26 +287,7 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
         }
     }
 
-    async confirmDelete() {
-        this.isSaving = true;
-        try {
-            const result = await deletePassager({ participantId: this.selectedParticipantId });
-            if (result.success) {
-                this._toast('Succès', result.message, 'success');
-                this.closeDeleteModal();
-                await this.loadParticipants();
-            } else {
-                this._toast('Erreur', result.message, 'error');
-            }
-        } catch (e) {
-            this._toast('Erreur', this._cleanError(e), 'error');
-        } finally {
-            this.isSaving = false;
-        }
-    }
-
     closeModal() { this.showFormModal = false; }
-    closeDeleteModal() { this.showDeleteModal = false; }
     handleOverlayClick(e) { if (e.target === e.currentTarget) this.closeModal(); }
     stopPropagation(e) { e.stopPropagation(); }
 

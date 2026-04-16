@@ -2,7 +2,6 @@ import { LightningElement, api, wire } from 'lwc';
 import { refreshApex } from '@salesforce/apex';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getPassagersAutresPartie from '@salesforce/apex/PassagerController.getPassagersAutresPartie';
-import deletePassager from '@salesforce/apex/PassagerController.deletePassager';
 import resolveAccountByCIN from '@salesforce/apex/PassagerController.resolveAccountByCIN';
 
 const STATE_CLASS_MAP = {
@@ -17,12 +16,8 @@ export default class PassagerAutresPartieList extends LightningElement {
 
     passagers;
     error;
-    isDeleting = false;
     showModal = false;
-    showDeleteModal = false;
     editRecordId;
-    deleteRecordId;
-    deleteRecordName;
     modalTitle = '';
     selectedTypeContact = '';
 
@@ -72,21 +67,6 @@ export default class PassagerAutresPartieList extends LightningElement {
         this.showModal = true;
     }
 
-    // --- Row actions ---
-    handleRowActionClick(event) {
-        const { id, action } = event.currentTarget.dataset;
-
-        if (action === 'edit') {
-            this.editRecordId = id;
-            this.modalTitle = 'Modifier le participant';
-            this.showModal = true;
-        } else if (action === 'delete') {
-            this.deleteRecordId = id;
-            const rec = this.passagers.find((p) => p.Id === id);
-            this.deleteRecordName = rec?.Name__c || rec?.Name || '';
-            this.showDeleteModal = true;
-        }
-    }
 
     // --- Modal Ajout/Modification ---
     handleCloseModal() {
@@ -155,26 +135,6 @@ export default class PassagerAutresPartieList extends LightningElement {
         this._showToast('Erreur', event.detail.message || 'Une erreur est survenue.', 'error');
     }
 
-    // --- Modal Suppression ---
-    handleCloseDeleteModal() {
-        this.showDeleteModal = false;
-        this.deleteRecordId = undefined;
-        this.deleteRecordName = undefined;
-    }
-
-    async handleConfirmDelete() {
-        this.isDeleting = true;
-        try {
-            await deletePassager({ passagerId: this.deleteRecordId });
-            this.handleCloseDeleteModal();
-            this._showToast('Succès', 'Le participant a été supprimé.', 'success');
-            await refreshApex(this._wiredResult);
-        } catch (err) {
-            this._showToast('Erreur', err.body?.message || 'Erreur lors de la suppression.', 'error');
-        } finally {
-            this.isDeleting = false;
-        }
-    }
 
     // --- Refresh ---
     handleRefresh() {

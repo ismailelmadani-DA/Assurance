@@ -49,7 +49,6 @@
                                 <th class="pm-th" scope="col">Ville</th>
                                 <th class="pm-th" scope="col">Type</th>
                                 <th class="pm-th" scope="col">&Eacute;tat du Participant</th>
-                                <th class="pm-th pm-th--center" scope="col">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -63,20 +62,6 @@
                                     <td class="pm-td">{rec.TypeContact__c}</td>
                                     <td class="pm-td">
                                         <span class={rec.stateClass}>{rec.StateOfPerson__c}</span>
-                                    </td>
-                                    <td class="pm-td pm-td--actions">
-                                        <div class="pm-action-group">
-                                            <button class="pm-action-btn pm-action-btn--edit"
-                                                onclick={handleRowActionClick} data-id={rec.Id} data-action="edit"
-                                                title="Modifier">
-                                                <lightning-icon icon-name="utility:edit" size="xx-small"></lightning-icon>
-                                            </button>
-                                            <button class="pm-action-btn pm-action-btn--delete"
-                                                onclick={handleRowActionClick} data-id={rec.Id} data-action="delete"
-                                                title="Supprimer">
-                                                <lightning-icon icon-name="utility:delete" size="xx-small"></lightning-icon>
-                                            </button>
-                                        </div>
                                     </td>
                                 </tr>
                             </template>
@@ -191,36 +176,5 @@
         </div>
     </template>
 
-    <!-- MODALE CONFIRMATION SUPPRESSION -->
-    <template if:true={showDeleteModal}>
-        <div class="pm-modal-overlay">
-            <section class="pm-modal pm-modal--small" role="dialog" aria-modal="true" aria-labelledby="modal-title-delete">
-                <header class="pm-modal__header pm-modal__header--danger">
-                    <div class="pm-modal__header-inner">
-                        <lightning-icon icon-name="utility:warning" size="small" variant="inverse"></lightning-icon>
-                        <h2 id="modal-title-delete" class="pm-modal__title">Confirmer la suppression</h2>
-                    </div>
-                    <button class="pm-modal__close" onclick={handleCloseDeleteModal} title="Fermer">
-                        <lightning-icon icon-name="utility:close" size="x-small" variant="inverse"></lightning-icon>
-                    </button>
-                </header>
-                <div class="pm-modal__body pm-modal__body--confirm">
-                    <p>&Ecirc;tes-vous s&ucirc;r de vouloir supprimer le participant <strong>{deleteRecordName}</strong> ?</p>
-                    <p class="pm-confirm__note">Cette action est irr&eacute;versible.</p>
-                </div>
-                <footer class="pm-modal__footer">
-                    <button class="pm-btn pm-btn--cancel" onclick={handleCloseDeleteModal}>Non, annuler</button>
-                    <button class="pm-btn pm-btn--danger" onclick={handleConfirmDelete} disabled={isDeleting}>
-                        <template if:true={isDeleting}>
-                            <lightning-spinner alternative-text="Suppression..." size="small" variant="inverse"></lightning-spinner>
-                        </template>
-                        <template if:false={isDeleting}>
-                            Oui, supprimer
-                        </template>
-                    </button>
-                </footer>
-            </section>
-        </div>
-    </template>
 
 </template>

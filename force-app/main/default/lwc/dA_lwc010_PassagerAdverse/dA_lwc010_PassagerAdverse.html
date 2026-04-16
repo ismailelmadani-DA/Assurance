@@ -53,9 +53,6 @@
                                 <th class="pm-th">Pays</th>
                                 <th class="pm-th">Ville</th>
                                 <th class="pm-th">&#201;tat</th>
-                                <template if:false={isReadonly}>
-                                    <th class="pm-th pm-th--center">Actions</th>
-                                </template>
                             </tr>
                         </thead>
                         <tbody>
@@ -84,22 +81,6 @@
                                     <td class="pm-td">
                                         <span class={rec.stateClass}>{rec.StateOfPerson__c}</span>
                                     </td>
-                                    <template if:false={isReadonly}>
-                                        <td class="pm-td pm-td--actions">
-                                            <div class="pm-action-group">
-                                                <button class="pm-action-btn pm-action-btn--edit"
-                                                    onclick={handleRowAction} data-id={rec.Id} data-action="edit"
-                                                    title="Modifier">
-                                                    <lightning-icon icon-name="utility:edit" size="xx-small"></lightning-icon>
-                                                </button>
-                                                <button class="pm-action-btn pm-action-btn--delete"
-                                                    onclick={handleRowAction} data-id={rec.Id} data-action="delete"
-                                                    title="Supprimer">
-                                                    <lightning-icon icon-name="utility:delete" size="xx-small"></lightning-icon>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </template>
                                 </tr>
                             </template>
                         </tbody>
@@ -219,20 +200,11 @@
                                 </div>
 
                                 <div class="pm-field">
-                                    <lightning-input type="text" label="Nom" name="nom" value={form.nom}
-                                        maxlength="100" onchange={handleFieldChange} required>
+                                    <lightning-input type="text" label="Nom complet" name="nomComplet" value={form.nomComplet}
+                                        maxlength="200" onchange={handleFieldChange} required>
                                     </lightning-input>
-                                    <template if:true={errors.nom}>
-                                        <div class="pm-error">{errors.nom}</div>
-                                    </template>
-                                </div>
-
-                                <div class="pm-field">
-                                    <lightning-input type="text" label="Pr&#233;nom" name="prenom" value={form.prenom}
-                                        maxlength="100" onchange={handleFieldChange} required>
-                                    </lightning-input>
-                                    <template if:true={errors.prenom}>
-                                        <div class="pm-error">{errors.prenom}</div>
+                                    <template if:true={errors.nomComplet}>
+                                        <div class="pm-error">{errors.nomComplet}</div>
                                     </template>
                                 </div>
 
@@ -410,36 +382,5 @@
         </div>
     </template>
 
-    <!-- ══════════════════════════════════════════
-       MODALE CONFIRMATION SUPPRESSION
-    ══════════════════════════════════════════ -->
-    <template if:true={showDeleteModal}>
-        <div class="pm-modal-overlay">
-            <section class="pm-modal pm-modal--small" role="dialog" aria-modal="true">
-                <header class="pm-modal__header pm-modal__header--danger">
-                    <div class="pm-modal__header-inner">
-                        <lightning-icon icon-name="utility:warning" size="small" variant="inverse"></lightning-icon>
-                        <h2 class="pm-modal__title">Confirmer la suppression</h2>
-                    </div>
-                </header>
-                <div class="pm-modal__body pm-modal__body--confirm">
-                    <p>&#202;tes-vous s&#251;r de vouloir supprimer le passager adverse <strong>{selectedParticipantName}</strong> ?</p>
-                    <p class="pm-confirm__note">Cette action est irr&#233;versible.</p>
-                </div>
-                <footer class="pm-modal__footer">
-                    <button class="pm-btn pm-btn--cancel" onclick={closeDeleteModal}>Non, annuler</button>
-                    <button class="pm-btn pm-btn--danger" onclick={confirmDelete} disabled={isSaving}>
-                        <template if:true={isSaving}>
-                            <lightning-spinner alternative-text="Suppression..." size="small"
-                                variant="inverse"></lightning-spinner>
-                        </template>
-                        <template if:false={isSaving}>
-                            Oui, supprimer
-                        </template>
-                    </button>
-                </footer>
-            </section>
-        </div>
-    </template>
 
 </template>
