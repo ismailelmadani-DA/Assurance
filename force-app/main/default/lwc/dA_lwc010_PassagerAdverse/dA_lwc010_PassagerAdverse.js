@@ -32,7 +32,8 @@ const SITUATION_OPTIONS = [
 
 const NOTIFICATION_OPTIONS = [
     { label: 'Mail', value: 'Mail' },
-    { label: 'Téléphone', value: 'Téléphone' }
+    { label: 'Téléphone', value: 'Téléphone' },
+    { label: 'Mail et Téléphone', value: 'Mail et Téléphone' }
 ];
 
 const PAYS_OPTIONS = [
@@ -64,7 +65,7 @@ const EMPTY_FORM = () => ({
     dateNaissance: '',
     cni: '',
     situationFamiliale: '',
-    typeContact: '',
+    typeContact: 'Mail et Téléphone',
     email: '',
     telephone: '',
     pays: '',
@@ -170,6 +171,8 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
             civility: r.ParticipantAccount__r?.Civility__c || '',
             accountName: r.ParticipantAccount__r?.Name || '',
             vehicleName: r.Vehicule__r?.RegistrationNumber__c || '',
+            vehicleUrl: r.Vehicule__c ? `/lightning/r/Vehicule__c/${r.Vehicule__c}/view` : '',
+            hasVehicle: !!r.Vehicule__c,
             participantUrl: `/lightning/r/ClaimParticipant__c/${r.Id}/view`,
         };
     }
@@ -194,13 +197,17 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
     nextPage() { if (!this.isLastPage) { this.currentPage++; this._applyFilter(); } }
 
     get isVilleDisabled() { return !this.form.pays; }
+    get selectedVehicleUrl() {
+        return this.form.vehiculeId ? `/lightning/r/Vehicule__c/${this.form.vehiculeId}/view` : '';
+    }
+    get hasSelectedVehicle() { return !!this.form.vehiculeId; }
     get showIttIpp() { return this.form.etatPassager === 'Blessé'; }
     get showDecesFields() { return this.form.etatPassager === 'Décédé'; }
     get showEmailField() {
-        return this.form.typeContact === 'Mail';
+        return this.form.typeContact === 'Mail' || this.form.typeContact === 'Mail et Téléphone';
     }
     get showPhoneField() {
-        return this.form.typeContact === 'Téléphone';
+        return this.form.typeContact === 'Téléphone' || this.form.typeContact === 'Mail et Téléphone';
     }
     get modalTitle() { return this.isUpdateMode ? 'Modifier le passager adverse' : 'Ajouter un passager adverse'; }
     get saveLabel() { return this.isUpdateMode ? 'Enregistrer les modifications' : 'Confirmer'; }

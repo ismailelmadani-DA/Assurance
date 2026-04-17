@@ -620,6 +620,43 @@
 }
 
 /* ════════════════════════════════════════
+   LOOKUP ROW (Vehicle)
+════════════════════════════════════════ */
+.pm-lookup-row {
+    display: flex;
+    align-items: flex-end;
+    gap: .5rem;
+}
+
+.pm-lookup-field {
+    flex: 1;
+}
+
+.pm-btn--lookup-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--wafa-green);
+    background: var(--wafa-light-green);
+    color: var(--wafa-green);
+    cursor: pointer;
+    transition: all var(--dur) var(--ease);
+    text-decoration: none;
+    margin-bottom: 2px;
+    flex-shrink: 0;
+}
+
+.pm-btn--lookup-link:hover {
+    background: var(--wafa-green);
+    color: var(--white);
+    box-shadow: 0 3px 10px rgba(0, 98, 51, .3);
+    transform: translateY(-1px);
+}
+
+/* ════════════════════════════════════════
    LINK
 ════════════════════════════════════════ */
 .pm-link {

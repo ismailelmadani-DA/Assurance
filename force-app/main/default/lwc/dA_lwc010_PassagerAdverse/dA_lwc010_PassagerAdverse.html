@@ -78,7 +78,14 @@
                                         </a>
                                     </td>
                                     <td class="pm-td pm-td--mono">{rec.ParticipantCNI__c}</td>
-                                    <td class="pm-td">{rec.vehicleName}</td>
+                                    <td class="pm-td">
+                                        <template if:true={rec.hasVehicle}>
+                                            <a class="pm-link" href={rec.vehicleUrl} target="_blank">{rec.vehicleName}</a>
+                                        </template>
+                                        <template if:false={rec.hasVehicle}>
+                                            &#8212;
+                                        </template>
+                                    </td>
                                     <td class="pm-td">{rec.Pays__c}</td>
                                     <td class="pm-td">{rec.Ville__c}</td>
                                     <td class="pm-td">
@@ -181,10 +188,20 @@
                             </div>
                             <div class="pm-grid">
                                 <div class="pm-field pm-field--full">
-                                    <lightning-combobox label="V&#233;hicule adverse" name="vehiculeId"
-                                        value={form.vehiculeId} options={vehicleOptions}
-                                        onchange={handleFieldChange} placeholder="S&#233;lectionner un v&#233;hicule">
-                                    </lightning-combobox>
+                                    <div class="pm-lookup-row">
+                                        <div class="pm-lookup-field">
+                                            <lightning-combobox label="V&#233;hicule adverse" name="vehiculeId"
+                                                value={form.vehiculeId} options={vehicleOptions}
+                                                onchange={handleFieldChange} placeholder="S&#233;lectionner un v&#233;hicule">
+                                            </lightning-combobox>
+                                        </div>
+                                        <template if:true={hasSelectedVehicle}>
+                                            <a class="pm-btn pm-btn--lookup-link" href={selectedVehicleUrl}
+                                                target="_blank" title="Voir le v&#233;hicule">
+                                                <lightning-icon icon-name="utility:new_window" size="xx-small"></lightning-icon>
+                                            </a>
+                                        </template>
+                                    </div>
                                 </div>
                             </div>
                         </div>
