@@ -53,6 +53,9 @@
                                 <th class="pm-th">Pays</th>
                                 <th class="pm-th">Ville</th>
                                 <th class="pm-th">&#201;tat</th>
+                                <template if:false={isReadonly}>
+                                    <th class="pm-th pm-th--center">Actions</th>
+                                </template>
                             </tr>
                         </thead>
                         <tbody>
@@ -81,6 +84,18 @@
                                     <td class="pm-td">
                                         <span class={rec.stateClass}>{rec.StateOfPerson__c}</span>
                                     </td>
+                                    <template if:false={isReadonly}>
+                                        <td class="pm-td pm-td--center pm-td--actions">
+                                            <button class="pm-btn pm-btn--icon-small" data-id={rec.Id}
+                                                onclick={handleEdit} title="Modifier">
+                                                <lightning-icon icon-name="utility:edit" size="xx-small"></lightning-icon>
+                                            </button>
+                                            <button class="pm-btn pm-btn--icon-small pm-btn--delete" data-id={rec.Id}
+                                                onclick={handleDeleteClick} title="Supprimer">
+                                                <lightning-icon icon-name="utility:delete" size="xx-small"></lightning-icon>
+                                            </button>
+                                        </td>
+                                    </template>
                                 </tr>
                             </template>
                         </tbody>
@@ -239,11 +254,25 @@
                                     </lightning-combobox>
                                 </div>
 
-                                <template if:true={showContactField}>
-                                    <div class="pm-field pm-field--full">
-                                        <lightning-input type="text" label="Contact" name="contactValue"
-                                            value={form.contactValue} onchange={handleFieldChange}>
+                                <template if:true={showEmailField}>
+                                    <div class="pm-field">
+                                        <lightning-input type="email" label="Email" name="email"
+                                            value={form.email} onchange={handleFieldChange} required>
                                         </lightning-input>
+                                        <template if:true={errors.email}>
+                                            <div class="pm-error">{errors.email}</div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <template if:true={showPhoneField}>
+                                    <div class="pm-field">
+                                        <lightning-input type="tel" label="T&#233;l&#233;phone" name="telephone"
+                                            value={form.telephone} onchange={handleFieldChange} required>
+                                        </lightning-input>
+                                        <template if:true={errors.telephone}>
+                                            <div class="pm-error">{errors.telephone}</div>
+                                        </template>
                                     </div>
                                 </template>
 
@@ -308,27 +337,39 @@
                                 <template if:true={showIttIpp}>
                                     <div class="pm-field">
                                         <lightning-input type="number" label="ITT (jours)" name="itt"
-                                            value={form.itt} step="1" min="0" onchange={handleFieldChange}>
+                                            value={form.itt} step="1" min="0" onchange={handleFieldChange} required>
                                         </lightning-input>
+                                        <template if:true={errors.itt}>
+                                            <div class="pm-error">{errors.itt}</div>
+                                        </template>
                                     </div>
                                     <div class="pm-field">
                                         <lightning-input type="number" label="IPP (%)" name="ipp"
-                                            value={form.ipp} step="1" min="0" max="100" onchange={handleFieldChange}>
+                                            value={form.ipp} step="1" min="0" max="100" onchange={handleFieldChange} required>
                                         </lightning-input>
+                                        <template if:true={errors.ipp}>
+                                            <div class="pm-error">{errors.ipp}</div>
+                                        </template>
                                     </div>
                                 </template>
 
                                 <template if:true={showDecesFields}>
                                     <div class="pm-field">
                                         <lightning-input type="date" label="Date de d&#233;c&#232;s" name="dateDeces"
-                                            value={form.dateDeces} onchange={handleFieldChange}>
+                                            value={form.dateDeces} onchange={handleFieldChange} required>
                                         </lightning-input>
+                                        <template if:true={errors.dateDeces}>
+                                            <div class="pm-error">{errors.dateDeces}</div>
+                                        </template>
                                     </div>
                                     <div class="pm-field">
                                         <lightning-input type="number" label="Revenu annuel" name="revenuAnnuel"
                                             value={form.revenuAnnuel} step="0.01" formatter="currency"
-                                            onchange={handleFieldChange}>
+                                            onchange={handleFieldChange} required>
                                         </lightning-input>
+                                        <template if:true={errors.revenuAnnuel}>
+                                            <div class="pm-error">{errors.revenuAnnuel}</div>
+                                        </template>
                                     </div>
                                 </template>
 
@@ -382,5 +423,38 @@
         </div>
     </template>
 
+    <!-- MODALE CONFIRMATION SUPPRESSION -->
+    <template if:true={showDeleteModal}>
+        <div class="pm-modal-overlay" onclick={handleCancelDelete}>
+            <section class="pm-modal pm-modal--small" role="dialog" aria-modal="true" onclick={stopPropagation}>
+                <header class="pm-modal__header pm-modal__header--danger">
+                    <div class="pm-modal__header-inner">
+                        <lightning-icon icon-name="utility:warning" size="small" variant="inverse"></lightning-icon>
+                        <h2 class="pm-modal__title">Confirmer la suppression</h2>
+                    </div>
+                    <button class="pm-modal__close" onclick={handleCancelDelete} title="Fermer">
+                        <lightning-icon icon-name="utility:close" size="x-small" variant="inverse"></lightning-icon>
+                    </button>
+                </header>
+                <div class="pm-modal__body">
+                    <p class="pm-delete-msg">
+                        &#202;tes-vous s&#251;r de vouloir supprimer le passager adverse
+                        <strong>{deleteRecordName}</strong> ? Cette action est irr&#233;versible.
+                    </p>
+                </div>
+                <footer class="pm-modal__footer">
+                    <button class="pm-btn pm-btn--cancel" onclick={handleCancelDelete}>Annuler</button>
+                    <button class="pm-btn pm-btn--danger" onclick={handleConfirmDelete} disabled={isDeleting}>
+                        <template if:true={isDeleting}>
+                            <lightning-spinner alternative-text="Suppression..." size="small" variant="inverse"></lightning-spinner>
+                        </template>
+                        <template if:false={isDeleting}>
+                            Supprimer
+                        </template>
+                    </button>
+                </footer>
+            </section>
+        </div>
+    </template>
 
 </template>

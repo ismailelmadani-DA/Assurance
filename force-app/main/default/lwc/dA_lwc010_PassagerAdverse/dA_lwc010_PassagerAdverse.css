@@ -576,6 +576,49 @@
     transform: translateY(-1px);
 }
 
+.pm-btn--icon-small {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    background: var(--wafa-light-green);
+    color: var(--wafa-green);
+    cursor: pointer;
+    transition: all var(--dur) var(--ease);
+    padding: 0;
+}
+
+.pm-btn--icon-small:hover {
+    background: var(--wafa-green);
+    color: var(--white);
+    border-color: var(--wafa-green);
+    box-shadow: 0 3px 10px rgba(0, 98, 51, .3);
+    transform: translateY(-1px);
+}
+
+.pm-btn--delete {
+    background: var(--pm-red-bg);
+    color: var(--pm-red);
+    border-color: rgba(192, 57, 43, .15);
+}
+
+.pm-btn--delete:hover {
+    background: var(--pm-red);
+    color: var(--white);
+    border-color: var(--pm-red);
+    box-shadow: 0 3px 10px rgba(192, 57, 43, .3);
+}
+
+.pm-delete-msg {
+    font-size: .9rem;
+    color: var(--text-main);
+    line-height: 1.5;
+    padding: .5rem 0;
+}
+
 /* ════════════════════════════════════════
    LINK
 ════════════════════════════════════════ */

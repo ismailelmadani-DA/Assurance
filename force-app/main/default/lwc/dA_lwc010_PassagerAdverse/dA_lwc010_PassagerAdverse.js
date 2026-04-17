@@ -3,7 +3,9 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 import getAdverseVehicles from '@salesforce/apex/DA_PassagerAdverseController.getAdverseVehicles';
 import getParticipants from '@salesforce/apex/DA_PassagerAdverseController.getParticipants';
+import getParticipantById from '@salesforce/apex/DA_PassagerAdverseController.getParticipantById';
 import upsertPassager from '@salesforce/apex/DA_PassagerAdverseController.upsertPassager';
+import deletePassager from '@salesforce/apex/DA_PassagerAdverseController.deletePassager';
 import checkDuplicate from '@salesforce/apex/DA_PassagerAdverseController.checkDuplicate';
 import resolveAccountByCIN from '@salesforce/apex/PassagerController.resolveAccountByCIN';
 
@@ -15,11 +17,11 @@ const CIVILITY_OPTIONS = [
 ];
 
 const SEXE_OPTIONS = [
-    { label: 'Male', value: 'Male' },
-    { label: 'Femelle', value: 'Femelle' }
+    { label: 'Masculin', value: 'Masculin' },
+    { label: 'Féminin', value: 'Féminin' }
 ];
 
-const CIVILITY_SEX_MAP = { Mr: 'Male', Mme: 'Femelle' };
+const CIVILITY_SEX_MAP = { Mr: 'Masculin', Mme: 'Féminin' };
 
 const SITUATION_OPTIONS = [
     { label: 'Célibataire', value: 'Célibataire' },
@@ -30,7 +32,6 @@ const SITUATION_OPTIONS = [
 
 const NOTIFICATION_OPTIONS = [
     { label: 'Mail', value: 'Mail' },
-    { label: 'SMS', value: 'SMS' },
     { label: 'Téléphone', value: 'Téléphone' }
 ];
 
@@ -64,7 +65,8 @@ const EMPTY_FORM = () => ({
     cni: '',
     situationFamiliale: '',
     typeContact: '',
-    contactValue: '',
+    email: '',
+    telephone: '',
     pays: '',
     ville: '',
     adresse: '',
@@ -79,7 +81,10 @@ const EMPTY_FORM = () => ({
 
 const EMPTY_ERRORS = () => ({
     nomComplet: '', civility: '', cni: '',
-    pays: '', ville: '', etatPassager: ''
+    pays: '', ville: '', etatPassager: '',
+    email: '', telephone: '',
+    itt: '', ipp: '',
+    dateDeces: '', revenuAnnuel: ''
 });
 
 export default class DA_lwc010_PassagerAdverse extends LightningElement {
@@ -97,6 +102,11 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
 
     @track showFormModal = false;
     @track isUpdateMode = false;
+
+    @track showDeleteModal = false;
+    @track deleteRecordId = null;
+    @track deleteRecordName = '';
+    @track isDeleting = false;
 
     @track form = EMPTY_FORM();
     @track errors = EMPTY_ERRORS();
@@ -186,7 +196,12 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
     get isVilleDisabled() { return !this.form.pays; }
     get showIttIpp() { return this.form.etatPassager === 'Blessé'; }
     get showDecesFields() { return this.form.etatPassager === 'Décédé'; }
-    get showContactField() { return !!this.form.typeContact; }
+    get showEmailField() {
+        return this.form.typeContact === 'Mail';
+    }
+    get showPhoneField() {
+        return this.form.typeContact === 'Téléphone';
+    }
     get modalTitle() { return this.isUpdateMode ? 'Modifier le passager adverse' : 'Ajouter un passager adverse'; }
     get saveLabel() { return this.isUpdateMode ? 'Enregistrer les modifications' : 'Confirmer'; }
 
@@ -199,6 +214,79 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
 
     handleRefresh() { this.loadParticipants(); }
 
+    async handleEdit(event) {
+        const participantId = event.currentTarget.dataset.id;
+        this.isUpdateMode = true;
+        this.form = EMPTY_FORM();
+        this.errors = EMPTY_ERRORS();
+        this.showFormModal = true;
+        this.isFormLoading = true;
+        try {
+            const data = await getParticipantById({ participantId });
+            this.form = {
+                participantId: data.participantId || '',
+                vehiculeId: data.vehiculeId || '',
+                nomComplet: data.nomComplet || ((data.prenom || '') + ' ' + (data.nom || '')).trim() || '',
+                civility: data.civility || '',
+                sexe: data.sexe || '',
+                dateNaissance: data.dateNaissance || '',
+                cni: data.cni || '',
+                situationFamiliale: data.situationFamiliale || '',
+                typeContact: data.typeContact || '',
+                email: data.email || '',
+                telephone: data.telephone || '',
+                pays: data.pays || '',
+                ville: data.ville || '',
+                adresse: data.adresse || '',
+                etatPassager: data.etatPassager || '',
+                itt: data.itt != null ? data.itt : null,
+                ipp: data.ipp != null ? data.ipp : null,
+                dateDeces: data.dateDeces || '',
+                revenuAnnuel: data.revenuAnnuel != null ? data.revenuAnnuel : null,
+                conducteur: data.conducteur === true,
+                isOwner: false
+            };
+        } catch (e) {
+            this._toast('Erreur', this._cleanError(e), 'error');
+            this.showFormModal = false;
+        } finally {
+            this.isFormLoading = false;
+        }
+    }
+
+    handleDeleteClick(event) {
+        const recId = event.currentTarget.dataset.id;
+        const rec = this.records.find(r => r.Id === recId);
+        this.deleteRecordId = recId;
+        this.deleteRecordName = rec?.accountName || '';
+        this.showDeleteModal = true;
+    }
+
+    handleCancelDelete() {
+        this.showDeleteModal = false;
+        this.deleteRecordId = null;
+        this.deleteRecordName = '';
+    }
+
+    async handleConfirmDelete() {
+        this.isDeleting = true;
+        try {
+            const result = await deletePassager({ participantId: this.deleteRecordId });
+            if (result.success) {
+                this._toast('Succès', result.message, 'success');
+                this.showDeleteModal = false;
+                this.deleteRecordId = null;
+                this.deleteRecordName = '';
+                await this.loadParticipants();
+            } else {
+                this._toast('Erreur', result.message, 'error');
+            }
+        } catch (e) {
+            this._toast('Erreur', this._cleanError(e), 'error');
+        } finally {
+            this.isDeleting = false;
+        }
+    }
 
     handleFieldChange(e) {
         const name = e.target.name;
@@ -233,6 +321,22 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
         if (!this.form.ville) { e.ville = 'Obligatoire'; ok = false; }
         if (!this.form.etatPassager) { e.etatPassager = 'Obligatoire'; ok = false; }
 
+        // Contact fields based on typeContact
+        if (this.showEmailField && !this.form.email?.trim()) { e.email = 'Obligatoire'; ok = false; }
+        if (this.showPhoneField && !this.form.telephone?.trim()) { e.telephone = 'Obligatoire'; ok = false; }
+
+        // Blessé → ITT and IPP required
+        if (this.form.etatPassager === 'Blessé') {
+            if (this.form.itt == null || this.form.itt === '') { e.itt = 'Obligatoire'; ok = false; }
+            if (this.form.ipp == null || this.form.ipp === '') { e.ipp = 'Obligatoire'; ok = false; }
+        }
+
+        // Décédé → date décès and revenu annuel required
+        if (this.form.etatPassager === 'Décédé') {
+            if (!this.form.dateDeces) { e.dateDeces = 'Obligatoire'; ok = false; }
+            if (this.form.revenuAnnuel == null || this.form.revenuAnnuel === '') { e.revenuAnnuel = 'Obligatoire'; ok = false; }
+        }
+
         this.errors = e;
         return ok;
     }
@@ -241,17 +345,15 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
         if (!this._validate()) return;
         this.isSaving = true;
         try {
-            if (!this.isUpdateMode) {
-                const isDup = await checkDuplicate({
-                    nomComplet: this.form.nomComplet,
-                    claimId: this.recordId,
-                    excludeId: null,
-                });
-                if (isDup) {
-                    this._toast('Doublon détecté', `Un passager adverse "${this.form.nomComplet}" existe déjà.`, 'warning', 'sticky');
-                    this.isSaving = false;
-                    return;
-                }
+            const isDup = await checkDuplicate({
+                nomComplet: this.form.nomComplet,
+                claimId: this.recordId,
+                excludeId: this.isUpdateMode ? this.form.participantId : null
+            });
+            if (isDup) {
+                this._toast('Doublon détecté', `Un passager adverse "${this.form.nomComplet}" existe déjà.`, 'warning', 'sticky');
+                this.isSaving = false;
+                return;
             }
 
             let accountId;

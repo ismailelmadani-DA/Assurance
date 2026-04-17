@@ -21,7 +21,7 @@ public with sharing class DA_PassagerAdverseController {
         'isDriver__c, Vehicule__c, ParticipantAccount__c, ' +
         'ParticipantAccount__r.Name, ParticipantAccount__r.Nom__c, ' +
         'ParticipantAccount__r.Prenom__c, ParticipantAccount__r.Civility__c, ' +
-        'ParticipantAccount__r.Email__c, ParticipantAccount__r.MoyenNotification__c';
+        'ParticipantAccount__r.Email__c, ParticipantAccount__r.Phone, ParticipantAccount__r.MoyenNotification__c';
 
     private static Id resolveClaimId(Id recordId) {
         if (recordId == null) {
@@ -141,6 +141,7 @@ public with sharing class DA_PassagerAdverseController {
             result.put('accountId', p.ParticipantAccount__c);
             result.put('vehiculeId', p.Vehicule__c);
             result.put('roles', p.Roles__c);
+            result.put('nomComplet', p.ParticipantAccount__r.Name);
             result.put('civility', p.ParticipantAccount__r.Civility__c);
             result.put('sexe', p.Sexe__c);
             result.put('nom', p.ParticipantAccount__r.Nom__c);
@@ -153,6 +154,7 @@ public with sharing class DA_PassagerAdverseController {
             result.put('adresse', p.Adresse__c);
             result.put('typeContact', p.TypeContact__c);
             result.put('email', p.ParticipantAccount__r.Email__c);
+            result.put('telephone', p.ParticipantAccount__r.Phone);
             result.put('etatPassager', p.StateOfPerson__c);
             result.put('itt', p.ITT__c);
             result.put('ipp', p.IPP__c);
@@ -261,6 +263,22 @@ public with sharing class DA_PassagerAdverseController {
 
             Boolean isOwner = formData.get('isOwner') == true;
             upsert participant;
+
+            // Update Account with civility, email, phone
+            Account acc = new Account(Id = accountId);
+            String civility = (String) formData.get('civility');
+            if (String.isNotBlank(civility)) {
+                acc.Civility__c = civility;
+            }
+            String email = (String) formData.get('email');
+            if (String.isNotBlank(email)) {
+                acc.Email__c = email;
+            }
+            String phone = (String) formData.get('telephone');
+            if (String.isNotBlank(phone)) {
+                acc.Phone = phone;
+            }
+            update acc;
 
             if (isOwner && String.isNotBlank(vehiculeId)) {
                 Vehicule__c veh = new Vehicule__c(Id = (Id) vehiculeId);
