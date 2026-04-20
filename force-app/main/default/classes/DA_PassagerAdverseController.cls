@@ -217,6 +217,62 @@ public with sharing class DA_PassagerAdverseController {
                 return response;
             }
 
+            // Validate state transition on update
+            if (isUpdateMode && formData.get('participantId') != null) {
+                String newEtat = (String) formData.get('etatPassager');
+                ClaimParticipant__c existing = (ClaimParticipant__c) DM_DataManager.getById(
+                    'Id, StateOfPerson__c', CLAIM_PARTICIPANT, (Id) formData.get('participantId')
+                );
+                if (existing != null && String.isNotBlank(existing.StateOfPerson__c) && String.isNotBlank(newEtat)) {
+                    String oldEtat = existing.StateOfPerson__c;
+                    Boolean invalid = false;
+                    if (oldEtat == 'Décédé' && newEtat != 'Décédé') {
+                        invalid = true;
+                    } else if (oldEtat == 'Blessé' && newEtat != 'Blessé' && newEtat != 'Décédé') {
+                        invalid = true;
+                    } else if (oldEtat == 'Indemne' && newEtat != 'Indemne') {
+                        invalid = true;
+                    }
+                    if (invalid) {
+                        response.put('success', false);
+                        response.put('message', 'Transition d\'état invalide : ' + oldEtat + ' → ' + newEtat + ' n\'est pas autorisée.');
+                        return response;
+                    }
+                }
+            }
+
+            // Validate dates against sinistre creation date
+            List<SObject> claims = DM_DataManager.query(
+                'Id, CreatedDate', 'Claim__c',
+                'Id = \'' + String.escapeSingleQuotes(String.valueOf(resolvedClaimId)) + '\'',
+                null, 1
+            );
+            if (!claims.isEmpty()) {
+                Date sinistreDate = claims[0].getPopulatedFieldsAsMap().containsKey('CreatedDate')
+                    ? ((Datetime) claims[0].get('CreatedDate')).date()
+                    : Date.today();
+
+                String dateNaissStr = (String) formData.get('dateNaissance');
+                if (String.isNotBlank(dateNaissStr)) {
+                    Date dateNaissance = Date.valueOf(dateNaissStr);
+                    if (dateNaissance > sinistreDate) {
+                        response.put('success', false);
+                        response.put('message', 'La date de naissance ne peut pas être postérieure à la date du sinistre.');
+                        return response;
+                    }
+                }
+
+                String dateDecesStr = (String) formData.get('dateDeces');
+                if (String.isNotBlank(dateDecesStr)) {
+                    Date dateDeces = Date.valueOf(dateDecesStr);
+                    if (dateDeces > sinistreDate) {
+                        response.put('success', false);
+                        response.put('message', 'La date de décès ne peut pas être postérieure à la date du sinistre.');
+                        return response;
+                    }
+                }
+            }
+
             ClaimParticipant__c participant;
             if (isUpdateMode && formData.get('participantId') != null) {
                 participant = new ClaimParticipant__c(Id = (Id) formData.get('participantId'));

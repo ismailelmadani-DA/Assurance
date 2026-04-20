@@ -188,20 +188,49 @@
                             </div>
                             <div class="pm-grid">
                                 <div class="pm-field pm-field--full">
-                                    <div class="pm-lookup-row">
-                                        <div class="pm-lookup-field">
-                                            <lightning-combobox label="V&#233;hicule adverse" name="vehiculeId"
-                                                value={form.vehiculeId} options={vehicleOptions}
-                                                onchange={handleFieldChange} placeholder="S&#233;lectionner un v&#233;hicule">
-                                            </lightning-combobox>
+                                    <label class="pm-lookup-label">V&#233;hicule adverse</label>
+                                    <template if:false={hasSelectedVehicle}>
+                                        <div class="pm-lookup-container">
+                                            <div class="pm-lookup-input-wrap">
+                                                <lightning-icon icon-name="utility:search" size="xx-small" class="pm-lookup-search-icon"></lightning-icon>
+                                                <input type="text" class="pm-lookup-input"
+                                                    value={vehicleSearchTerm}
+                                                    placeholder="Rechercher un v&#233;hicule..."
+                                                    oninput={handleVehicleSearch}
+                                                    onfocus={handleVehicleSearchFocus}
+                                                    onblur={handleVehicleSearchBlur} />
+                                            </div>
+                                            <template if:true={showVehicleDropdown}>
+                                                <div class="pm-lookup-dropdown" role="listbox">
+                                                    <template if:true={hasFilteredVehicles}>
+                                                        <template for:each={filteredVehicleOptions} for:item="opt">
+                                                            <div key={opt.value} class="pm-lookup-option"
+                                                                data-value={opt.value} onmousedown={handleVehicleSelect}>
+                                                                <lightning-icon icon-name="standard:asset_object" size="x-small"></lightning-icon>
+                                                                <span>{opt.label}</span>
+                                                            </div>
+                                                        </template>
+                                                    </template>
+                                                    <template if:false={hasFilteredVehicles}>
+                                                        <div class="pm-lookup-no-results">Aucun v&#233;hicule trouv&#233;</div>
+                                                    </template>
+                                                </div>
+                                            </template>
                                         </div>
-                                        <template if:true={hasSelectedVehicle}>
+                                    </template>
+                                    <template if:true={hasSelectedVehicle}>
+                                        <div class="pm-lookup-pill">
+                                            <lightning-icon icon-name="standard:asset_object" size="xx-small"></lightning-icon>
+                                            <span class="pm-lookup-pill-label">{selectedVehicleLabel}</span>
+                                            <button class="pm-lookup-pill-remove" onclick={handleVehicleRemove} title="Retirer" type="button">
+                                                <lightning-icon icon-name="utility:close" size="xx-small"></lightning-icon>
+                                            </button>
                                             <a class="pm-btn pm-btn--lookup-link" href={selectedVehicleUrl}
                                                 target="_blank" title="Voir le v&#233;hicule">
                                                 <lightning-icon icon-name="utility:new_window" size="xx-small"></lightning-icon>
                                             </a>
-                                        </template>
-                                    </div>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -249,8 +278,11 @@
 
                                 <div class="pm-field">
                                     <lightning-input type="date" label="Date de naissance" name="dateNaissance"
-                                        value={form.dateNaissance} onchange={handleFieldChange}>
+                                        value={form.dateNaissance} max={caseCreatedDate} onchange={handleFieldChange}>
                                     </lightning-input>
+                                    <template if:true={errors.dateNaissance}>
+                                        <div class="pm-error">{errors.dateNaissance}</div>
+                                    </template>
                                 </div>
 
                                 <div class="pm-field">
@@ -343,8 +375,9 @@
 
                                 <div class="pm-field pm-field--full">
                                     <lightning-combobox label="&#201;tat du passager" name="etatPassager"
-                                        value={form.etatPassager} options={etatPassagerOptions}
-                                        onchange={handleFieldChange} placeholder="S&#233;lectionner" required>
+                                        value={form.etatPassager} options={filteredEtatOptions}
+                                        onchange={handleFieldChange} placeholder="S&#233;lectionner"
+                                        required disabled={isEtatDisabled}>
                                     </lightning-combobox>
                                     <template if:true={errors.etatPassager}>
                                         <div class="pm-error">{errors.etatPassager}</div>
@@ -373,7 +406,7 @@
                                 <template if:true={showDecesFields}>
                                     <div class="pm-field">
                                         <lightning-input type="date" label="Date de d&#233;c&#232;s" name="dateDeces"
-                                            value={form.dateDeces} onchange={handleFieldChange} required>
+                                            value={form.dateDeces} max={caseCreatedDate} onchange={handleFieldChange} required>
                                         </lightning-input>
                                         <template if:true={errors.dateDeces}>
                                             <div class="pm-error">{errors.dateDeces}</div>

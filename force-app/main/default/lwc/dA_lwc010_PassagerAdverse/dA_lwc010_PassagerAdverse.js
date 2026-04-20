@@ -1,5 +1,7 @@
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track, wire } from 'lwc';
+import { getRecord } from 'lightning/uiRecordApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import CASE_CREATED_DATE from '@salesforce/schema/Case.CreatedDate';
 
 import getAdverseVehicles from '@salesforce/apex/DA_PassagerAdverseController.getAdverseVehicles';
 import getParticipants from '@salesforce/apex/DA_PassagerAdverseController.getParticipants';
@@ -56,6 +58,13 @@ const ETAT_OPTIONS = [
     { label: 'Décédé', value: 'Décédé' }
 ];
 
+// Allowed values per current state (on edit)
+const ETAT_ALLOWED = {
+    'Indemne': ['Indemne'],
+    'Blessé': ['Blessé', 'Décédé'],
+    'Décédé': ['Décédé']
+};
+
 const EMPTY_FORM = () => ({
     participantId: '',
     vehiculeId: '',
@@ -85,7 +94,7 @@ const EMPTY_ERRORS = () => ({
     pays: '', ville: '', etatPassager: '',
     email: '', telephone: '',
     itt: '', ipp: '',
-    dateDeces: '', revenuAnnuel: ''
+    dateNaissance: '', dateDeces: '', revenuAnnuel: ''
 });
 
 export default class DA_lwc010_PassagerAdverse extends LightningElement {
@@ -103,6 +112,7 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
 
     @track showFormModal = false;
     @track isUpdateMode = false;
+    @track originalEtatPassager = '';
 
     @track showDeleteModal = false;
     @track deleteRecordId = null;
@@ -112,6 +122,8 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
     @track form = EMPTY_FORM();
     @track errors = EMPTY_ERRORS();
     @track vehicleOptions = [];
+    @track vehicleSearchTerm = '';
+    @track showVehicleDropdown = false;
 
     @track currentPage = 1;
 
@@ -123,6 +135,14 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
     paysOptions = PAYS_OPTIONS;
     villeOptions = VILLE_OPTIONS;
     etatPassagerOptions = ETAT_OPTIONS;
+
+    @wire(getRecord, { recordId: '$recordId', fields: [CASE_CREATED_DATE] })
+    caseRecord;
+
+    get caseCreatedDate() {
+        const val = this.caseRecord?.data?.fields?.CreatedDate?.value;
+        return val ? val.substring(0, 10) : null;
+    }
 
     connectedCallback() {
         this.loadParticipants();
@@ -201,6 +221,28 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
         return this.form.vehiculeId ? `/lightning/r/Vehicule__c/${this.form.vehiculeId}/view` : '';
     }
     get hasSelectedVehicle() { return !!this.form.vehiculeId; }
+    get selectedVehicleLabel() {
+        const match = this.vehicleOptions.find(o => o.value === this.form.vehiculeId);
+        return match ? match.label : '';
+    }
+    get filteredVehicleOptions() {
+        if (!this.vehicleSearchTerm) return this.vehicleOptions;
+        const term = this.vehicleSearchTerm.toLowerCase();
+        return this.vehicleOptions.filter(o => o.label.toLowerCase().includes(term));
+    }
+    get hasFilteredVehicles() {
+        return this.filteredVehicleOptions.length > 0;
+    }
+    get filteredEtatOptions() {
+        if (!this.isUpdateMode || !this.originalEtatPassager) {
+            return ETAT_OPTIONS;
+        }
+        const allowed = ETAT_ALLOWED[this.originalEtatPassager] || ETAT_OPTIONS.map(o => o.value);
+        return ETAT_OPTIONS.filter(o => allowed.includes(o.value));
+    }
+    get isEtatDisabled() {
+        return this.isUpdateMode && this.originalEtatPassager === 'Décédé';
+    }
     get showIttIpp() { return this.form.etatPassager === 'Blessé'; }
     get showDecesFields() { return this.form.etatPassager === 'Décédé'; }
     get showEmailField() {
@@ -214,6 +256,7 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
 
     handleAdd() {
         this.isUpdateMode = false;
+        this.originalEtatPassager = '';
         this.form = EMPTY_FORM();
         this.errors = EMPTY_ERRORS();
         this.showFormModal = true;
@@ -253,6 +296,7 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
                 conducteur: data.conducteur === true,
                 isOwner: false
             };
+            this.originalEtatPassager = data.etatPassager || '';
         } catch (e) {
             this._toast('Erreur', this._cleanError(e), 'error');
             this.showFormModal = false;
@@ -315,6 +359,33 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
         this.form = { ...this.form, [e.target.name]: e.target.checked };
     }
 
+    handleVehicleSearch(e) {
+        this.vehicleSearchTerm = e.target.value;
+        this.showVehicleDropdown = true;
+    }
+
+    handleVehicleSearchFocus() {
+        this.showVehicleDropdown = true;
+    }
+
+    handleVehicleSearchBlur() {
+        // Delay to allow mousedown on option to fire first
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        setTimeout(() => { this.showVehicleDropdown = false; }, 200);
+    }
+
+    handleVehicleSelect(e) {
+        const value = e.currentTarget.dataset.value;
+        this.form = { ...this.form, vehiculeId: value };
+        this.vehicleSearchTerm = '';
+        this.showVehicleDropdown = false;
+    }
+
+    handleVehicleRemove() {
+        this.form = { ...this.form, vehiculeId: '' };
+        this.vehicleSearchTerm = '';
+    }
+
     handleFormSubmit(e) { e.preventDefault(); }
 
     _validate() {
@@ -342,6 +413,22 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
         if (this.form.etatPassager === 'Décédé') {
             if (!this.form.dateDeces) { e.dateDeces = 'Obligatoire'; ok = false; }
             if (this.form.revenuAnnuel == null || this.form.revenuAnnuel === '') { e.revenuAnnuel = 'Obligatoire'; ok = false; }
+        }
+
+        // Date de naissance can't be after sinistre creation date
+        if (this.form.dateNaissance && this.caseCreatedDate) {
+            if (this.form.dateNaissance > this.caseCreatedDate) {
+                e.dateNaissance = 'La date de naissance ne peut pas être postérieure à la date du sinistre';
+                ok = false;
+            }
+        }
+
+        // Date de décès can't be after sinistre creation date
+        if (this.form.dateDeces && this.caseCreatedDate) {
+            if (this.form.dateDeces > this.caseCreatedDate) {
+                e.dateDeces = 'La date de décès ne peut pas être postérieure à la date du sinistre';
+                ok = false;
+            }
         }
 
         this.errors = e;
