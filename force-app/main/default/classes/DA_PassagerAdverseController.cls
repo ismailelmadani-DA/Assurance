@@ -18,7 +18,7 @@ public with sharing class DA_PassagerAdverseController {
         'Pays__c, Ville__c, Adresse__c, TypeContact__c, ' +
         'StateOfPerson__c, CompagnieAdverse__c, ' +
         'ITT__c, IPP__c, DateDeces__c, RevenuAnnuel__c, ' +
-        'isDriver__c, Vehicule__c, ParticipantAccount__c, ' +
+        'isDriver__c, isOwner__c, Vehicule__c, ParticipantAccount__c, ' +
         'ParticipantAccount__r.Name, ParticipantAccount__r.Nom__c, ' +
         'ParticipantAccount__r.Prenom__c, ParticipantAccount__r.Civility__c, ' +
         'ParticipantAccount__r.Email__c, ParticipantAccount__r.Phone, ParticipantAccount__r.MoyenNotification__c';
@@ -161,6 +161,7 @@ public with sharing class DA_PassagerAdverseController {
             result.put('dateDeces', p.DateDeces__c != null ? String.valueOf(p.DateDeces__c) : '');
             result.put('revenuAnnuel', p.RevenuAnnuel__c);
             result.put('conducteur', p.isDriver__c);
+            result.put('isOwner', p.isOwner__c);
             return result;
         } catch (AuraHandledException ae) {
             throw ae;
@@ -229,8 +230,6 @@ public with sharing class DA_PassagerAdverseController {
                     if (oldEtat == 'Décédé' && newEtat != 'Décédé') {
                         invalid = true;
                     } else if (oldEtat == 'Blessé' && newEtat != 'Blessé' && newEtat != 'Décédé') {
-                        invalid = true;
-                    } else if (oldEtat == 'Indemne' && newEtat != 'Indemne') {
                         invalid = true;
                     }
                     if (invalid) {
@@ -318,6 +317,7 @@ public with sharing class DA_PassagerAdverseController {
             }
 
             Boolean isOwner = formData.get('isOwner') == true;
+            participant.isOwner__c = isOwner;
             upsert participant;
 
             // Update Account with civility, email, phone

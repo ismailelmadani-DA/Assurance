@@ -268,6 +268,8 @@
     background: var(--bg-light);
     color: var(--text-mid);
     border: 1px solid var(--border);
+    min-width: 150px;
+    justify-content: center;
 }
 
 .pm-btn--cancel:hover {
@@ -968,6 +970,7 @@
 
 .pm-modal__body {
     overflow-y: auto;
+    overflow-x: visible;
     flex: 1;
     padding: 1.4rem;
     position: relative;
@@ -1086,12 +1089,14 @@
     grid-template-columns: 1fr 1fr;
     gap: .9rem;
     padding: 1.1rem;
+    overflow: visible;
 }
 
 
 .pm-field {
     display: flex;
     flex-direction: column;
+    overflow: visible;
 }
 
 .pm-field--full {

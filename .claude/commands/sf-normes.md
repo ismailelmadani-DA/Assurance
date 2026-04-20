@@ -275,3 +275,24 @@ EntityTrigger     -->  TH001_EntityName    (Facade layer)
   - Specifies endpoint URL
   - Authentication method
   - Headers
+
+---
+
+## 21. COMPONENT ISOLATION
+
+- **NEVER modify an existing component** when working on a new task/feature.
+- Always **create new components** or **reuse existing ones** without altering them.
+- If shared logic is needed, extract it into a reusable service/utility class rather than editing another component.
+- This prevents regressions and keeps each component's scope clearly defined.
+
+---
+
+## 22. MESSAGES D'ERREUR EN FRANÇAIS
+
+- **ALL error messages, validation messages, and user-facing text must be written in French.**
+- This applies to: toast messages, form validation errors, confirmation dialogs, placeholder text, labels, and any text visible to the end user.
+- Avoid relying on browser-native validation messages (which default to English). Use custom validation with French messages instead.
+- Examples:
+  - `'Obligatoire'` instead of `'Required'`
+  - `'Veuillez saisir une valeur numérique valide.'` instead of `'Enter a valid numeric value.'`
+  - `'La date de naissance ne peut pas être postérieure à la date du sinistre'` instead of `'Birth date cannot be after claim date'`

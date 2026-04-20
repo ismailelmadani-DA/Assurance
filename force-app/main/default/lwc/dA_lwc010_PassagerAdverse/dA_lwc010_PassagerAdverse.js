@@ -1,4 +1,5 @@
 import { LightningElement, api, track, wire } from 'lwc';
+import { NavigationMixin } from 'lightning/navigation';
 import { getRecord } from 'lightning/uiRecordApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import CASE_CREATED_DATE from '@salesforce/schema/Case.CreatedDate';
@@ -60,7 +61,7 @@ const ETAT_OPTIONS = [
 
 // Allowed values per current state (on edit)
 const ETAT_ALLOWED = {
-    'Indemne': ['Indemne'],
+    'Indemne': ['Indemne', 'Blessé', 'Décédé'],
     'Blessé': ['Blessé', 'Décédé'],
     'Décédé': ['Décédé']
 };
@@ -97,7 +98,7 @@ const EMPTY_ERRORS = () => ({
     dateNaissance: '', dateDeces: '', revenuAnnuel: ''
 });
 
-export default class DA_lwc010_PassagerAdverse extends LightningElement {
+export default class DA_lwc010_PassagerAdverse extends NavigationMixin(LightningElement) {
 
     @api recordId;
     @api isReadonly = false;
@@ -234,14 +235,7 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
         return this.filteredVehicleOptions.length > 0;
     }
     get filteredEtatOptions() {
-        if (!this.isUpdateMode || !this.originalEtatPassager) {
-            return ETAT_OPTIONS;
-        }
-        const allowed = ETAT_ALLOWED[this.originalEtatPassager] || ETAT_OPTIONS.map(o => o.value);
-        return ETAT_OPTIONS.filter(o => allowed.includes(o.value));
-    }
-    get isEtatDisabled() {
-        return this.isUpdateMode && this.originalEtatPassager === 'Décédé';
+        return ETAT_OPTIONS;
     }
     get showIttIpp() { return this.form.etatPassager === 'Blessé'; }
     get showDecesFields() { return this.form.etatPassager === 'Décédé'; }
@@ -252,7 +246,7 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
         return this.form.typeContact === 'Téléphone' || this.form.typeContact === 'Mail et Téléphone';
     }
     get modalTitle() { return this.isUpdateMode ? 'Modifier le passager adverse' : 'Ajouter un passager adverse'; }
-    get saveLabel() { return this.isUpdateMode ? 'Enregistrer les modifications' : 'Confirmer'; }
+    get saveLabel() { return this.isUpdateMode ? 'Enregistrer' : 'Confirmer'; }
 
     handleAdd() {
         this.isUpdateMode = false;
@@ -263,6 +257,16 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
     }
 
     handleRefresh() { this.loadParticipants(); }
+
+    navigateToRecord(event) {
+        this[NavigationMixin.Navigate]({
+            type: 'standard__recordPage',
+            attributes: {
+                recordId: event.currentTarget.dataset.id,
+                actionName: 'view'
+            }
+        });
+    }
 
     async handleEdit(event) {
         const participantId = event.currentTarget.dataset.id;
@@ -294,7 +298,7 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
                 dateDeces: data.dateDeces || '',
                 revenuAnnuel: data.revenuAnnuel != null ? data.revenuAnnuel : null,
                 conducteur: data.conducteur === true,
-                isOwner: false
+                isOwner: data.isOwner === true
             };
             this.originalEtatPassager = data.etatPassager || '';
         } catch (e) {
@@ -328,7 +332,8 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
                 this.showDeleteModal = false;
                 this.deleteRecordId = null;
                 this.deleteRecordName = '';
-                await this.loadParticipants();
+                // eslint-disable-next-line @lwc/lwc/no-async-operation
+                setTimeout(() => { window.location.reload(); }, 800);
             } else {
                 this._toast('Erreur', result.message, 'error');
             }
@@ -349,6 +354,17 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
         }
         if (name === 'pays') {
             this.form = { ...this.form, ville: '' };
+        }
+        // Validate état transition on edit
+        if (name === 'etatPassager' && this.isUpdateMode && this.originalEtatPassager) {
+            const allowed = ETAT_ALLOWED[this.originalEtatPassager] || [];
+            if (!allowed.includes(value)) {
+                this.errors = {
+                    ...this.errors,
+                    etatPassager: `Transition non autorisée : impossible de passer de "${this.originalEtatPassager}" à "${value}".`
+                };
+                return;
+            }
         }
         if (this.errors[name] !== undefined) {
             this.errors = { ...this.errors, [name]: '' };
@@ -398,16 +414,18 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
         if (!this.form.pays) { e.pays = 'Obligatoire'; ok = false; }
         if (!this.form.ville) { e.ville = 'Obligatoire'; ok = false; }
         if (!this.form.etatPassager) { e.etatPassager = 'Obligatoire'; ok = false; }
+        if (this.isUpdateMode && this.originalEtatPassager && this.form.etatPassager) {
+            const allowed = ETAT_ALLOWED[this.originalEtatPassager] || [];
+            if (!allowed.includes(this.form.etatPassager)) {
+                e.etatPassager = `Transition non autorisée : impossible de passer de "${this.originalEtatPassager}" à "${this.form.etatPassager}".`;
+                ok = false;
+            }
+        }
 
         // Contact fields based on typeContact
         if (this.showEmailField && !this.form.email?.trim()) { e.email = 'Obligatoire'; ok = false; }
         if (this.showPhoneField && !this.form.telephone?.trim()) { e.telephone = 'Obligatoire'; ok = false; }
 
-        // Blessé → ITT and IPP required
-        if (this.form.etatPassager === 'Blessé') {
-            if (this.form.itt == null || this.form.itt === '') { e.itt = 'Obligatoire'; ok = false; }
-            if (this.form.ipp == null || this.form.ipp === '') { e.ipp = 'Obligatoire'; ok = false; }
-        }
 
         // Décédé → date décès and revenu annuel required
         if (this.form.etatPassager === 'Décédé') {
@@ -472,7 +490,8 @@ export default class DA_lwc010_PassagerAdverse extends LightningElement {
             if (result.success) {
                 this._toast('Succès', result.message, 'success');
                 this.closeModal();
-                await this.loadParticipants();
+                // eslint-disable-next-line @lwc/lwc/no-async-operation
+                setTimeout(() => { window.location.reload(); }, 800);
             } else {
                 this._toast('Erreur', result.message, 'error', 'sticky');
             }

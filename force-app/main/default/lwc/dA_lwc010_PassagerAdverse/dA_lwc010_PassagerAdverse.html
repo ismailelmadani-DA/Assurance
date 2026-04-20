@@ -48,7 +48,7 @@
                                 <th class="pm-th pm-th--center">Conducteur</th>
                                 <th class="pm-th">Civilit&#233;</th>
                                 <th class="pm-th">Nom complet</th>
-                                <th class="pm-th">CNI</th>
+                                <th class="pm-th">CIN</th>
                                 <th class="pm-th">V&#233;hicule</th>
                                 <th class="pm-th">Pays</th>
                                 <th class="pm-th">Ville</th>
@@ -73,14 +73,14 @@
                                     </td>
                                     <td class="pm-td">{rec.civility}</td>
                                     <td class="pm-td pm-td--name">
-                                        <a class="pm-link" href={rec.participantUrl} target="_blank">
+                                        <a class="pm-link" href="javascript:void(0)" data-id={rec.Id} onclick={navigateToRecord}>
                                             {rec.accountName}
                                         </a>
                                     </td>
                                     <td class="pm-td pm-td--mono">{rec.ParticipantCNI__c}</td>
                                     <td class="pm-td">
                                         <template if:true={rec.hasVehicle}>
-                                            <a class="pm-link" href={rec.vehicleUrl} target="_blank">{rec.vehicleName}</a>
+                                            <a class="pm-link" href="javascript:void(0)" data-id={rec.Vehicule__c} onclick={navigateToRecord}>{rec.vehicleName}</a>
                                         </template>
                                         <template if:false={rec.hasVehicle}>
                                             &#8212;
@@ -278,7 +278,7 @@
 
                                 <div class="pm-field">
                                     <lightning-input type="date" label="Date de naissance" name="dateNaissance"
-                                        value={form.dateNaissance} max={caseCreatedDate} onchange={handleFieldChange}>
+                                        value={form.dateNaissance} onchange={handleFieldChange}>
                                     </lightning-input>
                                     <template if:true={errors.dateNaissance}>
                                         <div class="pm-error">{errors.dateNaissance}</div>
@@ -286,7 +286,7 @@
                                 </div>
 
                                 <div class="pm-field">
-                                    <lightning-input type="text" label="CNI / N&#176; Identit&#233;" name="cni"
+                                    <lightning-input type="text" label="CIN / N&#176; Identit&#233;" name="cni"
                                         value={form.cni} pattern="^[a-zA-Z0-9]+$"
                                         message-when-pattern-mismatch="Caract&#232;res alphanum&#233;riques uniquement"
                                         onchange={handleFieldChange} required>
@@ -377,7 +377,7 @@
                                     <lightning-combobox label="&#201;tat du passager" name="etatPassager"
                                         value={form.etatPassager} options={filteredEtatOptions}
                                         onchange={handleFieldChange} placeholder="S&#233;lectionner"
-                                        required disabled={isEtatDisabled}>
+                                        required>
                                     </lightning-combobox>
                                     <template if:true={errors.etatPassager}>
                                         <div class="pm-error">{errors.etatPassager}</div>
@@ -387,7 +387,7 @@
                                 <template if:true={showIttIpp}>
                                     <div class="pm-field">
                                         <lightning-input type="number" label="ITT (jours)" name="itt"
-                                            value={form.itt} step="1" min="0" onchange={handleFieldChange} required>
+                                            value={form.itt} step="1" min="0" onchange={handleFieldChange}>
                                         </lightning-input>
                                         <template if:true={errors.itt}>
                                             <div class="pm-error">{errors.itt}</div>
@@ -395,7 +395,7 @@
                                     </div>
                                     <div class="pm-field">
                                         <lightning-input type="number" label="IPP (%)" name="ipp"
-                                            value={form.ipp} step="1" min="0" max="100" onchange={handleFieldChange} required>
+                                            value={form.ipp} step="1" min="0" max="100" onchange={handleFieldChange}>
                                         </lightning-input>
                                         <template if:true={errors.ipp}>
                                             <div class="pm-error">{errors.ipp}</div>
@@ -406,16 +406,18 @@
                                 <template if:true={showDecesFields}>
                                     <div class="pm-field">
                                         <lightning-input type="date" label="Date de d&#233;c&#232;s" name="dateDeces"
-                                            value={form.dateDeces} max={caseCreatedDate} onchange={handleFieldChange} required>
+                                            value={form.dateDeces} onchange={handleFieldChange} required>
                                         </lightning-input>
                                         <template if:true={errors.dateDeces}>
                                             <div class="pm-error">{errors.dateDeces}</div>
                                         </template>
                                     </div>
                                     <div class="pm-field">
-                                        <lightning-input type="number" label="Revenu annuel" name="revenuAnnuel"
-                                            value={form.revenuAnnuel} step="0.01" formatter="currency"
-                                            onchange={handleFieldChange} required>
+                                        <lightning-input type="number" label="Revenu annuel (MAD)" name="revenuAnnuel"
+                                            value={form.revenuAnnuel} step="0.01"
+                                            message-when-bad-input="Veuillez saisir une valeur numérique valide."
+                                            message-when-range-underflow="La valeur doit être positive."
+                                            min="0" onchange={handleFieldChange} required>
                                         </lightning-input>
                                         <template if:true={errors.revenuAnnuel}>
                                             <div class="pm-error">{errors.revenuAnnuel}</div>
@@ -489,7 +491,7 @@
                 <div class="pm-modal__body">
                     <p class="pm-delete-msg">
                         &#202;tes-vous s&#251;r de vouloir supprimer le passager adverse
-                        <strong>{deleteRecordName}</strong> ? Cette action est irr&#233;versible.
+                        "<strong>{deleteRecordName}</strong>" ? Cette action est irr&#233;versible.
                     </p>
                 </div>
                 <footer class="pm-modal__footer">
