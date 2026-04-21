@@ -1,0 +1,462 @@
+<template>
+
+    <!-- ══════════════════════════════════════════
+       CARTE PRINCIPALE - LISTE DES AUTRES PARTIES ADVERSES
+    ══════════════════════════════════════════ -->
+    <div class="ap-card">
+
+        <!-- HEADER -->
+        <div class="ap-header">
+            <div class="ap-header__left">
+                <div class="ap-header__icon-wrap">
+                    <lightning-icon icon-name="standard:partners" size="small" variant="inverse"></lightning-icon>
+                </div>
+                <div>
+                    <h2 class="ap-header__title">Autres Parties Adverses</h2>
+                    <span class="ap-header__subtitle">{totalLabel}</span>
+                </div>
+            </div>
+            <div class="ap-header__actions">
+                <template if:false={isReadonly}>
+                    <button class="ap-btn ap-btn--add" onclick={handleAdd} title="Ajouter une autre partie adverse">
+                        <lightning-icon icon-name="utility:add" size="xx-small"></lightning-icon>
+                        <span>Ajouter</span>
+                    </button>
+                </template>
+                <button class="ap-btn ap-btn--icon" onclick={handleRefresh} title="Actualiser">
+                    <lightning-icon icon-name="utility:refresh" size="xx-small"></lightning-icon>
+                </button>
+            </div>
+        </div>
+
+        <!-- SPINNER -->
+        <template if:true={isLoading}>
+            <div class="ap-spinner-overlay">
+                <lightning-spinner alternative-text="Chargement..." size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- CONTENU -->
+        <div class="ap-body">
+
+            <!-- TABLE -->
+            <template if:true={hasRecords}>
+                <div class="ap-table-wrap">
+                    <table class="ap-table">
+                        <thead>
+                            <tr>
+                                <th class="ap-th">Type</th>
+                                <th class="ap-th">Civilit&#233;</th>
+                                <th class="ap-th">Nom complet</th>
+                                <th class="ap-th">CIN</th>
+                                <th class="ap-th">Compagnie adverse</th>
+                                <th class="ap-th">Pays compagnie</th>
+                                <th class="ap-th">&#201;tat</th>
+                                <template if:false={isReadonly}>
+                                    <th class="ap-th ap-th--center">Actions</th>
+                                </template>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={filteredRecords} for:item="rec">
+                                <tr key={rec.Id}>
+                                    <td class="ap-td">{rec.TypePartieAdverse__c}</td>
+                                    <td class="ap-td">{rec.civility}</td>
+                                    <td class="ap-td ap-td--name">
+                                        <a class="ap-link" href="javascript:void(0)" data-id={rec.Id} onclick={navigateToRecord}>
+                                            {rec.accountName}
+                                        </a>
+                                    </td>
+                                    <td class="ap-td ap-td--mono">
+                                        <a class="ap-link" href="javascript:void(0)" data-id={rec.Id} onclick={navigateToRecord}>
+                                            {rec.ParticipantCNI__c}
+                                        </a>
+                                    </td>
+                                    <td class="ap-td">
+                                        <template if:true={rec.hasCompagnie}>
+                                            <a class="ap-link" href="javascript:void(0)" data-id={rec.CompagnieAdverse__c} onclick={navigateToRecord}>{rec.compagnieName}</a>
+                                        </template>
+                                        <template if:false={rec.hasCompagnie}>
+                                            &#8212;
+                                        </template>
+                                    </td>
+                                    <td class="ap-td">{rec.PaysCompagnieAdverse__c}</td>
+                                    <td class="ap-td">
+                                        <span class={rec.stateClass}>{rec.StateOfPerson__c}</span>
+                                    </td>
+                                    <template if:false={isReadonly}>
+                                        <td class="ap-td ap-td--center ap-td--actions">
+                                            <button class="ap-btn ap-btn--icon-small" data-id={rec.Id}
+                                                onclick={handleEdit} title="Modifier">
+                                                <lightning-icon icon-name="utility:edit" size="xx-small"></lightning-icon>
+                                            </button>
+                                            <button class="ap-btn ap-btn--icon-small ap-btn--delete" data-id={rec.Id}
+                                                onclick={handleDeleteClick} title="Supprimer">
+                                                <lightning-icon icon-name="utility:delete" size="xx-small"></lightning-icon>
+                                            </button>
+                                        </td>
+                                    </template>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PAGINATION -->
+                <template if:true={showPagination}>
+                    <div class="ap-pagination">
+                        <button class={prevClass} onclick={prevPage} disabled={isFirstPage}>
+                            <lightning-icon icon-name="utility:chevronleft" size="xx-small"></lightning-icon>
+                            Pr&#233;c.
+                        </button>
+                        <span class="ap-page-info">Page {currentPage} / {totalPages}</span>
+                        <button class={nextClass} onclick={nextPage} disabled={isLastPage}>
+                            Suiv.
+                            <lightning-icon icon-name="utility:chevronright" size="xx-small"></lightning-icon>
+                        </button>
+                    </div>
+                </template>
+            </template>
+
+            <!-- &#201;TAT VIDE -->
+            <template if:false={hasRecords}>
+                <div class="ap-empty">
+                    <div class="ap-empty__icon">
+                        <lightning-icon icon-name="standard:partners" size="large"></lightning-icon>
+                    </div>
+                    <p class="ap-empty__text">Aucune autre partie adverse enregistr&#233;e pour ce sinistre.</p>
+                    <template if:false={isReadonly}>
+                        <button class="ap-btn ap-btn--add ap-btn--outlined" onclick={handleAdd}>
+                            <lightning-icon icon-name="utility:add" size="xx-small"></lightning-icon>
+                            Ajouter la premi&#232;re autre partie adverse
+                        </button>
+                    </template>
+                </div>
+            </template>
+
+            <!-- ERREUR -->
+            <template if:true={hasError}>
+                <div class="ap-alert ap-alert--error">
+                    <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                    <span>{errorMessage}</span>
+                </div>
+            </template>
+
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+       MODALE AJOUT / MODIFICATION
+    ══════════════════════════════════════════ -->
+    <template if:true={showFormModal}>
+        <div class="ap-modal-overlay" onclick={handleOverlayClick}>
+            <section class="ap-modal" role="dialog" aria-modal="true" onclick={stopPropagation}>
+
+                <!-- En-t&#234;te modale -->
+                <header class="ap-modal__header">
+                    <div class="ap-modal__header-inner">
+                        <lightning-icon icon-name="standard:partners" size="small" variant="inverse"></lightning-icon>
+                        <h2 class="ap-modal__title">{modalTitle}</h2>
+                    </div>
+                    <button class="ap-modal__close" onclick={closeModal} title="Fermer">
+                        <lightning-icon icon-name="utility:close" size="x-small" variant="inverse"></lightning-icon>
+                    </button>
+                </header>
+
+                <!-- Corps modale -->
+                <div class="ap-modal__body">
+                    <template if:true={isFormLoading}>
+                        <div class="ap-spinner-overlay">
+                            <lightning-spinner alternative-text="Chargement..." size="medium"></lightning-spinner>
+                        </div>
+                    </template>
+
+                    <form onsubmit={handleFormSubmit}>
+
+                        <!-- Section 01 : Type & Identit&#233; -->
+                        <div class="ap-section">
+                            <div class="ap-section__title">
+                                <span class="ap-section__num">01</span>
+                                Type &amp; Identit&#233;
+                            </div>
+                            <div class="ap-grid">
+
+                                <div class="ap-field ap-field--full">
+                                    <lightning-combobox label="Type partie adverse" name="typePartieAdverse"
+                                        value={form.typePartieAdverse} options={typePartieOptions}
+                                        onchange={handleFieldChange} placeholder="S&#233;lectionner">
+                                    </lightning-combobox>
+                                </div>
+
+                                <div class="ap-field">
+                                    <lightning-input type="text" label="Nom complet" name="nomComplet" value={form.nomComplet}
+                                        maxlength="200" onchange={handleFieldChange} required>
+                                    </lightning-input>
+                                    <template if:true={errors.nomComplet}>
+                                        <div class="ap-error">{errors.nomComplet}</div>
+                                    </template>
+                                </div>
+
+                                <div class="ap-field">
+                                    <lightning-combobox label="Civilit&#233;" name="civility" value={form.civility}
+                                        options={civiliteOptions} onchange={handleFieldChange}
+                                        placeholder="S&#233;lectionner" required>
+                                    </lightning-combobox>
+                                    <template if:true={errors.civility}>
+                                        <div class="ap-error">{errors.civility}</div>
+                                    </template>
+                                </div>
+
+                                <div class="ap-field">
+                                    <lightning-combobox label="Sexe" name="sexe" value={form.sexe}
+                                        options={sexeOptions} onchange={handleFieldChange}
+                                        placeholder="S&#233;lectionner">
+                                    </lightning-combobox>
+                                </div>
+
+                                <div class="ap-field">
+                                    <lightning-input type="date" label="Date de naissance" name="dateNaissance"
+                                        value={form.dateNaissance} onchange={handleFieldChange}>
+                                    </lightning-input>
+                                    <template if:true={errors.dateNaissance}>
+                                        <div class="ap-error">{errors.dateNaissance}</div>
+                                    </template>
+                                </div>
+
+                                <div class="ap-field">
+                                    <lightning-input type="text" label="CIN / N&#176; Identit&#233;" name="cin"
+                                        value={form.cin} pattern="^[a-zA-Z0-9]+$"
+                                        message-when-pattern-mismatch="Caract&#232;res alphanum&#233;riques uniquement"
+                                        onchange={handleFieldChange}>
+                                    </lightning-input>
+                                </div>
+
+                                <div class="ap-field">
+                                    <lightning-combobox label="Situation familiale" name="situationFamiliale"
+                                        value={form.situationFamiliale} options={situationFamilialeOptions}
+                                        onchange={handleFieldChange} placeholder="S&#233;lectionner">
+                                    </lightning-combobox>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Section 02 : Coordonn&#233;es -->
+                        <div class="ap-section">
+                            <div class="ap-section__title">
+                                <span class="ap-section__num">02</span>
+                                Coordonn&#233;es
+                            </div>
+                            <div class="ap-grid">
+
+                                <div class="ap-field">
+                                    <lightning-combobox label="Pays" name="pays" value={form.pays}
+                                        options={paysOptions} onchange={handleFieldChange}
+                                        placeholder="S&#233;lectionner" required>
+                                    </lightning-combobox>
+                                    <template if:true={errors.pays}>
+                                        <div class="ap-error">{errors.pays}</div>
+                                    </template>
+                                </div>
+
+                                <div class="ap-field">
+                                    <lightning-combobox label="Ville" name="ville" value={form.ville}
+                                        options={villeOptions} onchange={handleFieldChange}
+                                        placeholder="S&#233;lectionner" required disabled={isVilleDisabled}>
+                                    </lightning-combobox>
+                                    <template if:true={errors.ville}>
+                                        <div class="ap-error">{errors.ville}</div>
+                                    </template>
+                                </div>
+
+                                <div class="ap-field ap-field--full">
+                                    <lightning-input type="text" label="Adresse" name="adresse" value={form.adresse}
+                                        maxlength="255" onchange={handleFieldChange}>
+                                    </lightning-input>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Section 03 : Assurance adverse -->
+                        <div class="ap-section">
+                            <div class="ap-section__title">
+                                <span class="ap-section__num">03</span>
+                                Assurance adverse
+                            </div>
+                            <div class="ap-grid">
+
+                                <div class="ap-field">
+                                    <lightning-combobox label="&#201;tat de la personne" name="etatPassager"
+                                        value={form.etatPassager} options={etatOptions}
+                                        onchange={handleFieldChange} placeholder="S&#233;lectionner"
+                                        required>
+                                    </lightning-combobox>
+                                    <template if:true={errors.etatPassager}>
+                                        <div class="ap-error">{errors.etatPassager}</div>
+                                    </template>
+                                </div>
+
+                                <div class="ap-field">
+                                    <lightning-combobox label="Pays compagnie adverse" name="paysCompagnieAdverse"
+                                        value={form.paysCompagnieAdverse} options={paysCompagnieOptions}
+                                        onchange={handleFieldChange} placeholder="S&#233;lectionner" required>
+                                    </lightning-combobox>
+                                    <template if:true={errors.paysCompagnieAdverse}>
+                                        <div class="ap-error">{errors.paysCompagnieAdverse}</div>
+                                    </template>
+                                </div>
+
+                                <div class="ap-field">
+                                    <lightning-input type="text" label="Compagnie adverse" name="compagnieAdverseId"
+                                        value={form.compagnieAdverseId} onchange={handleFieldChange}
+                                        placeholder="ID de la compagnie adverse">
+                                    </lightning-input>
+                                </div>
+
+                                <div class="ap-field">
+                                    <lightning-input type="text" label="N&#176; contrat d'assurance" name="numeroContrat"
+                                        value={form.numeroContrat} maxlength="100" onchange={handleFieldChange}>
+                                    </lightning-input>
+                                </div>
+
+                                <template if:true={showIttIpp}>
+                                    <div class="ap-field">
+                                        <lightning-input type="number" label="ITT (jours)" name="itt"
+                                            value={form.itt} step="1" min="0" onchange={handleFieldChange}>
+                                        </lightning-input>
+                                        <template if:true={errors.itt}>
+                                            <div class="ap-error">{errors.itt}</div>
+                                        </template>
+                                    </div>
+                                    <div class="ap-field">
+                                        <lightning-input type="number" label="IPP (%)" name="ipp"
+                                            value={form.ipp} step="1" min="0" max="100" onchange={handleFieldChange}>
+                                        </lightning-input>
+                                        <template if:true={errors.ipp}>
+                                            <div class="ap-error">{errors.ipp}</div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <template if:true={showDecesFields}>
+                                    <div class="ap-field">
+                                        <lightning-input type="date" label="Date de d&#233;c&#232;s" name="dateDeces"
+                                            value={form.dateDeces} onchange={handleFieldChange} required>
+                                        </lightning-input>
+                                        <template if:true={errors.dateDeces}>
+                                            <div class="ap-error">{errors.dateDeces}</div>
+                                        </template>
+                                    </div>
+                                    <div class="ap-field">
+                                        <lightning-input type="number" label="Revenu annuel (MAD)" name="revenuAnnuel"
+                                            value={form.revenuAnnuel} step="0.01"
+                                            message-when-bad-input="Veuillez saisir une valeur num&#233;rique valide."
+                                            message-when-range-underflow="La valeur doit &#234;tre positive."
+                                            min="0" onchange={handleFieldChange} required>
+                                        </lightning-input>
+                                        <template if:true={errors.revenuAnnuel}>
+                                            <div class="ap-error">{errors.revenuAnnuel}</div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                            </div>
+                        </div>
+
+                        <!-- Section 04 : Notification -->
+                        <div class="ap-section">
+                            <div class="ap-section__title">
+                                <span class="ap-section__num">04</span>
+                                Notification
+                            </div>
+                            <div class="ap-grid">
+
+                                <div class="ap-field ap-field--full">
+                                    <lightning-combobox label="Moyen de notification" name="typeContact"
+                                        value={form.typeContact} options={notificationOptions}
+                                        onchange={handleFieldChange} placeholder="S&#233;lectionner">
+                                    </lightning-combobox>
+                                </div>
+
+                                <template if:true={showEmailField}>
+                                    <div class="ap-field">
+                                        <lightning-input type="email" label="Email" name="email"
+                                            value={form.email} onchange={handleFieldChange} required>
+                                        </lightning-input>
+                                        <template if:true={errors.email}>
+                                            <div class="ap-error">{errors.email}</div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <template if:true={showPhoneField}>
+                                    <div class="ap-field">
+                                        <lightning-input type="tel" label="T&#233;l&#233;phone" name="telephone"
+                                            value={form.telephone} onchange={handleFieldChange} required>
+                                        </lightning-input>
+                                        <template if:true={errors.telephone}>
+                                            <div class="ap-error">{errors.telephone}</div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+                <!-- Footer modale -->
+                <footer class="ap-modal__footer">
+                    <button class="ap-btn ap-btn--cancel" onclick={closeModal}>Annuler</button>
+                    <button class="ap-btn ap-btn--save" onclick={handleSave} disabled={isSaving}>
+                        <template if:true={isSaving}>
+                            <lightning-spinner alternative-text="Sauvegarde..." size="small"
+                                variant="inverse"></lightning-spinner>
+                        </template>
+                        <template if:false={isSaving}>
+                            {saveLabel}
+                        </template>
+                    </button>
+                </footer>
+
+            </section>
+        </div>
+    </template>
+
+    <!-- MODALE CONFIRMATION SUPPRESSION -->
+    <template if:true={showDeleteModal}>
+        <div class="ap-modal-overlay" onclick={handleCancelDelete}>
+            <section class="ap-modal ap-modal--small" role="dialog" aria-modal="true" onclick={stopPropagation}>
+                <header class="ap-modal__header ap-modal__header--danger">
+                    <div class="ap-modal__header-inner">
+                        <lightning-icon icon-name="utility:warning" size="small" variant="inverse"></lightning-icon>
+                        <h2 class="ap-modal__title">Confirmer la suppression</h2>
+                    </div>
+                    <button class="ap-modal__close" onclick={handleCancelDelete} title="Fermer">
+                        <lightning-icon icon-name="utility:close" size="x-small" variant="inverse"></lightning-icon>
+                    </button>
+                </header>
+                <div class="ap-modal__body">
+                    <p class="ap-delete-msg">
+                        &#202;tes-vous s&#251;r de vouloir supprimer l'autre partie adverse
+                        "<strong>{deleteRecordName}</strong>" ? Cette action est irr&#233;versible.
+                    </p>
+                </div>
+                <footer class="ap-modal__footer">
+                    <button class="ap-btn ap-btn--cancel" onclick={handleCancelDelete}>Annuler</button>
+                    <button class="ap-btn ap-btn--danger" onclick={handleConfirmDelete} disabled={isDeleting}>
+                        <template if:true={isDeleting}>
+                            <lightning-spinner alternative-text="Suppression..." size="small" variant="inverse"></lightning-spinner>
+                        </template>
+                        <template if:false={isDeleting}>
+                            Supprimer
+                        </template>
+                    </button>
+                </footer>
+            </section>
+        </div>
+    </template>
+
+</template>

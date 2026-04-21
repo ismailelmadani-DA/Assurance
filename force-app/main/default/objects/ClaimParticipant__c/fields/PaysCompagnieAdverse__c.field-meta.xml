@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PaysCompagnieAdverse__c</fullName>
+    <description>Pays de la compagnie adverse</description>
+    <externalId>false</externalId>
+    <label>Pays du compagnie adverse</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value><fullName>Maroc</fullName><default>false</default><label>Maroc</label></value>
+            <value><fullName>Gabon</fullName><default>false</default><label>Gabon</label></value>
+            <value><fullName>Tunisie</fullName><default>false</default><label>Tunisie</label></value>
+            <value><fullName>Algerie</fullName><default>false</default><label>Algérie</label></value>
+            <value><fullName>France</fullName><default>false</default><label>France</label></value>
+            <value><fullName>Senegal</fullName><default>false</default><label>Sénégal</label></value>
+            <value><fullName>CoteIvoire</fullName><default>false</default><label>Côte d Ivoire</label></value>
+            <value><fullName>Cameroun</fullName><default>false</default><label>Cameroun</label></value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
