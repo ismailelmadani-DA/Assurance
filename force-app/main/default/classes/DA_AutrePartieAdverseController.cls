@@ -18,7 +18,7 @@ public with sharing class DA_AutrePartieAdverseController {
         'Pays__c, Ville__c, Adresse__c, TypeContact__c, ' +
         'StateOfPerson__c, CompagnieAdverse__c, ' +
         'PaysCompagnieAdverse__c, NumeroContratAssurance__c, ' +
-        'ITT__c, IPP__c, DateDeces__c, RevenuAnnuel__c, ' +
+        'ITT__c, IPP__c, DateDeces__c, RevenuAnnuel__c, Description__c, ' +
         'ParticipantAccount__c, ' +
         'ParticipantAccount__r.Name, ParticipantAccount__r.Nom__c, ' +
         'ParticipantAccount__r.Prenom__c, ParticipantAccount__r.Civility__c, ' +
@@ -137,11 +137,32 @@ public with sharing class DA_AutrePartieAdverseController {
             result.put('ipp', p.IPP__c);
             result.put('dateDeces', p.DateDeces__c != null ? String.valueOf(p.DateDeces__c) : '');
             result.put('revenuAnnuel', p.RevenuAnnuel__c);
+            result.put('description', p.Description__c);
             return result;
         } catch (AuraHandledException ae) {
             throw ae;
         } catch (Exception e) {
             throw new AuraHandledException(friendlyError(e));
+        }
+    }
+
+    @AuraEnabled
+    public static List<Map<String, String>> searchCompagnies(String searchTerm) {
+        if (String.isBlank(searchTerm) || searchTerm.length() < 2) {
+            return new List<Map<String, String>>();
+        }
+        try {
+            List<SObject> results = DA_Utility.search('Id, Name', 'Account', 'Name', searchTerm, null, 10);
+            List<Map<String, String>> options = new List<Map<String, String>>();
+            for (SObject acc : results) {
+                options.add(new Map<String, String>{
+                    'value' => (String) acc.get('Id'),
+                    'label' => (String) acc.get('Name')
+                });
+            }
+            return options;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
         }
     }
 
@@ -294,6 +315,8 @@ public with sharing class DA_AutrePartieAdverseController {
             if (formData.get('revenuAnnuel') != null) {
                 participant.RevenuAnnuel__c = Decimal.valueOf(String.valueOf(formData.get('revenuAnnuel')));
             }
+
+            participant.Description__c = (String) formData.get('description');
 
             upsert participant;
 

@@ -1,8 +1,6 @@
 <template>
 
-    <!-- ══════════════════════════════════════════
-       CARTE PRINCIPALE - LISTE DES AUTRES PARTIES ADVERSES
-    ══════════════════════════════════════════ -->
+    <!-- CARTE PRINCIPALE - LISTE DES AUTRES PARTIES ADVERSES -->
     <div class="ap-card">
 
         <!-- HEADER -->
@@ -118,7 +116,7 @@
                 </template>
             </template>
 
-            <!-- &#201;TAT VIDE -->
+            <!-- ETAT VIDE -->
             <template if:false={hasRecords}>
                 <div class="ap-empty">
                     <div class="ap-empty__icon">
@@ -145,14 +143,12 @@
         </div>
     </div>
 
-    <!-- ══════════════════════════════════════════
-       MODALE AJOUT / MODIFICATION
-    ══════════════════════════════════════════ -->
+    <!-- MODALE AJOUT / MODIFICATION -->
     <template if:true={showFormModal}>
         <div class="ap-modal-overlay" onclick={handleOverlayClick}>
             <section class="ap-modal" role="dialog" aria-modal="true" onclick={stopPropagation}>
 
-                <!-- En-t&#234;te modale -->
+                <!-- En-tete modale -->
                 <header class="ap-modal__header">
                     <div class="ap-modal__header-inner">
                         <lightning-icon icon-name="standard:partners" size="small" variant="inverse"></lightning-icon>
@@ -173,7 +169,7 @@
 
                     <form onsubmit={handleFormSubmit}>
 
-                        <!-- Section 01 : Type & Identit&#233; -->
+                        <!-- Section 01 : Type & Identite -->
                         <div class="ap-section">
                             <div class="ap-section__title">
                                 <span class="ap-section__num">01</span>
@@ -187,6 +183,16 @@
                                         onchange={handleFieldChange} placeholder="S&#233;lectionner">
                                     </lightning-combobox>
                                 </div>
+
+                                <template if:true={isAnimal}>
+                                    <div class="ap-field ap-field--full">
+                                        <lightning-textarea label="Description" name="description"
+                                            value={form.description} maxlength="1000"
+                                            onchange={handleFieldChange}
+                                            placeholder="D&#233;crivez l'animal (type, race, propri&#233;taire, etc.)">
+                                        </lightning-textarea>
+                                    </div>
+                                </template>
 
                                 <div class="ap-field">
                                     <lightning-input type="text" label="Nom complet" name="nomComplet" value={form.nomComplet}
@@ -241,7 +247,7 @@
                             </div>
                         </div>
 
-                        <!-- Section 02 : Coordonn&#233;es -->
+                        <!-- Section 02 : Coordonnees -->
                         <div class="ap-section">
                             <div class="ap-section__title">
                                 <span class="ap-section__num">02</span>
@@ -261,7 +267,7 @@
 
                                 <div class="ap-field">
                                     <lightning-combobox label="Ville" name="ville" value={form.ville}
-                                        options={villeOptions} onchange={handleFieldChange}
+                                        options={filteredVilleOptions} onchange={handleFieldChange}
                                         placeholder="S&#233;lectionner" required disabled={isVilleDisabled}>
                                     </lightning-combobox>
                                     <template if:true={errors.ville}>
@@ -307,11 +313,52 @@
                                     </template>
                                 </div>
 
+                                <!-- Compagnie adverse LOOKUP -->
                                 <div class="ap-field">
-                                    <lightning-input type="text" label="Compagnie adverse" name="compagnieAdverseId"
-                                        value={form.compagnieAdverseId} onchange={handleFieldChange}
-                                        placeholder="ID de la compagnie adverse">
-                                    </lightning-input>
+                                    <label class="slds-form-element__label">Compagnie adverse</label>
+                                    <template if:false={hasSelectedCompagnie}>
+                                        <div class="ap-lookup-container">
+                                            <div class="ap-lookup-input-wrap">
+                                                <lightning-icon icon-name="utility:search" size="xx-small" class="ap-lookup-search-icon"></lightning-icon>
+                                                <input type="text" class="ap-lookup-input"
+                                                    value={compagnieSearchTerm}
+                                                    placeholder="Rechercher une compagnie..."
+                                                    oninput={handleCompagnieSearch}
+                                                    onfocus={handleCompagnieSearchFocus}
+                                                    onblur={handleCompagnieSearchBlur} />
+                                            </div>
+                                            <template if:true={showCompagnieDropdown}>
+                                                <div class="ap-lookup-dropdown" role="listbox">
+                                                    <template if:true={hasCompagnieResults}>
+                                                        <template for:each={compagnieSearchResults} for:item="opt">
+                                                            <div key={opt.value} class="ap-lookup-option"
+                                                                data-value={opt.value} data-label={opt.label}
+                                                                onmousedown={handleCompagnieSelect}>
+                                                                <lightning-icon icon-name="standard:account" size="x-small"></lightning-icon>
+                                                                <span>{opt.label}</span>
+                                                            </div>
+                                                        </template>
+                                                    </template>
+                                                    <template if:false={hasCompagnieResults}>
+                                                        <div class="ap-lookup-empty">Aucun r&#233;sultat</div>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <template if:true={hasSelectedCompagnie}>
+                                        <div class="ap-lookup-pill">
+                                            <lightning-icon icon-name="standard:account" size="xx-small"></lightning-icon>
+                                            <span class="ap-lookup-pill-label">{selectedCompagnieName}</span>
+                                            <button class="ap-lookup-pill-remove" onclick={handleCompagnieRemove} title="Retirer" type="button">
+                                                <lightning-icon icon-name="utility:close" size="xx-small"></lightning-icon>
+                                            </button>
+                                            <a class="ap-btn ap-btn--lookup-link" href={selectedCompagnieUrl}
+                                                target="_blank" title="Voir la compagnie">
+                                                <lightning-icon icon-name="utility:new_window" size="xx-small"></lightning-icon>
+                                            </a>
+                                        </div>
+                                    </template>
                                 </div>
 
                                 <div class="ap-field">
@@ -374,7 +421,7 @@
 
                                 <div class="ap-field ap-field--full">
                                     <lightning-combobox label="Moyen de notification" name="typeContact"
-                                        value={form.typeContact} options={notificationOptions}
+                                        value={form.typeContact} options={typeContactOptions}
                                         onchange={handleFieldChange} placeholder="S&#233;lectionner">
                                     </lightning-combobox>
                                 </div>

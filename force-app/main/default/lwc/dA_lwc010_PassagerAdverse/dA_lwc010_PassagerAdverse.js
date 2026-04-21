@@ -1,8 +1,18 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
+import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
 import { getRecord } from 'lightning/uiRecordApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import CASE_CREATED_DATE from '@salesforce/schema/Case.CreatedDate';
+
+import CLAIM_PARTICIPANT_OBJECT from '@salesforce/schema/ClaimParticipant__c';
+import PAYS_FIELD from '@salesforce/schema/ClaimParticipant__c.Pays__c';
+import VILLE_FIELD from '@salesforce/schema/ClaimParticipant__c.Ville__c';
+import STATE_OF_PERSON_FIELD from '@salesforce/schema/ClaimParticipant__c.StateOfPerson__c';
+import SEXE_FIELD from '@salesforce/schema/ClaimParticipant__c.Sexe__c';
+import MARITAL_STATUS_FIELD from '@salesforce/schema/ClaimParticipant__c.MaritalStatus__c';
+import TYPE_CONTACT_FIELD from '@salesforce/schema/ClaimParticipant__c.TypeContact__c';
+import CIVILITE_FIELD from '@salesforce/schema/ClaimParticipant__c.Civilite__c';
 
 import getAdverseVehicles from '@salesforce/apex/DA_PassagerAdverseController.getAdverseVehicles';
 import getParticipants from '@salesforce/apex/DA_PassagerAdverseController.getParticipants';
@@ -14,52 +24,6 @@ import resolveAccountByCIN from '@salesforce/apex/PassagerController.resolveAcco
 
 const PAGE_SIZE = 10;
 
-const CIVILITY_OPTIONS = [
-    { label: 'Mr', value: 'Mr' },
-    { label: 'Mme', value: 'Mme' }
-];
-
-const SEXE_OPTIONS = [
-    { label: 'Masculin', value: 'Masculin' },
-    { label: 'Féminin', value: 'Féminin' }
-];
-
-const CIVILITY_SEX_MAP = { Mr: 'Masculin', Mme: 'Féminin' };
-
-const SITUATION_OPTIONS = [
-    { label: 'Célibataire', value: 'Célibataire' },
-    { label: 'Marié(e)', value: 'Marié(e)' },
-    { label: 'Divorcé(e)', value: 'Divorcé(e)' },
-    { label: 'Séparé(e)', value: 'Séparé(e)' }
-];
-
-const NOTIFICATION_OPTIONS = [
-    { label: 'Mail', value: 'Mail' },
-    { label: 'Téléphone', value: 'Téléphone' },
-    { label: 'Mail et Téléphone', value: 'Mail et Téléphone' }
-];
-
-const PAYS_OPTIONS = [
-    { label: 'Maroc', value: 'Maroc' }
-];
-
-const VILLE_OPTIONS = [
-    'Casablanca','Rabat','Fes','Marrakech','Agadir','Tanger','Meknes','Oujda',
-    'Kenitra','Tetouan','Safi','Mohammedia','Khouribga','Beni Mellal','El Jadida',
-    'Nador','Taza','Settat','Berrechid','Khemisset','Inezgane','Ksar El Kebir',
-    'Larache','Guelmim','Berkane','Taourirt','Sidi Slimane','Sidi Kacem',
-    'Al Hoceima','Tiznit','Tan-Tan','Taroudant','Ouarzazate','Errachidia',
-    'Ifrane','Azrou','Midelt','Tinghir','Zagora','Dakhla','Laayoune',
-    'Chefchaouen','Temara','Sale','Sefrou'
-].map(v => ({ label: v, value: v }));
-
-const ETAT_OPTIONS = [
-    { label: 'Indemne', value: 'Indemne' },
-    { label: 'Blessé', value: 'Blessé' },
-    { label: 'Décédé', value: 'Décédé' }
-];
-
-// Allowed values per current state (on edit)
 const ETAT_ALLOWED = {
     'Indemne': ['Indemne', 'Blessé', 'Décédé'],
     'Blessé': ['Blessé', 'Décédé'],
@@ -128,17 +92,71 @@ export default class DA_lwc010_PassagerAdverse extends NavigationMixin(Lightning
 
     @track currentPage = 1;
 
-
-    civiliteOptions = CIVILITY_OPTIONS;
-    sexeOptions = SEXE_OPTIONS;
-    situationFamilialeOptions = SITUATION_OPTIONS;
-    notificationOptions = NOTIFICATION_OPTIONS;
-    paysOptions = PAYS_OPTIONS;
-    villeOptions = VILLE_OPTIONS;
-    etatPassagerOptions = ETAT_OPTIONS;
+    // Picklist options from wire
+    @track civiliteOptions = [];
+    @track sexeOptions = [];
+    @track situationFamilialeOptions = [];
+    @track notificationOptions = [];
+    @track paysOptions = [];
+    @track allVilleOptions = [];
+    @track filteredVilleOptions = [];
+    @track etatPassagerOptions = [];
 
     @wire(getRecord, { recordId: '$recordId', fields: [CASE_CREATED_DATE] })
     caseRecord;
+
+    /* ══════════════════════════════════════
+       WIRE - Object info & picklists
+    ══════════════════════════════════════ */
+    @wire(getObjectInfo, { objectApiName: CLAIM_PARTICIPANT_OBJECT })
+    claimParticipantInfo;
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: CIVILITE_FIELD })
+    wiredCivilite({ data, error }) {
+        if (data) this.civiliteOptions = data.values;
+        if (error) console.error('Civilite picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: SEXE_FIELD })
+    wiredSexe({ data, error }) {
+        if (data) this.sexeOptions = data.values;
+        if (error) console.error('Sexe picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: MARITAL_STATUS_FIELD })
+    wiredMarital({ data, error }) {
+        if (data) this.situationFamilialeOptions = data.values;
+        if (error) console.error('MaritalStatus picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: TYPE_CONTACT_FIELD })
+    wiredTypeContact({ data, error }) {
+        if (data) this.notificationOptions = data.values;
+        if (error) console.error('TypeContact picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: PAYS_FIELD })
+    wiredPays({ data, error }) {
+        if (data) this.paysOptions = data.values;
+        if (error) console.error('Pays picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: VILLE_FIELD })
+    wiredVille({ data, error }) {
+        if (data) {
+            this.allVilleOptions = data;
+            if (this.form.pays) {
+                this._updateVilleOptions();
+            }
+        }
+        if (error) console.error('Ville picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: STATE_OF_PERSON_FIELD })
+    wiredState({ data, error }) {
+        if (data) this.etatPassagerOptions = data.values;
+        if (error) console.error('StateOfPerson picklist error', error);
+    }
 
     get caseCreatedDate() {
         const val = this.caseRecord?.data?.fields?.CreatedDate?.value;
@@ -235,7 +253,7 @@ export default class DA_lwc010_PassagerAdverse extends NavigationMixin(Lightning
         return this.filteredVehicleOptions.length > 0;
     }
     get filteredEtatOptions() {
-        return ETAT_OPTIONS;
+        return this.etatPassagerOptions;
     }
     get showIttIpp() { return this.form.etatPassager === 'Blessé'; }
     get showDecesFields() { return this.form.etatPassager === 'Décédé'; }
@@ -301,6 +319,10 @@ export default class DA_lwc010_PassagerAdverse extends NavigationMixin(Lightning
                 isOwner: data.isOwner === true
             };
             this.originalEtatPassager = data.etatPassager || '';
+
+            if (data.pays) {
+                this._updateVilleOptions();
+            }
         } catch (e) {
             this._toast('Erreur', this._cleanError(e), 'error');
             this.showFormModal = false;
@@ -349,11 +371,9 @@ export default class DA_lwc010_PassagerAdverse extends NavigationMixin(Lightning
         const value = e.target.value;
         this.form = { ...this.form, [name]: value };
 
-        if (name === 'civility' && CIVILITY_SEX_MAP[value]) {
-            this.form = { ...this.form, sexe: CIVILITY_SEX_MAP[value] };
-        }
         if (name === 'pays') {
             this.form = { ...this.form, ville: '' };
+            this._updateVilleOptions();
         }
         // Validate état transition on edit
         if (name === 'etatPassager' && this.isUpdateMode && this.originalEtatPassager) {
@@ -505,6 +525,21 @@ export default class DA_lwc010_PassagerAdverse extends NavigationMixin(Lightning
     closeModal() { this.showFormModal = false; }
     handleOverlayClick(e) { if (e.target === e.currentTarget) this.closeModal(); }
     stopPropagation(e) { e.stopPropagation(); }
+
+    _updateVilleOptions() {
+        if (!this.allVilleOptions || !this.allVilleOptions.controllerValues) {
+            this.filteredVilleOptions = [];
+            return;
+        }
+        const paysIndex = this.allVilleOptions.controllerValues[this.form.pays];
+        if (paysIndex === undefined) {
+            this.filteredVilleOptions = [];
+            return;
+        }
+        this.filteredVilleOptions = this.allVilleOptions.values.filter(
+            v => v.validFor.includes(paysIndex)
+        );
+    }
 
     _cleanError(e) {
         const raw = e?.body?.message || e?.message || '';

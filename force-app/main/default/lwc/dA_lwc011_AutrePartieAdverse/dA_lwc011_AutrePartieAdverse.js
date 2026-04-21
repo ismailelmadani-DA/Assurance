@@ -1,82 +1,30 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
+import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
 import { getRecord } from 'lightning/uiRecordApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import CASE_CREATED_DATE from '@salesforce/schema/Case.CreatedDate';
+
+import CLAIM_PARTICIPANT_OBJECT from '@salesforce/schema/ClaimParticipant__c';
+import PAYS_FIELD from '@salesforce/schema/ClaimParticipant__c.Pays__c';
+import VILLE_FIELD from '@salesforce/schema/ClaimParticipant__c.Ville__c';
+import STATE_OF_PERSON_FIELD from '@salesforce/schema/ClaimParticipant__c.StateOfPerson__c';
+import SEXE_FIELD from '@salesforce/schema/ClaimParticipant__c.Sexe__c';
+import MARITAL_STATUS_FIELD from '@salesforce/schema/ClaimParticipant__c.MaritalStatus__c';
+import TYPE_CONTACT_FIELD from '@salesforce/schema/ClaimParticipant__c.TypeContact__c';
+import TYPE_PARTIE_ADVERSE_FIELD from '@salesforce/schema/ClaimParticipant__c.TypePartieAdverse__c';
+import PAYS_COMPAGNIE_FIELD from '@salesforce/schema/ClaimParticipant__c.PaysCompagnieAdverse__c';
+import CIVILITE_FIELD from '@salesforce/schema/ClaimParticipant__c.Civilite__c';
 
 import getParticipants from '@salesforce/apex/DA_AutrePartieAdverseController.getParticipants';
 import getParticipantById from '@salesforce/apex/DA_AutrePartieAdverseController.getParticipantById';
 import upsertPartie from '@salesforce/apex/DA_AutrePartieAdverseController.upsertPartie';
 import deletePartie from '@salesforce/apex/DA_AutrePartieAdverseController.deletePartie';
 import checkDuplicate from '@salesforce/apex/DA_AutrePartieAdverseController.checkDuplicate';
+import searchCompagnies from '@salesforce/apex/DA_AutrePartieAdverseController.searchCompagnies';
 import resolveAccountByCIN from '@salesforce/apex/PassagerController.resolveAccountByCIN';
 
 const PAGE_SIZE = 10;
-
-const CIVILITY_OPTIONS = [
-    { label: 'Mr', value: 'Mr' },
-    { label: 'Mme', value: 'Mme' }
-];
-
-const SEXE_OPTIONS = [
-    { label: 'Masculin', value: 'Masculin' },
-    { label: 'Féminin', value: 'Féminin' }
-];
-
-const CIVILITY_SEX_MAP = { Mr: 'Masculin', Mme: 'Féminin' };
-
-const SITUATION_OPTIONS = [
-    { label: 'Célibataire', value: 'Célibataire' },
-    { label: 'Marié(e)', value: 'Marié(e)' },
-    { label: 'Divorcé(e)', value: 'Divorcé(e)' },
-    { label: 'Séparé(e)', value: 'Séparé(e)' }
-];
-
-const TYPE_PARTIE_OPTIONS = [
-    { label: 'Animal', value: 'Animal' },
-    { label: 'Charrette', value: 'Charrette' },
-    { label: 'Cyclomoteur', value: 'Cyclomoteur' },
-    { label: 'Pieton', value: 'Pieton' },
-    { label: 'Objet', value: 'Objet' },
-    { label: 'Autre', value: 'Autre' }
-];
-
-const NOTIFICATION_OPTIONS = [
-    { label: 'Mail', value: 'Mail' },
-    { label: 'Téléphone', value: 'Téléphone' },
-    { label: 'Mail et Téléphone', value: 'Mail et Téléphone' }
-];
-
-const PAYS_OPTIONS = [
-    { label: 'Maroc', value: 'Maroc' }
-];
-
-const PAYS_COMPAGNIE_OPTIONS = [
-    { label: 'Maroc', value: 'Maroc' },
-    { label: 'Gabon', value: 'Gabon' },
-    { label: 'Tunisie', value: 'Tunisie' },
-    { label: 'Algérie', value: 'Algerie' },
-    { label: 'France', value: 'France' },
-    { label: 'Sénégal', value: 'Senegal' },
-    { label: 'Côte d\'Ivoire', value: 'CoteIvoire' },
-    { label: 'Cameroun', value: 'Cameroun' }
-];
-
-const VILLE_OPTIONS = [
-    'Casablanca','Rabat','Fes','Marrakech','Agadir','Tanger','Meknes','Oujda',
-    'Kenitra','Tetouan','Safi','Mohammedia','Khouribga','Beni Mellal','El Jadida',
-    'Nador','Taza','Settat','Berrechid','Khemisset','Inezgane','Ksar El Kebir',
-    'Larache','Guelmim','Berkane','Taourirt','Sidi Slimane','Sidi Kacem',
-    'Al Hoceima','Tiznit','Tan-Tan','Taroudant','Ouarzazate','Errachidia',
-    'Ifrane','Azrou','Midelt','Tinghir','Zagora','Dakhla','Laayoune',
-    'Chefchaouen','Temara','Sale','Sefrou'
-].map(v => ({ label: v, value: v }));
-
-const ETAT_OPTIONS = [
-    { label: 'Indemne', value: 'Indemne' },
-    { label: 'Blessé', value: 'Blessé' },
-    { label: 'Décédé', value: 'Décédé' }
-];
 
 const ETAT_ALLOWED = {
     'Indemne': ['Indemne', 'Blessé', 'Décédé'],
@@ -106,7 +54,8 @@ const EMPTY_FORM = () => ({
     itt: null,
     ipp: null,
     dateDeces: '',
-    revenuAnnuel: null
+    revenuAnnuel: null,
+    description: ''
 });
 
 const EMPTY_ERRORS = () => ({
@@ -145,20 +94,88 @@ export default class DA_lwc011_AutrePartieAdverse extends NavigationMixin(Lightn
 
     @track currentPage = 1;
 
-    // Compagnie adverse search
+    // Picklist options from wire
+    @track typePartieOptions = [];
+    @track sexeOptions = [];
+    @track situationFamilialeOptions = [];
+    @track paysOptions = [];
+    @track allVilleOptions = [];
+    @track filteredVilleOptions = [];
+    @track etatOptions = [];
+    @track paysCompagnieOptions = [];
+    @track typeContactOptions = [];
+    @track civiliteOptions = [];
+
+    // Compagnie adverse lookup
     @track compagnieSearchTerm = '';
     @track showCompagnieDropdown = false;
     @track compagnieSearchResults = [];
+    @track selectedCompagnieName = '';
 
-    civiliteOptions = CIVILITY_OPTIONS;
-    sexeOptions = SEXE_OPTIONS;
-    situationFamilialeOptions = SITUATION_OPTIONS;
-    typePartieOptions = TYPE_PARTIE_OPTIONS;
-    notificationOptions = NOTIFICATION_OPTIONS;
-    paysOptions = PAYS_OPTIONS;
-    paysCompagnieOptions = PAYS_COMPAGNIE_OPTIONS;
-    villeOptions = VILLE_OPTIONS;
-    etatOptions = ETAT_OPTIONS;
+    /* ══════════════════════════════════════
+       WIRE - Object info & picklists
+    ══════════════════════════════════════ */
+    @wire(getObjectInfo, { objectApiName: CLAIM_PARTICIPANT_OBJECT })
+    claimParticipantInfo;
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: TYPE_PARTIE_ADVERSE_FIELD })
+    wiredTypePartie({ data, error }) {
+        if (data) this.typePartieOptions = data.values;
+        if (error) console.error('TypePartieAdverse picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: SEXE_FIELD })
+    wiredSexe({ data, error }) {
+        if (data) this.sexeOptions = data.values;
+        if (error) console.error('Sexe picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: MARITAL_STATUS_FIELD })
+    wiredMarital({ data, error }) {
+        if (data) this.situationFamilialeOptions = data.values;
+        if (error) console.error('MaritalStatus picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: PAYS_FIELD })
+    wiredPays({ data, error }) {
+        if (data) this.paysOptions = data.values;
+        if (error) console.error('Pays picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: VILLE_FIELD })
+    wiredVille({ data, error }) {
+        if (data) {
+            this.allVilleOptions = data;
+            if (this.form.pays) {
+                this._updateVilleOptions();
+            }
+        }
+        if (error) console.error('Ville picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: STATE_OF_PERSON_FIELD })
+    wiredState({ data, error }) {
+        if (data) this.etatOptions = data.values;
+        if (error) console.error('StateOfPerson picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: PAYS_COMPAGNIE_FIELD })
+    wiredPaysCompagnie({ data, error }) {
+        if (data) this.paysCompagnieOptions = data.values;
+        if (error) console.error('PaysCompagnieAdverse picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: TYPE_CONTACT_FIELD })
+    wiredTypeContact({ data, error }) {
+        if (data) this.typeContactOptions = data.values;
+        if (error) console.error('TypeContact picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: CIVILITE_FIELD })
+    wiredCivilite({ data, error }) {
+        if (data) this.civiliteOptions = data.values;
+        if (error) console.error('Civilite picklist error', error);
+    }
 
     @wire(getRecord, { recordId: '$recordId', fields: [CASE_CREATED_DATE] })
     caseRecord;
@@ -168,6 +185,29 @@ export default class DA_lwc011_AutrePartieAdverse extends NavigationMixin(Lightn
         return val ? val.substring(0, 10) : null;
     }
 
+    /* ══════════════════════════════════════
+       VILLE DEPENDENT PICKLIST
+    ══════════════════════════════════════ */
+    _updateVilleOptions() {
+        if (!this.allVilleOptions || !this.form.pays) {
+            this.filteredVilleOptions = [];
+            return;
+        }
+        const key = this.form.pays;
+        const controllerValues = this.allVilleOptions.controllerValues || {};
+        const controllerIndex = controllerValues[key];
+        if (controllerIndex === undefined) {
+            this.filteredVilleOptions = this.allVilleOptions.values || [];
+            return;
+        }
+        this.filteredVilleOptions = (this.allVilleOptions.values || []).filter(
+            opt => opt.validFor && opt.validFor.includes(controllerIndex)
+        );
+    }
+
+    /* ══════════════════════════════════════
+       LIFECYCLE
+    ══════════════════════════════════════ */
     connectedCallback() {
         this.loadParticipants();
     }
@@ -215,6 +255,9 @@ export default class DA_lwc011_AutrePartieAdverse extends NavigationMixin(Lightn
         );
     }
 
+    /* ══════════════════════════════════════
+       GETTERS
+    ══════════════════════════════════════ */
     get totalPages() { return Math.max(1, Math.ceil(this.records.length / PAGE_SIZE)); }
     get showPagination() { return this.totalPages > 1; }
     get hasRecords() { return this.filteredRecords.length > 0; }
@@ -228,6 +271,7 @@ export default class DA_lwc011_AutrePartieAdverse extends NavigationMixin(Lightn
     nextPage() { if (!this.isLastPage) { this.currentPage++; this._applyFilter(); } }
 
     get isVilleDisabled() { return !this.form.pays; }
+    get isAnimal() { return this.form.typePartieAdverse === 'Animal'; }
     get showIttIpp() { return this.form.etatPassager === 'Blessé'; }
     get showDecesFields() { return this.form.etatPassager === 'Décédé'; }
     get showEmailField() {
@@ -239,11 +283,24 @@ export default class DA_lwc011_AutrePartieAdverse extends NavigationMixin(Lightn
     get modalTitle() { return this.isUpdateMode ? 'Modifier autre partie adverse' : 'Ajouter autre partie adverse'; }
     get saveLabel() { return this.isUpdateMode ? 'Enregistrer' : 'Confirmer'; }
 
+    // Compagnie adverse lookup getters
+    get hasSelectedCompagnie() { return !!this.form.compagnieAdverseId; }
+    get selectedCompagnieUrl() {
+        return this.form.compagnieAdverseId ? `/lightning/r/Account/${this.form.compagnieAdverseId}/view` : '';
+    }
+    get hasCompagnieResults() { return this.compagnieSearchResults.length > 0; }
+
+    /* ══════════════════════════════════════
+       ACTIONS
+    ══════════════════════════════════════ */
     handleAdd() {
         this.isUpdateMode = false;
         this.originalEtatPassager = '';
         this.form = EMPTY_FORM();
         this.errors = EMPTY_ERRORS();
+        this.selectedCompagnieName = '';
+        this.compagnieSearchTerm = '';
+        this.compagnieSearchResults = [];
         this.showFormModal = true;
     }
 
@@ -290,9 +347,23 @@ export default class DA_lwc011_AutrePartieAdverse extends NavigationMixin(Lightn
                 itt: data.itt != null ? data.itt : null,
                 ipp: data.ipp != null ? data.ipp : null,
                 dateDeces: data.dateDeces || '',
-                revenuAnnuel: data.revenuAnnuel != null ? data.revenuAnnuel : null
+                revenuAnnuel: data.revenuAnnuel != null ? data.revenuAnnuel : null,
+                description: data.description || ''
             };
             this.originalEtatPassager = data.etatPassager || '';
+
+            // Resolve compagnie name for the pill
+            if (data.compagnieAdverseId) {
+                const rec = this.records.find(r => r.CompagnieAdverse__c === data.compagnieAdverseId);
+                this.selectedCompagnieName = rec?.compagnieName || data.compagnieAdverseId;
+            } else {
+                this.selectedCompagnieName = '';
+            }
+
+            // Update ville options for the selected pays
+            if (data.pays) {
+                this._updateVilleOptions();
+            }
         } catch (e) {
             this._toast('Erreur', this._cleanError(e), 'error');
             this.showFormModal = false;
@@ -336,16 +407,17 @@ export default class DA_lwc011_AutrePartieAdverse extends NavigationMixin(Lightn
         }
     }
 
+    /* ══════════════════════════════════════
+       FORM HANDLERS
+    ══════════════════════════════════════ */
     handleFieldChange(e) {
         const name = e.target.name;
         const value = e.target.value;
         this.form = { ...this.form, [name]: value };
 
-        if (name === 'civility' && CIVILITY_SEX_MAP[value]) {
-            this.form = { ...this.form, sexe: CIVILITY_SEX_MAP[value] };
-        }
         if (name === 'pays') {
             this.form = { ...this.form, ville: '' };
+            this._updateVilleOptions();
         }
         // Validate état transition on edit
         if (name === 'etatPassager' && this.isUpdateMode && this.originalEtatPassager) {
@@ -365,6 +437,56 @@ export default class DA_lwc011_AutrePartieAdverse extends NavigationMixin(Lightn
 
     handleFormSubmit(e) { e.preventDefault(); }
 
+    /* ══════════════════════════════════════
+       COMPAGNIE ADVERSE LOOKUP
+    ══════════════════════════════════════ */
+    async handleCompagnieSearch(e) {
+        this.compagnieSearchTerm = e.target.value;
+        if (this.compagnieSearchTerm.length < 2) {
+            this.compagnieSearchResults = [];
+            this.showCompagnieDropdown = false;
+            return;
+        }
+        try {
+            const results = await searchCompagnies({ searchTerm: this.compagnieSearchTerm });
+            this.compagnieSearchResults = results;
+            this.showCompagnieDropdown = true;
+        } catch (err) {
+            console.error('searchCompagnies error', err);
+            this.compagnieSearchResults = [];
+        }
+    }
+
+    handleCompagnieSearchFocus() {
+        if (this.compagnieSearchResults.length > 0) {
+            this.showCompagnieDropdown = true;
+        }
+    }
+
+    handleCompagnieSearchBlur() {
+        // eslint-disable-next-line @lwc/lwc/no-async-operation
+        setTimeout(() => { this.showCompagnieDropdown = false; }, 200);
+    }
+
+    handleCompagnieSelect(e) {
+        const selectedId = e.currentTarget.dataset.value;
+        const selectedLabel = e.currentTarget.dataset.label;
+        this.form = { ...this.form, compagnieAdverseId: selectedId };
+        this.selectedCompagnieName = selectedLabel;
+        this.compagnieSearchTerm = '';
+        this.compagnieSearchResults = [];
+        this.showCompagnieDropdown = false;
+    }
+
+    handleCompagnieRemove() {
+        this.form = { ...this.form, compagnieAdverseId: '' };
+        this.selectedCompagnieName = '';
+        this.compagnieSearchTerm = '';
+    }
+
+    /* ══════════════════════════════════════
+       VALIDATION
+    ══════════════════════════════════════ */
     _validate() {
         const e = EMPTY_ERRORS();
         let ok = true;
@@ -380,7 +502,7 @@ export default class DA_lwc011_AutrePartieAdverse extends NavigationMixin(Lightn
         if (this.showEmailField && !this.form.email?.trim()) { e.email = 'Obligatoire'; ok = false; }
         if (this.showPhoneField && !this.form.telephone?.trim()) { e.telephone = 'Obligatoire'; ok = false; }
 
-        // Décédé → date décès and revenu annuel required
+        // Décédé
         if (this.form.etatPassager === 'Décédé') {
             if (!this.form.dateDeces) { e.dateDeces = 'Obligatoire'; ok = false; }
             if (this.form.revenuAnnuel == null || this.form.revenuAnnuel === '') { e.revenuAnnuel = 'Obligatoire'; ok = false; }
@@ -413,6 +535,9 @@ export default class DA_lwc011_AutrePartieAdverse extends NavigationMixin(Lightn
         return ok;
     }
 
+    /* ══════════════════════════════════════
+       SAVE
+    ══════════════════════════════════════ */
     async handleSave() {
         if (!this._validate()) return;
         this.isSaving = true;

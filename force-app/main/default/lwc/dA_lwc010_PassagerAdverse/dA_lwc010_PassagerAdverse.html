@@ -348,7 +348,7 @@
 
                                 <div class="pm-field">
                                     <lightning-combobox label="Ville" name="ville" value={form.ville}
-                                        options={villeOptions} onchange={handleFieldChange}
+                                        options={filteredVilleOptions} onchange={handleFieldChange}
                                         placeholder="S&#233;lectionner" required disabled={isVilleDisabled}>
                                     </lightning-combobox>
                                     <template if:true={errors.ville}>

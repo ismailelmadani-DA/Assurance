@@ -901,6 +901,157 @@
 }
 
 /* ════════════════════════════════════════
+   LOOKUP (Compagnie adverse)
+════════════════════════════════════════ */
+.ap-lookup-container {
+    position: relative;
+}
+
+.ap-lookup-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.ap-lookup-search-icon {
+    position: absolute;
+    left: .65rem;
+    z-index: 1;
+    pointer-events: none;
+    --lwc-colorTextIconDefault: var(--text-muted);
+}
+
+.ap-lookup-input {
+    width: 100%;
+    padding: .55rem .75rem .55rem 2.2rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-size: .85rem;
+    font-family: inherit;
+    color: var(--text-main);
+    background: var(--white);
+    outline: none;
+    transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.ap-lookup-input::placeholder {
+    color: var(--text-muted);
+}
+
+.ap-lookup-input:focus {
+    border-color: var(--wafa-green);
+    box-shadow: 0 0 0 3px rgba(0, 98, 51, .12);
+}
+
+.ap-lookup-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    background: var(--white);
+    border: 1px solid var(--border-strong);
+    border-top: none;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    z-index: 100;
+}
+
+.ap-lookup-dropdown::-webkit-scrollbar {
+    width: 4px;
+}
+
+.ap-lookup-dropdown::-webkit-scrollbar-thumb {
+    background: var(--wafa-green);
+    border-radius: 2px;
+}
+
+.ap-lookup-option {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    padding: .55rem .75rem;
+    cursor: pointer;
+    font-size: .83rem;
+    color: var(--text-main);
+    transition: background var(--dur) var(--ease);
+}
+
+.ap-lookup-option:hover {
+    background: var(--wafa-light-green);
+    color: var(--wafa-dark-green);
+}
+
+.ap-lookup-empty {
+    padding: .75rem;
+    text-align: center;
+    font-size: .8rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.ap-lookup-pill {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .4rem .65rem;
+    background: var(--wafa-light-green);
+    border: 1px solid rgba(0, 98, 51, .2);
+    border-radius: var(--radius-pill);
+    max-width: max-content;
+}
+
+.ap-lookup-pill-label {
+    font-size: .83rem;
+    font-weight: 600;
+    color: var(--wafa-dark-green);
+}
+
+.ap-lookup-pill-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 98, 51, .12);
+    color: var(--wafa-green);
+    cursor: pointer;
+    padding: 0;
+    transition: all var(--dur) var(--ease);
+}
+
+.ap-lookup-pill-remove:hover {
+    background: var(--ap-red);
+    color: var(--white);
+}
+
+.ap-btn--lookup-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--wafa-green);
+    background: var(--wafa-light-green);
+    color: var(--wafa-green);
+    cursor: pointer;
+    transition: all var(--dur) var(--ease);
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.ap-btn--lookup-link:hover {
+    background: var(--wafa-green);
+    color: var(--white);
+    box-shadow: 0 3px 10px rgba(0, 98, 51, .3);
+    transform: translateY(-1px);
+}
+
+/* ════════════════════════════════════════
    FOCUS VISIBLE
 ════════════════════════════════════════ */
 .ap-btn:focus-visible {
