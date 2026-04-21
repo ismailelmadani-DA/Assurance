@@ -20,6 +20,17 @@
                             <p><strong>Nom & Prénom :</strong> {party.Nom__c} {party.Prenom__c} | <strong>Partie :</strong> {party.OpposingParty__c}</p>
                             <p class="slds-text-color_weak">CIN : {party.CIN__c} | Ville : {party.Ville__c}</p>
                         </div>
+                        
+                        <div class="slds-col slds-grow-none">
+                            <lightning-button-icon 
+                                icon-name="utility:delete" 
+                                variant="bare" 
+                                alternative-text="Supprimer" 
+                                data-key={party.key} 
+                                onclick={handleDelete}
+                                title="Supprimer cette personne">
+                            </lightning-button-icon>
+                        </div>
                     </div>
                 </div>
             </template>
@@ -37,30 +48,38 @@
             <h3 class="section-header slds-m-bottom_medium">Informations Personne à indemniser</h3>
             
             <div class="slds-grid slds-wrap slds-gutters">
-            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
-                <lightning-combobox label="Type partie adverse" options={opposingPartyOptions} data-field="OpposingParty__c" onchange={handleInputChange}></lightning-combobox>
-                <lightning-input label="Prénom" data-field="Prenom__c" onchange={handleInputChange} required></lightning-input>
-                <lightning-combobox label="Pays" options={paysOptions} data-field="Pays__c" value={formData.Pays__c} onchange={handleInputChange} required></lightning-combobox>
-                <lightning-input label="Adresse" data-field="Adresse__c" onchange={handleInputChange}></lightning-input>
-                <lightning-input label="CNI" data-field="CIN__c" onchange={handleInputChange}></lightning-input>
-                <lightning-combobox label="État personne" options={etatOptions} data-field="StateOfPerson__c" onchange={handleInputChange}></lightning-combobox>
-                
-                <div class="slds-m-top_x-small">
-                    <lightning-record-picker label="Compagnie adverse" object-api-name="Account" value={formData.CompagnieAdverse__c} onchange={handleLookupChange}></lightning-record-picker>
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-combobox label="Type partie adverse" options={opposingPartyOptions} data-field="OpposingParty__c" value={formData.OpposingParty__c} onchange={handleInputChange} required></lightning-combobox>
+                    <lightning-input label="Prénom" data-field="Prenom__c" value={formData.Prenom__c} onchange={handleInputChange} required></lightning-input>
+                    <lightning-combobox label="Pays" options={paysOptions} data-field="Pays__c" value={formData.Pays__c} onchange={handleInputChange} required></lightning-combobox>
+                    <lightning-input label="Adresse" data-field="Adresse__c" value={formData.Adresse__c} onchange={handleInputChange} required></lightning-input>
+                    <lightning-input label="CIN" data-field="CIN__c" value={formData.CIN__c} onchange={handleInputChange} required></lightning-input>
+                    <lightning-combobox label="État personne" options={etatOptions} data-field="StateOfPerson__c" value={formData.StateOfPerson__c} onchange={handleInputChange}></lightning-combobox>
+                    
+                    <div class="slds-m-top_x-small">
+                        <lightning-record-picker label="Compagnie adverse" object-api-name="Account" value={formData.CompagnieAdverse__c} onchange={handleLookupChange}></lightning-record-picker>
+                    </div>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                    <lightning-input label="Nom" data-field="Nom__c" value={formData.Nom__c} onchange={handleInputChange} required></lightning-input>
+                    <lightning-combobox label="Civilité" options={civiliteOptions} data-field="Civilite__c" value={formData.Civilite__c} onchange={handleInputChange}></lightning-combobox>
+                    <lightning-combobox label="Ville" options={villeOptions} data-field="Ville__c" value={formData.Ville__c} onchange={handleInputChange} required></lightning-combobox>
+                    <lightning-input type="date" label="Date de naissance" data-field="BirthDay__c" value={formData.BirthDay__c} onchange={handleInputChange} required></lightning-input>
+                    <lightning-combobox label="Situation familiale" options={situationOptions} data-field="MaritalStatus__c" value={formData.MaritalStatus__c} onchange={handleInputChange}></lightning-combobox>
+                    <lightning-input label="N° de contrat d'assurance" data-field="Numéro_de_contrat__c" value={formData.Numéro_de_contrat__c} onchange={handleInputChange}></lightning-input>
+                    
+                    <lightning-combobox label="Moyen de notification" options={notificationOptions} data-field="MoyenNotification__c" value={formData.MoyenNotification__c} onchange={handleInputChange}></lightning-combobox>
+                    
+                    <template if:true={isTelephoneOrSMS}>
+                        <lightning-input type="tel" label="Numéro (Téléphone / SMS)" data-field="Telephone__c" value={formData.Telephone__c} onchange={handleInputChange} required></lightning-input>
+                    </template>
+                    
+                    <template if:true={isEmail}>
+                        <lightning-input type="email" label="Adresse Email" data-field="Email__c" value={formData.Email__c} onchange={handleInputChange} required></lightning-input>
+                    </template>
                 </div>
             </div>
-
-            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
-                <lightning-input label="Nom" data-field="Nom__c" onchange={handleInputChange} required></lightning-input>
-                <lightning-combobox label="Civilité" options={civiliteOptions} data-field="Civilite__c" onchange={handleInputChange} required></lightning-combobox>
-                <lightning-combobox label="Ville" options={villeOptions} data-field="Ville__c" onchange={handleInputChange} required></lightning-combobox>
-                <lightning-input type="date" label="Date de naissance" data-field="BirthDay__c" onchange={handleInputChange}></lightning-input>
-                <lightning-combobox label="Situation familiale" options={situationOptions} data-field="MaritalStatus__c" onchange={handleInputChange}></lightning-combobox>
-                <lightning-input label="N° de contrat d'assurance" data-field="Numéro_de_contrat__c" value={formData.Numéro_de_contrat__c} onchange={handleInputChange}></lightning-input>
-                
-                <lightning-combobox label="Moyen de notification" options={notificationOptions} data-field="MoyenNotification__c" value={formData.MoyenNotification__c} onchange={handleInputChange}></lightning-combobox>
-            </div>
-        </div>
 
             <div class="slds-grid slds-grid_align-center slds-m-top_large">
                 <button class="btn-secondary slds-m-right_small" onclick={handleAnnuler}>Annuler</button>

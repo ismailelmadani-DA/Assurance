@@ -2,7 +2,6 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>TypePartieAdverse__c</fullName>
     <description>Type de la partie adverse (Animal, Charrette, Cyclomoteur, Pieton, Objet, Autre)</description>
-    <externalId>false</externalId>
     <label>Type partie adverse</label>
     <required>false</required>
     <trackTrending>false</trackTrending>
@@ -11,12 +10,36 @@
         <restricted>true</restricted>
         <valueSetDefinition>
             <sorted>false</sorted>
-            <value><fullName>Animal</fullName><default>false</default><label>Animal</label></value>
-            <value><fullName>Charrette</fullName><default>false</default><label>Charrette</label></value>
-            <value><fullName>Cyclomoteur</fullName><default>false</default><label>Cyclomoteur</label></value>
-            <value><fullName>Pieton</fullName><default>false</default><label>Pieton</label></value>
-            <value><fullName>Objet</fullName><default>false</default><label>Objet</label></value>
-            <value><fullName>Autre</fullName><default>false</default><label>Autre</label></value>
+            <value>
+                <fullName>Animal</fullName>
+                <default>false</default>
+                <label>Animal</label>
+            </value>
+            <value>
+                <fullName>Charrette</fullName>
+                <default>false</default>
+                <label>Charrette</label>
+            </value>
+            <value>
+                <fullName>Cyclomoteur</fullName>
+                <default>false</default>
+                <label>Cyclomoteur</label>
+            </value>
+            <value>
+                <fullName>Pieton</fullName>
+                <default>false</default>
+                <label>Pieton</label>
+            </value>
+            <value>
+                <fullName>Objet</fullName>
+                <default>false</default>
+                <label>Objet</label>
+            </value>
+            <value>
+                <fullName>Autre</fullName>
+                <default>false</default>
+                <label>Autre</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

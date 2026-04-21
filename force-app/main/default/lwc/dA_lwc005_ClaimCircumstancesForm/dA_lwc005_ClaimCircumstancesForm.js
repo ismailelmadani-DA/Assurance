@@ -1,33 +1,49 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
 
-// Import de l'objet et des champs pour les picklists dynamiques
-import CLAIM_OBJECT from '@salesforce/schema/Claim__c';
-import TRIGGER_FIELD from '@salesforce/schema/Claim__c.TriggeringEventOfClaim__c';
-import CAUSE_FIELD from '@salesforce/schema/Claim__c.CausesOfClaim__c';
-import PARTY_FIELD from '@salesforce/schema/Claim__c.OpposingParty__c';
+// --- CORRECTION : On importe l'objet Case et ses champs ---
+import CASE_OBJECT from '@salesforce/schema/Case';
+import TRIGGER_FIELD from '@salesforce/schema/Case.TriggeringEventOfClaim__c';
+import CAUSE_FIELD from '@salesforce/schema/Case.CausesOfClaim__c';
+import PARTY_FIELD from '@salesforce/schema/Case.OpposingParty__c';
 
 export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
-    @api claimSummary = {}; // Reçoit les infos du header (Date, Police, etc.)
-    @track formData = {};   // Stocke l'ensemble des données du formulaire
-    @track isDamageYes = false; // Gère l'affichage du composant Point de Choc
+    @api claimSummary = {};
+    
+    @track _formData = {
+        AnyDamage__c: false,
+        CausesAndCircumstances__c: '',
+        TriggeringEventOfClaim__c: '',
+        CausesOfClaim__c: '',
+        OpposingParty__c: '',
+        Commentaire__c: '',
+        PointsDeChoc__c: '',
+        PrecisionsDommages__c: '',
+        NumberOfVehiclesInvolved__c: 0
+    };
+    @track isDamageYes = false;
 
-    // Options des listes déroulantes
+    @api
+    get formData() {
+        return this._formData;
+    }
+
     @track triggerOptions = [];
     @track causeOptions = [];
     @track partyOptions = [];
+    
     ouiNonOptions = [
         { label: 'Oui', value: 'true' }, 
         { label: 'Non', value: 'false' }
     ];
 
-    // --- 1. Récupération des métadonnées de l'objet Claim ---
-    @wire(getObjectInfo, { objectApiName: CLAIM_OBJECT })
-    claimObjectInfo;
+    // --- 1. Récupération des métadonnées de l'objet CASE ---
+    @wire(getObjectInfo, { objectApiName: CASE_OBJECT })
+    caseObjectInfo;
 
-    // --- 2. Récupération dynamique des valeurs de Picklists ---
+    // --- 2. Récupération dynamique des valeurs de Picklists depuis CASE ---
     @wire(getPicklistValues, { 
-        recordTypeId: '$claimObjectInfo.data.defaultRecordTypeId', 
+        recordTypeId: '$caseObjectInfo.data.defaultRecordTypeId', 
         fieldApiName: TRIGGER_FIELD 
     })
     wiredTriggerValues({ data, error }) {
@@ -36,7 +52,7 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
     }
 
     @wire(getPicklistValues, { 
-        recordTypeId: '$claimObjectInfo.data.defaultRecordTypeId', 
+        recordTypeId: '$caseObjectInfo.data.defaultRecordTypeId', 
         fieldApiName: CAUSE_FIELD 
     })
     wiredCauseValues({ data, error }) {
@@ -45,7 +61,7 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
     }
 
     @wire(getPicklistValues, { 
-        recordTypeId: '$claimObjectInfo.data.defaultRecordTypeId', 
+        recordTypeId: '$caseObjectInfo.data.defaultRecordTypeId', 
         fieldApiName: PARTY_FIELD 
     })
     wiredPartyValues({ data, error }) {
@@ -53,39 +69,41 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
         else if (error) console.error('Erreur Party Picklist', error);
     }
 
-    // --- 3. Gestion des changements des champs standards ---
+    // --- 3. Gestion des changements des champs ---
     handleChange(event) {
         const field = event.target.name;
         const value = event.target.value;
 
-        this.formData[field] = value;
+        this._formData = { 
+            ...this._formData, 
+            [field]: value 
+        };
 
-        // Logique spécifique pour afficher/masquer le croquis lwc006
         if (field === 'AnyDamage__c') {
             this.isDamageYes = (value === 'true');
+            this._formData.AnyDamage__c = (value === 'true');
         }
 
         this.notifyParent();
     }
 
-    // --- 4. Récupération des données du composant enfant (lwc006) ---
     handlePointChocUpdate(event) {
-    this.formData.PointsDeChoc__c = event.detail.clickedParts;
-    this.formData.PrecisionsDommages__c = event.detail.precisionDommage; // Récupère la valeur envoyée par l'enfant
-    this.notifyParent();
-}
+        this._formData = {
+            ...this._formData,
+            PointsDeChoc__c: event.detail.clickedParts,
+            PrecisionsDommages__c: event.detail.precisionDommage
+        };
+        this.notifyParent();
+    }
 
-    // --- 5. Notification du composant Wizard principal ---
     notifyParent() {
         this.dispatchEvent(new CustomEvent('formupdate', {
-            detail: { ...this.formData }
+            detail: { ...this._formData }
         }));
     }
 
-    // --- 6. Méthode de validation publique appelée par le Wizard ---
     @api
     validate() {
-        // Validation des éléments HTML locaux (Combobox, Input, Textarea)
         const isFormValid = [
             ...this.template.querySelectorAll('lightning-input, lightning-combobox, lightning-textarea')
         ].reduce((validSoFar, inputCmp) => {
@@ -93,7 +111,6 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
             return validSoFar && inputCmp.checkValidity();
         }, true);
 
-        // Validation interne du composant Point de Choc (si affiché)
         let isPointChocValid = true;
         if (this.isDamageYes) {
             const pointChocCmp = this.template.querySelector('c-lwc006_-point-choc');

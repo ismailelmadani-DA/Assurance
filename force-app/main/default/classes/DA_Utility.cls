@@ -27,4 +27,45 @@ public with sharing class DA_Utility {
         return 'ORDER BY ' + (String.isNotBlank(sortBy) && validFields.contains(sortBy) ?
             sortBy + ' ' + (sortDirection == 'asc' ? 'ASC' : 'DESC') : defaultSort);
     }
+
+    /**
+     * @description      :   Recherche générique par LIKE sur un champ donné via DM_DataManager
+     * @param fields     :   Champs à retourner (ex: 'Id, Name')
+     * @param sObjectName:   Nom de l'objet (ex: 'Account')
+     * @param searchField:   Champ sur lequel chercher (ex: 'Name')
+     * @param searchTerm :   Terme de recherche (le % est ajouté automatiquement)
+     * @param extraConditions : Conditions supplémentaires ou null
+     * @param limitCount :   Nombre max de résultats (défaut 10)
+     * @return           :   List<SObject>
+     **/
+    public static List<SObject> query(String fields, String sObjectName, String conditions, String orderBy, Integer limitCount) {
+        String soql = 'SELECT ' + fields + ' FROM ' + sObjectName;
+        if (String.isNotBlank(conditions)) {
+            soql += ' WHERE ' + conditions;
+        }
+        if (String.isNotBlank(orderBy)) {
+            soql += ' ORDER BY ' + orderBy;
+        }
+        if (limitCount != null && limitCount > 0) {
+            soql += ' LIMIT ' + limitCount;
+        }
+        return Database.query(soql);
+    }
+
+    public static List<SObject> search(String fields, String sObjectName, String searchField, String searchTerm, String conditions, Integer limitCount) {
+        if (String.isBlank(searchTerm)) {
+            return new List<SObject>();
+        }
+        String safeTerm = String.escapeSingleQuotes(searchTerm.trim()) + '%';
+        String soql = 'SELECT ' + fields + ' FROM ' + sObjectName
+            + ' WHERE ' + searchField + ' LIKE \'' + safeTerm + '\'';
+        if (String.isNotBlank(conditions)) {
+            soql += ' AND ' + conditions;
+        }
+        soql += ' ORDER BY ' + searchField + ' ASC';
+        if (limitCount != null && limitCount > 0) {
+            soql += ' LIMIT ' + limitCount;
+        }
+        return Database.query(soql);
+    }
 }

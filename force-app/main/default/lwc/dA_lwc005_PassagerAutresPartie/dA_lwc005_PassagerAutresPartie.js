@@ -137,7 +137,11 @@ export default class DA_lwc005_PassagerAutresPartie extends LightningElement {
                 cin: cin.trim(),
                 nom: fields.Name__c || ''
             });
+            
             fields.Compte__c = accountId;
+            // On force la liaison avec le Case courant
+            fields.Case__c = this.recordId; 
+            
         } catch (err) {
             this._showToast('Erreur', err.body?.message || 'Erreur lors de la résolution du compte.', 'error');
             return;

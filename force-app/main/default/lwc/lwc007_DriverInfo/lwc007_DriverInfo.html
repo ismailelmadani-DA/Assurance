@@ -50,27 +50,26 @@
             
             <div class="slds-col slds-size_1-of-2 slds-p-horizontal_small">
                 <lightning-input label="CIN" value={formData.CIN__c} data-field="CIN__c" onchange={handleInputChange} required></lightning-input>
-                <lightning-input label="Nom" value={formData.LastName} data-field="LastName" onchange={handleInputChange} required></lightning-input>
-                
+                <lightning-combobox label="Pays d'enregistrement" value={formData.Pays__c} options={paysOptions} data-field="Pays__c" onchange={handleInputChange} required></lightning-combobox>
+
+                <lightning-combobox label="Ville" value={formData.Ville__c} options={villeOptions} data-field="Ville__c" onchange={handleInputChange} required></lightning-combobox>
                 <lightning-combobox label="Civilité" value={formData.Civility__c} options={civilityOptions} data-field="Civility__c" onchange={handleInputChange}></lightning-combobox>
-                <lightning-combobox label="Ville" value={formData.Ville__c} options={villeOptions} data-field="Ville__c" onchange={handleInputChange}></lightning-combobox>
                 
-                <lightning-input type="date" label="Date de naissance" value={formData.DateDeNaissance__c} data-field="DateDeNaissance__c" onchange={handleInputChange}></lightning-input>
+                <lightning-input type="date" label="Date de naissance" value={formData.DateDeNaissance__c} data-field="DateDeNaissance__c" onchange={handleInputChange} required></lightning-input>
                 
                 <lightning-combobox label="Type de permis" value={formData.TypeOfLicense__c} options={typePermisOptions} data-field="TypeOfLicense__c" onchange={handleInputChange}></lightning-combobox>
                 <lightning-input type="date" label="Date de délivrance" value={formData.DateOfIssue__c} data-field="DateOfIssue__c" onchange={handleInputChange}></lightning-input>
             </div>
 
             <div class="slds-col slds-size_1-of-2 slds-p-horizontal_small">
-                <lightning-input label="Prénom" value={formData.FirstName} data-field="FirstName" onchange={handleInputChange} required></lightning-input>
-                
-                <lightning-combobox label="Pays d'enregistrement" value={formData.Pays__c} options={paysOptions} data-field="Pays__c" onchange={handleInputChange}></lightning-combobox>
-                <lightning-input label="Adresse" value={formData.Adresse__c} data-field="Adresse__c" onchange={handleInputChange}></lightning-input>
+                <!--<lightning-input label="Prénom" value={formData.FirstName} data-field="FirstName" onchange={handleInputChange} required></lightning-input> -->
+                <lightning-input label="Nom complet" value={formData.LastName} data-field="LastName" onchange={handleInputChange} required></lightning-input>
+                <lightning-input label="Adresse" value={formData.Adresse__c} data-field="Adresse__c" onchange={handleInputChange} required></lightning-input>
                 <lightning-combobox label="Origine du permis" value={formData.Origine_du_permis__c} options={originePermisOptions} data-field="Origine_du_permis__c" onchange={handleInputChange}></lightning-combobox>
                 
                 <lightning-input label="N° de permis" value={formData.LicenseNumber__c} data-field="LicenseNumber__c" onchange={handleInputChange}></lightning-input>
                 
-                <lightning-combobox label="Etat de la personne" value={formData.ConditionOfPerson__c} options={conditionPersonOptions} data-field="ConditionOfPerson__c" onchange={handleInputChange}></lightning-combobox>
+                <lightning-combobox label="Etat de la personne" value={formData.ConditionOfPerson__c} options={conditionPersonOptions} data-field="ConditionOfPerson__c" onchange={handleInputChange} required></lightning-combobox>
                 <lightning-combobox label="Situation familiale" value={formData.MaritalStatus__c} options={maritalStatusOptions} data-field="MaritalStatus__c" onchange={handleInputChange}></lightning-combobox>
             </div>
 

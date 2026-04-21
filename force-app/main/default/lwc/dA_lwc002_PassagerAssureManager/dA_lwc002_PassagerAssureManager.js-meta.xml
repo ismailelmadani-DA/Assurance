@@ -7,4 +7,69 @@
         <target>lightning__AppPage</target>
         <target>lightning__Tab</target>
     </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__RecordPage,lightning__AppPage">
+
+            <!-- Titre de la liste -->
+            <property
+                name="listTitle"
+                type="String"
+                label="Titre de la liste"
+                description="Ex: Gestion des Passagers assurés"
+                default="Gestion des Passagers"/>
+
+            <!--
+                Rôles autorisés (virgule séparés).
+                Valeurs disponibles dans votre org :
+                  - Passager assuré
+                  - Passager adverse
+                  - Autres partie
+                Exemple : "Passager assuré,Autres partie"
+                Vide = tous les rôles affichés et disponibles.
+            -->
+            <property
+                name="allowedRoles"
+                type="String"
+                label="Rôles autorisés (filtrage)"
+                description="Rôles à afficher ET proposer à la création. Valeurs : 'Passager assuré', 'Passager adverse', 'Autres partie'. Séparés par virgules. Vide = tous."/>
+
+            <!--
+                Champs visibles dans la table (virgule séparés).
+                Champs disponibles : Conducteur, Civilité, Nom complet, Rôle, CNI, Pays, Ville, État
+                Vide = tous affichés.
+            -->
+            <property
+                name="visibleFields"
+                type="String"
+                label="Colonnes affichées dans la table"
+                description="Champs à afficher. Disponibles: Conducteur,Civilité,Nom complet,Rôle,CNI,Pays,Ville,État. Séparés par virgules. Vide = tous."/>
+
+            <!-- Options d'affichage -->
+            <property
+                name="showActionColumn"
+                type="Boolean"
+                label="Afficher colonne Actions (Modifier / Supprimer)"
+                default="true"/>
+
+            <property
+                name="showFilterPills"
+                type="Boolean"
+                label="Afficher filtres rapides (Tous / Assurés / Adverses)"
+                default="true"/>
+
+            <property
+                name="showAddButton"
+                type="Boolean"
+                label="Afficher bouton Ajouter un passager"
+                default="true"/>
+
+            <property
+                name="pageSize"
+                type="String"
+                label="Nombre de lignes par page"
+                description="10, 25, 50, etc."
+                default="10"/>
+
+        </targetConfig>
+    </targetConfigs>
 </LightningComponentBundle>

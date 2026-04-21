@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>isOwner__c</fullName>
-    <defaultValue>false</defaultValue>
-    <label>isOwner</label>
+    <fullName>BirthDay__c</fullName>
+    <label>Date de Naissance</label>
+    <required>false</required>
     <trackTrending>false</trackTrending>
-    <type>Checkbox</type>
+    <type>Date</type>
 </CustomField>

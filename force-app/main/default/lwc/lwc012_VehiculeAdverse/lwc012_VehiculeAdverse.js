@@ -1,16 +1,16 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
 import VEHICLE_ASSIGNMENT_OBJECT from '@salesforce/schema/VehicleCaseAssignment__c';
-
-// Import du champ pour la Picklist Type Véhicule
 import TYPE_VEHICULE_FIELD from '@salesforce/schema/VehicleCaseAssignment__c.TypeVehicule__c';
+
+// IMPORT POUR LES NOTIFICATIONS TOAST
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 export default class Lwc012_VehiculeAdverse extends LightningElement {
     @api claimSummary;
     @track adverseVehicles = []; 
-    @track isFormVisible = true; 
+    @track isFormVisible = true;
 
-    // L'objet formData contient les clés exactes attendues par votre Apex
     @track formData = {
         VehicleIsDamaged__c: '',
         Adversaire_Assure__c: 'false',
@@ -25,8 +25,9 @@ export default class Lwc012_VehiculeAdverse extends LightningElement {
 
     @track typeOptions = [];
     optionsAssure = [{ label: 'Oui', value: 'true' }, { label: 'Non', value: 'false' }];
-    optionsEtat = [{ label: 'Endommagé', value: 'Endommagé' }, { label: 'Intact', value: 'Intact' }];
+    optionsEtat = [{ label: 'Endommagé', value: 'Endommagé' }, { label: 'Pas de dommage', value: 'Pas de dommage' }];
 
+    // --- 1. Récupération des métadonnées pour les types de véhicules ---
     @wire(getObjectInfo, { objectApiName: VEHICLE_ASSIGNMENT_OBJECT })
     objectMetadata;
 
@@ -37,9 +38,12 @@ export default class Lwc012_VehiculeAdverse extends LightningElement {
     wiredType({ error, data }) {
         if (data) {
             this.typeOptions = data.values;
+        } else if (error) {
+            console.error('Erreur Picklist Type:', error);
         }
     }
 
+    // --- 2. Gestion des saisies ---
     handleInputChange(event) {
         const field = event.target.dataset.field;
         this.formData[field] = event.target.value;
@@ -49,8 +53,8 @@ export default class Lwc012_VehiculeAdverse extends LightningElement {
         this.formData.CompagnieAdverse__c = event.detail.recordId;
     }
 
+    // --- 3. Logique d'ajout à la liste ---
     handleAjouter() {
-        // Validation de tous les champs
         const allValid = [...this.template.querySelectorAll('lightning-input, lightning-combobox, lightning-record-picker')]
             .reduce((v, i) => {
                 if(i.reportValidity) i.reportValidity();
@@ -61,12 +65,53 @@ export default class Lwc012_VehiculeAdverse extends LightningElement {
             const newVehicle = { ...this.formData, key: Date.now() };
             this.adverseVehicles = [...this.adverseVehicles, newVehicle];
             
+            // DÉCLENCHEMENT DU TOAST DE SUCCÈS
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Succès',
+                    message: 'Le véhicule adverse a été ajouté à la liste.',
+                    variant: 'success',
+                })
+            );
+            
             this.resetForm();
-            this.isFormVisible = false; // Masque le formulaire, affiche la liste
+            this.isFormVisible = false; 
             this.notifyParent();
         }
     }
 
+    // --- NOUVELLE MÉTHODE : Suppression d'un véhicule ---
+    handleDelete(event) {
+        const keyToDelete = event.currentTarget.dataset.key;
+        this.adverseVehicles = this.adverseVehicles.filter(v => v.key.toString() !== keyToDelete.toString());
+        
+        if (this.adverseVehicles.length === 0) {
+            this.isFormVisible = true; // Réaffiche le formulaire si la liste est vide
+        }
+        
+        this.notifyParent();
+    }
+
+    // --- 4. COMMUNICATION AVEC LE PARENT ---
+    @api
+    get adverseVehicleData() {
+        return this.adverseVehicles;
+    }
+
+    notifyParent() {
+        this.dispatchEvent(new CustomEvent('adversevehicleupdate', { 
+            detail: this.adverseVehicles 
+        }));
+    }
+
+    @api 
+    validate() {
+        // CORRECTION DU BUG : On renvoie toujours true pour que l'absence de véhicule adverse
+        // ne bloque plus le passage à l'étape suivante.
+        return true;
+    }
+
+    // --- 5. Gestion de l'UI ---
     handleAnnuler() {
         this.resetForm();
         if (this.adverseVehicles.length > 0) {
@@ -90,20 +135,10 @@ export default class Lwc012_VehiculeAdverse extends LightningElement {
             Numéro_de_contrat__c: '', 
             NbDePassagerBlesses__c: 0 
         };
-        
-        // Vider le champ de recherche de compagnie manuellement
+
         const picker = this.template.querySelector('lightning-record-picker');
         if (picker) {
             picker.clearSelection();
         }
-    }
-
-    notifyParent() {
-        this.dispatchEvent(new CustomEvent('adversevehicleupdate', { detail: this.adverseVehicles }));
-    }
-
-    @api validate() {
-        // Vérifie qu'au moins un véhicule adverse a été ajouté
-        return this.adverseVehicles.length > 0;
     }
 }

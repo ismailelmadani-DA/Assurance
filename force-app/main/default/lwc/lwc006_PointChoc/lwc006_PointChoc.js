@@ -1,16 +1,82 @@
-import { LightningElement, track, api } from 'lwc';
+import { LightningElement, track, api, wire } from 'lwc';
+import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
+
+// Importation des champs de l'objet Claim__c
+import POINTS_CHOC_FIELD from '@salesforce/schema/Claim__c.PointsDeChoc__c';
+import PRECISIONS_FIELD from '@salesforce/schema/Claim__c.PrecisionsDommages__c';
 
 export default class Lwc006_PointChoc extends LightningElement {
+    @api recordId; // Identifiant de l'enregistrement (rempli automatiquement sur la page de consultation)
+    
     @track parts = []; // Liste des objets {id, val} sélectionnés
     @track motifVal = ''; // Texte saisi dans le textarea
     @track messageObligatoire = false;
 
     @api errorMessage = 'Veuillez sélectionner au moins un point de choc.';
 
+    // --- MODE LECTURE SEULE ---
+    // Si recordId est présent, cela signifie que le composant est sur une page de consultation
+    get isReadOnly() {
+        return !!this.recordId;
+    }
+
+    // Récupération automatique des données si on est sur la page d'un Sinistre
+    @wire(getRecord, { recordId: '$recordId', fields: [POINTS_CHOC_FIELD, PRECISIONS_FIELD] })
+    wiredClaim({ error, data }) {
+        if (data) {
+            const pointsSauvegardes = getFieldValue(data, POINTS_CHOC_FIELD);
+            const precisionsSauvegardees = getFieldValue(data, PRECISIONS_FIELD);
+
+            if (precisionsSauvegardees) {
+                this.motifVal = precisionsSauvegardees;
+            }
+
+            if (pointsSauvegardes) {
+                this.colorierPointsExistants(pointsSauvegardes);
+            }
+        } else if (error) {
+            console.error('Erreur lors de la récupération des points de choc', error);
+        }
+    }
+
+    /**
+     * Colorie le SVG en fonction des données sauvegardées (Mode Lecture)
+     */
+    colorierPointsExistants(pointsStr) {
+        // Dans votre méthode notifyChange, vous sépariez les valeurs par un point-virgule (;)
+        const partiesEndommagees = pointsStr.split(';').map(p => p.trim()).filter(p => p !== '');
+
+        // Un petit délai pour s'assurer que le HTML et le SVG sont bien chargés à l'écran
+        setTimeout(() => {
+            partiesEndommagees.forEach(partval => {
+                const myPartElement = this.template.querySelector(`path[data-value='${partval}']`);
+                
+                if (myPartElement) {
+                    // On simule visuellement le clic
+                    myPartElement.style.fill = "#FF0000";
+                    myPartElement.style.fillOpacity = "0.6";
+                    
+                    // On l'ajoute à la liste pour que les badges s'affichent aussi en bas
+                    this.parts.push({ id: myPartElement.id, val: partval });
+                }
+            });
+            
+            // Forcer la réactivité pour afficher les badges
+            this.parts = [...this.parts];
+            this.updateLayout();
+
+        }, 500); 
+    }
+
     /**
      * Gère le clic sur une partie du SVG ou sur la croix d'un badge
      */
     onclickPart(event) {
+        // SÉCURITÉ : Si on est en mode lecture seule, on bloque toute interaction
+        if (this.isReadOnly) {
+            return;
+        }
+
         try {
             const type = event.target.getAttribute('data-type');
             const partval = event.target.getAttribute('data-value');
@@ -59,6 +125,11 @@ export default class Lwc006_PointChoc extends LightningElement {
      * Gère la saisie dans le champ de commentaire
      */
     handleMotifChange(event) {
+        // SÉCURITÉ : Si on est en mode lecture seule, on ne met pas à jour (bien que le HTML doive aussi être en disabled)
+        if (this.isReadOnly) {
+            return;
+        }
+
         this.motifVal = event.target.value;
         this.notifyChange();
     }
@@ -105,6 +176,11 @@ export default class Lwc006_PointChoc extends LightningElement {
      */
     @api 
     checkValidity() {
+        // En mode lecture, on renvoie toujours true pour ne pas bloquer
+        if (this.isReadOnly) {
+            return true;
+        }
+
         this.messageObligatoire = (this.parts.length === 0);
         return !this.messageObligatoire;
     }

@@ -49,12 +49,25 @@
                     <div class="recap-content">
                         <template if:true={hasAdverseVehicles}>
                             <template for:each={adverseVehicles} for:item="adv">
-                                <div key={adv.key} class="recap-item">
-                                    <div class="slds-grid slds-grid_align-spread">
-                                        <div><strong>{adv.RegistrationNumber__c}</strong> - {adv.Marque__c}</div>
-                                        <div><span class="badge-warning">{adv.NbDePassagerBlesses__c} blessé(s)</span></div>
+                                <div key={adv.key} class="recap-item slds-m-bottom_small">
+                                    <div class="slds-grid slds-wrap">
+                                        <div class="slds-col slds-size_1-of-1 slds-m-bottom_small slds-grid slds-grid_align-spread">
+                                            <div><strong>{adv.RegistrationNumber__c} - {adv.Marque__c}</strong></div>
+                                            <div><span class="badge-warning">{adv.NbDePassagerBlesses__c} blessé(s)</span></div>
+                                        </div>
+                                        
+                                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-text-body_small">
+                                            <p class="slds-m-bottom_xx-small"><strong>Type :</strong> {adv.TypeVehicule__c}</p>
+                                            <p class="slds-m-bottom_xx-small"><strong>Contrat :</strong> {adv.Numéro_de_contrat__c}</p>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-text-body_small">
+                                            <p class="slds-m-bottom_xx-small"><strong>État :</strong> {adv.VehicleIsDamaged__c}</p>
+                                            <p class="slds-m-bottom_xx-small"><strong>Adversaire assuré :</strong> 
+                                                <template if:true={adv.Adversaire_Assure__c}>Oui</template>
+                                                <template if:false={adv.Adversaire_Assure__c}>Non</template>
+                                            </p>
+                                        </div>
                                     </div>
-                                    <p class="slds-text-color_weak slds-text-body_small">Contrat : {adv.Numéro_de_contrat__c}</p>
                                 </div>
                             </template>
                         </template>
@@ -74,10 +87,24 @@
                     <div class="recap-content">
                         <template if:true={hasOtherParties}>
                             <template for:each={otherParties} for:item="party">
-                                <div key={party.key} class="recap-item">
-                                    <strong>{party.Prenom__c} {party.Nom__c}</strong> 
-                                    <span class="slds-badge slds-m-left_x-small">{party.OpposingParty__c}</span>
-                                    <p class="slds-text-color_weak slds-text-body_small">Ville : {party.Ville__c} | CNI : {party.CIN__c}</p>
+                                <div key={party.key} class="recap-item slds-m-bottom_small">
+                                    <div class="slds-grid slds-wrap">
+                                        <div class="slds-col slds-size_1-of-1 slds-m-bottom_small slds-grid slds-grid_align-spread">
+                                            <div><strong>{party.Prenom__c} {party.Nom__c}</strong></div>
+                                            <div><span class="slds-badge slds-m-left_x-small">{party.OpposingParty__c}</span></div>
+                                        </div>
+                                        
+                                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-text-body_small">
+                                            <p class="slds-m-bottom_xx-small"><strong>CIN :</strong> {party.CIN__c}</p>
+                                            <p class="slds-m-bottom_xx-small"><strong>Ville :</strong> {party.Ville__c}</p>
+                                            <p class="slds-m-bottom_xx-small"><strong>Adresse :</strong> {party.Adresse__c}</p>
+                                        </div>
+                                        <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-text-body_small">
+                                            <p class="slds-m-bottom_xx-small"><strong>État corporel :</strong> {party.StateOfPerson__c}</p>
+                                            <p class="slds-m-bottom_xx-small"><strong>Téléphone :</strong> {party.Telephone__c}</p>
+                                            <p class="slds-m-bottom_xx-small"><strong>Email :</strong> {party.Email__c}</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </template>
                         </template>

@@ -8,7 +8,7 @@
     </targets>
     <targetConfigs>
         <targetConfig targets="lightning__RecordPage">
-            <property name="recordId" type="String" label="Record Id" description="Id du Case (Déclaration)"/>
+            <property name="isReadonly" type="Boolean" default="false" label="Mode lecture seule" />
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>

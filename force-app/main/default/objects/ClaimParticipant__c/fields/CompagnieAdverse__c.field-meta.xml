@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>CompagnieAdverse__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Compagnie adverse</label>
+    <referenceTo>Account</referenceTo>
+    <relationshipLabel>Claim Participants</relationshipLabel>
+    <relationshipName>Claim_Participant</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

@@ -1,7 +1,7 @@
 import { LightningElement, track, wire, api } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
-
+import { NavigationMixin } from 'lightning/navigation'; 
 // Import des objets et champs pour Picklists dynamiques
 import CASE_OBJECT from '@salesforce/schema/Case';
 import ACCOUNT_OBJECT from '@salesforce/schema/Account';
@@ -13,16 +13,16 @@ import NOTIF_FIELD from '@salesforce/schema/Account.MoyenNotification__c';
 
 // Apex
 import searchPolicies from '@salesforce/apex/ClaimSearchController.searchPolicies';
-import createClaimCase from '@salesforce/apex/ClaimSearchController.createClaimCase';
+import createCase from '@salesforce/apex/ClaimSearchController.createCase';
 import getPicklistOptions from '@salesforce/apex/ClaimSearchController.getTypeDocumentsByReportoire';
 import saveDocumentLocally from '@salesforce/apex/ClaimSearchController.saveDocumentLocally';
-import createClaimRecord from '@salesforce/apex/ClaimSearchController.createClaimRecord';
+import updateCaseRecord from '@salesforce/apex/ClaimSearchController.updateCaseRecord';
 import savePassengers from '@salesforce/apex/ClaimSearchController.savePassengers';
 import saveAdverseVehicle from '@salesforce/apex/ClaimSearchController.saveAdverseVehicle';
 import saveOtherParties from '@salesforce/apex/ClaimSearchController.saveOtherParties';
-import { NavigationMixin } from 'lightning/navigation'; 
+import finalizeClaimProcess from '@salesforce/apex/ClaimSearchController.finalizeClaimProcess';
 
-export default class ClaimCreationWizard extends LightningElement {
+export default class ClaimCreationWizard extends NavigationMixin(LightningElement) {
     // --- États et Flags ---
     @track currentStep = 1;
     @track isLoading = false;
@@ -42,7 +42,7 @@ export default class ClaimCreationWizard extends LightningElement {
     @track selectedPolicyRecord; 
     @track IdPolice;
     @track PoliceValue;
-    @track adverseVehicleData = {};
+    @track adverseVehicleData = [];
     // --- Variables pour l'objet Case (Étape 4) ---
     @track createdCaseId; 
     @track createdCaseNumber;
@@ -122,7 +122,7 @@ export default class ClaimCreationWizard extends LightningElement {
     get isStep7() { return this.currentStep === 7; }
     get isStep8() { return this.currentStep === 8; }
 
-    get showFooter() { return this.currentStep <= 10; }
+    get showFooter() { return this.currentStep <= 11; }
     get showPrecedent() { return this.currentStep > 1; }
     
     get isOuiSelected() { return this.isPoliceConnu === 'Oui'; }
@@ -344,16 +344,26 @@ export default class ClaimCreationWizard extends LightningElement {
             this.currentStep = 4;
         } 
         // --- ÉTAPE 4 : Création de la Déclaration (Case) ---
+        // --- ÉTAPE 4 : Création du Case ET du Claim (Le pivot) ---
         else if (this.currentStep === 4) {
             const allValid = [...this.template.querySelectorAll('lightning-input, lightning-combobox')]
                 .reduce((v, i) => { i.reportValidity(); return v && i.checkValidity(); }, true);
             if (!allValid) { this.isLoading = false; return; }
 
-            const payload = { ...this.caseData, policyId: this.selectedPolicyId, vehicleId: this.selectedPolicyRecord.vehicleId, dateSurvenance: this.dateSurvenance };
-            const result = await createClaimCase({ payload: JSON.stringify(payload) });
+            const payload = { 
+                ...this.caseData, 
+                policyId: this.selectedPolicyId, 
+                vehicleId: this.selectedPolicyRecord.vehicleId, 
+                dateSurvenance: this.dateSurvenance 
+            };
+
+            // L'Apex doit maintenant retourner un objet contenant les deux IDs
+            const result = await createCase({ payload: JSON.stringify(payload) });
+            
             this.createdCaseId = result.id;
             this.createdCaseNumber = result.caseNumber;
-            this.showToast('Succès', 'Déclaration créée : ' + this.createdCaseNumber, 'success');
+            
+            this.showToast('Succès', 'Déclaration initialisée', 'success');
             this.currentStep = 5;
         } 
         // --- ÉTAPE 5 : Documents (Navigation simple) ---
@@ -361,17 +371,16 @@ export default class ClaimCreationWizard extends LightningElement {
             this.currentStep = 6;
         } 
         // --- ÉTAPE 6 : Création du Sinistre (Claim__c) ---
+        // --- ÉTAPE 6 : Mise à jour des Circonstances sur le Claim existant ---
         else if (this.currentStep === 6) {
             const formChild = this.template.querySelector('c-d-a_lwc005_-claim-circumstances-form');
             if (formChild && formChild.validate()) {
-                this.claimId = await createClaimRecord({
-                    caseId: this.createdCaseId,
-                    policyId: this.selectedPolicyId,
-                    vehicleId: this.selectedPolicyRecord.vehicleId,
-                    registrationNumber: this.selectedPolicyRecord.RegistrationNumber,
-                    claimData: this.circumstancesData
+                // On appelle une méthode "updateClaim" au lieu de "create"
+                await updateCaseRecord({
+                    caseId: this.createdCaseId, // On utilise l'ID déjà stocké
+                    caseData: formChild.formData // On récupère les champs saisis
                 });
-                this.showToast('Succès', 'Sinistre enregistré', 'success');
+                this.showToast('Succès', 'Circonstances enregistrées', 'success');
                 this.currentStep = 7;
             }
         }
@@ -382,7 +391,7 @@ export default class ClaimCreationWizard extends LightningElement {
                 this.currentStep = 8;
             }
         }
-        // --- ÉTAPE 8 : Passagers Assurés (Sauvegarde & Switch Adverse) ---
+        // --- ÉTAPE 8 : Passagers Assurés ---
         else if (this.currentStep === 8) {
             const passengerChild = this.template.querySelector('c-lwc011_-passagers-assure');
             if (passengerChild && passengerChild.validate()) {
@@ -399,61 +408,87 @@ export default class ClaimCreationWizard extends LightningElement {
             const adverseChild = this.template.querySelector('c-lwc012_-vehicule-adverse');
             if (adverseChild && adverseChild.validate()) {
                 
-                // CORRECTION ICI : Ajout de JSON.stringify
-                await saveAdverseVehicle({
-                    caseId: this.createdCaseId,
-                    adverseDataJson: JSON.stringify(this.adverseVehicleData) 
-                });
+                // --- LA MAGIE EST ICI : On lit la donnée via l'enfant qui renvoie toujours un tableau [] ---
+                const dataFromChild = adverseChild.adverseVehicleData; 
 
-                this.showToast('Succès', 'Informations du tiers enregistrées', 'success');
-                this.currentStep = 10; 
-            } else {
-                this.showToast('Attention', 'Veuillez ajouter au moins un véhicule adverse.', 'warning');
-                this.isLoading = false;
-            }
-        }
-        // ÉTAPE 10 -> 11
-       // ÉTAPE 10 -> 11 (Validation des dommages tiers et passage au récap)
-        else if (this.currentStep === 10) {
-            const partyChild = this.template.querySelector('c-lwc013_-dommages-autres-parties');
-            
-            if (partyChild && partyChild.validate()) {
-                // NOUVEAU : Si la liste est vide, on passe direct au récapitulatif sans appeler Apex !
-                if (!this.otherPartiesData || this.otherPartiesData.length === 0) {
-                    this.currentStep = 11;
+                // Maintenant, la vérification de liste vide marchera parfaitement
+                if (!dataFromChild || dataFromChild.length === 0) {
+                    this.currentStep = 10; 
+                    this.isLoading = false;
                     return; 
                 }
 
-                // S'il y a des données, on sauvegarde
-                this.isLoading = true;
                 try {
-                    await saveOtherParties({
+                    await saveAdverseVehicle({
                         caseId: this.createdCaseId,
-                        claimId: this.claimId,
-                        partiesJson: JSON.stringify(this.otherPartiesData)
+                        adverseDataJson: JSON.stringify(dataFromChild) 
                     });
-
-                    this.showToast('Succès', 'Informations Tiers enregistrées', 'success');
-                    this.currentStep = 11; 
+                    this.showToast('Succès', 'Informations du tiers enregistrées', 'success');
+                    this.currentStep = 10; 
                 } catch (error) {
                     this.showToast('Erreur', error.body?.message || error.message, 'error');
                 } finally {
                     this.isLoading = false;
                 }
+            } else {
+                this.isLoading = false;
             }
         }
-            // ÉTAPE 11 (Action finale : Fermer ou Ouvrir le record)
-            else if (this.currentStep === 11) {
-                // Logique de navigation vers le record créé (nécessite NavigationMixin)
+            // ÉTAPE 10 -> 11
+        // ÉTAPE 10 -> 11 (Validation des dommages tiers et passage au récap)
+            else if (this.currentStep === 10) {
+                const partyChild = this.template.querySelector('c-lwc013_-dommages-autres-parties');
+                
+                if (partyChild && partyChild.validate()) {
+                    // NOUVEAU : Si la liste est vide, on passe direct au récapitulatif sans appeler Apex !
+                    if (!this.otherPartiesData || this.otherPartiesData.length === 0) {
+                        this.currentStep = 11;
+                        return; 
+                    }
+
+                    // S'il y a des données, on sauvegarde
+                    this.isLoading = true;
+                    try {
+                        await saveOtherParties({
+                            caseId: this.createdCaseId,
+                            partiesJson: JSON.stringify(this.otherPartiesData)
+                        });
+
+                        this.showToast('Succès', 'Informations Tiers enregistrées', 'success');
+                        this.currentStep = 11; 
+                    } catch (error) {
+                        this.showToast('Erreur', error.body?.message || error.message, 'error');
+                    } finally {
+                        this.isLoading = false;
+                    }
+                }
+            }
+            // ÉTAPE 11 (Action finale : Création du Claim et Redirection)
+        else if (this.currentStep === 11) {
+            this.isLoading = true;
+            try {
+                // 1. On déclenche la création du Claim et les liaisons
+                const finalClaimId = await finalizeClaimProcess({ 
+                    caseId: this.createdCaseId 
+                });
+                
+                this.showToast('Succès', 'Le dossier sinistre a été finalisé et mis en traitement !', 'success');
+                
+                // 2. On redirige vers le nouveau Sinistre
                 this[NavigationMixin.Navigate]({
                     type: 'standard__recordPage',
                     attributes: {
-                        recordId: this.claimId,
+                        recordId: finalClaimId,
                         objectApiName: 'Claim__c',
                         actionName: 'view'
                     }
                 });
+            } catch (error) {
+                this.showToast('Erreur', error.body?.message || error.message, 'error');
+            } finally {
+                this.isLoading = false;
             }
+        }
 
         } catch (error) {
             // Gestion générique des erreurs avec Toast Sticky

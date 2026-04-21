@@ -1,32 +1,31 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import ACCOUNT_OBJECT from '@salesforce/schema/Account';
-// import CIVILITE_FIELD from '@salesforce/schema/Account.Civilite__c';
-// import CITY_FIELD from '@salesforce/schema/Account.Ville__c';
-// import COUNTRY_FIELD from '@salesforce/schema/Account.Pays__c';
-// import SEXE_FIELD from '@salesforce/schema/Account.Sexe__c';
-// import MARITAL_STATUS_FIELD from '@salesforce/schema/Account.MaritalStatus__c';
-import STATE_OF_PERSON_FIELD from '@salesforce/schema/Account.ConditionOfPerson__c';
-// import TYPE_CONTACT_FIELD from '@salesforce/schema/Account.TypeContact__c';
+import CLAIM_PARTICIPANT_OBJECT from '@salesforce/schema/ClaimParticipant__c';
+import ROLES_FIELD from '@salesforce/schema/ClaimParticipant__c.Roles__c';
+import PAYS_FIELD from '@salesforce/schema/ClaimParticipant__c.Pays__c';
+import VILLE_FIELD from '@salesforce/schema/ClaimParticipant__c.Ville__c';
+import STATE_OF_PERSON_FIELD from '@salesforce/schema/ClaimParticipant__c.StateOfPerson__c';
+import SEXE_FIELD from '@salesforce/schema/ClaimParticipant__c.Sexe__c';
+import MARITAL_STATUS_FIELD from '@salesforce/schema/ClaimParticipant__c.MaritalStatus__c';
+import TYPE_CONTACT_FIELD from '@salesforce/schema/ClaimParticipant__c.TypeContact__c';
 
-import getParticipants from '@salesforce/apex/DA_PassagerAssureController.getParticipants';
-import getParticipantById from '@salesforce/apex/DA_PassagerAssureController.getParticipantById';
-import upsertPassager from '@salesforce/apex/DA_PassagerAssureController.upsertPassager';
-import deletePassager from '@salesforce/apex/DA_PassagerAssureController.deletePassager';
-import checkDuplicate from '@salesforce/apex/DA_PassagerAssureController.checkDuplicate';
-
-/* ── constantes ── */
-const PAGE_SIZE = 10;
-
-const ROLES_OPTIONS = [
-    { label: 'Passager assuré', value: 'Passager assuré' },
-    { label: 'Partie adverse', value: 'Partie adverse' },
-    { label: 'Conducteur assuré', value: 'Conducteur assuré' },
-    { label: 'Piéton', value: 'Piéton' },
-];
+import getParticipants from '@salesforce/apex/DA_PassagerGenerateTable.getParticipants';
+import getParticipantById from '@salesforce/apex/DA_PassagerGenerateTable.getParticipantById';
+import upsertPassager from '@salesforce/apex/DA_PassagerGenerateTable.upsertPassager';
+import deletePassager from '@salesforce/apex/DA_PassagerGenerateTable.deletePassager';
+import checkDuplicate from '@salesforce/apex/DA_PassagerGenerateTable.checkDuplicate';
+import resolveAccountByCIN from '@salesforce/apex/PassagerController.resolveAccountByCIN';
+import getVehiclesForClaim from '@salesforce/apex/DA_PassagerGenerateTable.getVehiclesForClaim';
+import getCompagniesAdverses from '@salesforce/apex/DA_PassagerGenerateTable.getCompagniesAdverses';
 
 const CIVILITY_SEX_MAP = { Mr: '1', Mme: '2' };
+
+// Options statiques de civilité (pas de picklist SF pour ça)
+const CIVILITY_OPTIONS = [
+    { label: 'M.', value: 'Mr' },
+    { label: 'Mme', value: 'Mme' },
+];
 
 const EMPTY_FORM = () => ({
     participantId: '',
@@ -52,6 +51,7 @@ const EMPTY_FORM = () => ({
     dateDeces: '',
     revenuAnnuel: null,
     conducteur: false,
+    vehiculeId: '',
 });
 
 const EMPTY_ERRORS = () => ({
@@ -70,6 +70,21 @@ export default class PassagerManager extends LightningElement {
     @api isReadonly = false;
     /** Nombre de conducteurs déjà enregistrés (pour désactiver la checkbox) */
     @api driverCount = 0;
+
+    /** Configuration - Titre de la liste */
+    @api listTitle = 'Gestion des Passagers';
+    /** Configuration - Rôles autorisés (virgule séparés, vide = tous) */
+    @api allowedRoles = '';
+    /** Configuration - Champs visibles (virgule séparés, vide = tous) */
+    @api visibleFields = '';
+    /** Configuration - Afficher colonne Actions */
+    @api showActionColumn = false;
+    /** Configuration - Afficher filtres rapides */
+    @api showFilterPills = false;
+    /** Configuration - Afficher bouton Ajouter */
+    @api showAddButton = false;
+    /** Configuration - Nombre de lignes par page */
+    @api pageSize = '10';
 
     /* ─── état interne ─── */
     @track records = [];
@@ -93,17 +108,19 @@ export default class PassagerManager extends LightningElement {
     selectedParticipantId = null;
     selectedParticipantName = '';
 
-    /* ─── picklists depuis schema Account ─── */
-    @track passagersRecordTypeId;
-    // @track civiliteOptions = [];
-    // @track sexeOptions = [];
-    // @track paysOptions = [];
-    // @track allCityOptions = [];
-    // @track filteredCityOptions = [];
-    // @track situationFamilialeOptions = [];
+    /* ─── picklists depuis ClaimParticipant__c ─── */
+    @track claimParticipantRecordTypeId;
+    @track rolesOptions = [];
+    @track paysOptions = [];
+    @track allVilleOptions = [];
+    @track filteredVilleOptions = [];
     @track etatPassagerOptions = [];
-    // @track typeContactOptions = [];
-    rolesOptions = ROLES_OPTIONS;
+    @track sexeOptions = [];
+    @track situationFamilialeOptions = [];
+    @track typeContactOptions = [];
+    @track vehiculesOptions = [];
+    @track compagniesAdversesOptions = [];
+    civilityOptions = CIVILITY_OPTIONS;
 
     /* ══════════════════════════════════════
        LIFECYCLE
@@ -113,21 +130,75 @@ export default class PassagerManager extends LightningElement {
     }
 
     /* ══════════════════════════════════════
-       WIRE – Object info & picklists
+       WIRE – Object info & picklists depuis ClaimParticipant__c
     ══════════════════════════════════════ */
-    @wire(getObjectInfo, { objectApiName: ACCOUNT_OBJECT })
-    wiredAccountInfo({ data, error }) {
+    @wire(getObjectInfo, { objectApiName: CLAIM_PARTICIPANT_OBJECT })
+    wiredCPInfo({ data, error }) {
         if (data) {
+            // Si pas de record types, utiliser le master record type ID
             const rtis = data.recordTypeInfos;
-            this.passagersRecordTypeId = Object.keys(rtis).find(
-                id => rtis[id].name === 'Passagers'
-            );
+            const masterRT = Object.keys(rtis).find(id => rtis[id].master === true);
+            this.claimParticipantRecordTypeId = masterRT;
         }
-        if (error) console.error('getObjectInfo error', error);
+        if (error) console.error('getObjectInfo ClaimParticipant error', error);
     }
 
-        @wire(getPicklistValues, { recordTypeId: '$passagersRecordTypeId', fieldApiName: STATE_OF_PERSON_FIELD })
-    wiredState({ data }) { if (data) this.etatPassagerOptions = data.values; }
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantRecordTypeId', fieldApiName: ROLES_FIELD })
+    wiredRoles({ data, error }) {
+        if (data) {
+            this.rolesOptions = data.values;
+            // Filtrer selon allowedRoles configurés
+            if (this.allowedRoles?.trim()) {
+                const allowed = this.allowedRoles.split(',').map(r => r.trim());
+                this.rolesOptions = data.values.filter(v => allowed.includes(v.value));
+            }
+        }
+        if (error) console.error('Roles picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantRecordTypeId', fieldApiName: PAYS_FIELD })
+    wiredPays({ data, error }) {
+        if (data) {
+            this.paysOptions = data.values;
+        }
+        if (error) console.error('Pays picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantRecordTypeId', fieldApiName: VILLE_FIELD })
+    wiredVille({ data, error }) {
+        if (data) {
+            this.allVilleOptions = data.values;
+            // Si un pays est déjà sélectionné (mode édition), recharger les villes
+            if (this.form.pays) {
+                this._updateVilleOptions();
+            }
+        }
+        if (error) console.error('Ville picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantRecordTypeId', fieldApiName: STATE_OF_PERSON_FIELD })
+    wiredState({ data, error }) {
+        if (data) this.etatPassagerOptions = data.values;
+        if (error) console.error('StateOfPerson picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantRecordTypeId', fieldApiName: SEXE_FIELD })
+    wiredSexe({ data, error }) {
+        if (data) this.sexeOptions = data.values;
+        if (error) console.error('Sexe picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantRecordTypeId', fieldApiName: MARITAL_STATUS_FIELD })
+    wiredMarital({ data, error }) {
+        if (data) this.situationFamilialeOptions = data.values;
+        if (error) console.error('MaritalStatus picklist error', error);
+    }
+
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantRecordTypeId', fieldApiName: TYPE_CONTACT_FIELD })
+    wiredTypeContact({ data, error }) {
+        if (data) this.typeContactOptions = data.values;
+        if (error) console.error('TypeContact picklist error', error);
+    }
 
     /* ══════════════════════════════════════
        CHARGEMENT DONNÉES
@@ -148,6 +219,38 @@ export default class PassagerManager extends LightningElement {
         }
     }
 
+    /**
+     * Charge les véhicules associés au claim pour les passagers adverses
+     */
+    async loadVehicles() {
+        if (!this.recordId) {
+            this.vehiculesOptions = [];
+            return;
+        }
+        try {
+            const vehicles = await getVehiclesForClaim({ claimId: this.recordId });
+            this.vehiculesOptions = vehicles;
+        } catch (e) {
+            console.error('Erreur lors du chargement des véhicules:', e);
+            this._toast('Erreur', 'Impossible de charger les véhicules', 'error');
+            this.vehiculesOptions = [];
+        }
+    }
+
+    /**
+     * Charge la liste des compagnies adverses
+     */
+    async loadCompagniesAdverses() {
+        try {
+            const compagnies = await getCompagniesAdverses();
+            this.compagniesAdversesOptions = compagnies;
+        } catch (e) {
+            console.error('Erreur lors du chargement des compagnies adverses:', e);
+            this._toast('Erreur', 'Impossible de charger les compagnies adverses', 'error');
+            this.compagniesAdversesOptions = [];
+        }
+    }
+
     _enrichRecord(r) {
         const stateClass = {
             'Blessé': 'pm-state pm-state--blesse',
@@ -155,7 +258,7 @@ export default class PassagerManager extends LightningElement {
             'Indemne': 'pm-state pm-state--indemne',
         }[r.StateOfPerson__c] || 'pm-state pm-state--default';
 
-        const roleClass = (r.Roles__c || '').includes('adverse')
+        const roleClass = (r.Roles__c || '').toLowerCase().includes('adverse')
             ? 'pm-role pm-role--adverse'
             : 'pm-role pm-role--assure';
 
@@ -172,20 +275,58 @@ export default class PassagerManager extends LightningElement {
     /* ══════════════════════════════════════
        FILTRES & PAGINATION
     ══════════════════════════════════════ */
+    get effectivePageSize() {
+        return parseInt(this.pageSize) || 10;
+    }
+
     _applyFilter() {
-        const base = this.activeFilter === 'all'
-            ? [...this.records]
-            : this.records.filter(r => r.Roles__c === this.activeFilter);
+        let base = [...this.records];
+
+        if (this.allowedRoles?.trim()) {
+            const rolesArray = this.allowedRoles.split(',').map(r => r.trim());
+            base = base.filter(r => rolesArray.includes(r.Roles__c));
+        }
+
+        if (this.activeFilter !== 'all') {
+            base = base.filter(r => r.Roles__c === this.activeFilter);
+        }
+
         this.filteredRecords = base.slice(
-            (this.currentPage - 1) * PAGE_SIZE,
-            this.currentPage * PAGE_SIZE
+            (this.currentPage - 1) * this.effectivePageSize,
+            this.currentPage * this.effectivePageSize
         );
     }
 
     get totalPages() {
-        const base = this.activeFilter === 'all' ? this.records : this.records.filter(r => r.Roles__c === this.activeFilter);
-        return Math.max(1, Math.ceil(base.length / PAGE_SIZE));
+        let base = [...this.records];
+        if (this.allowedRoles?.trim()) {
+            const rolesArray = this.allowedRoles.split(',').map(r => r.trim());
+            base = base.filter(r => rolesArray.includes(r.Roles__c));
+        }
+        if (this.activeFilter !== 'all') {
+            base = base.filter(r => r.Roles__c === this.activeFilter);
+        }
+        return Math.max(1, Math.ceil(base.length / this.effectivePageSize));
     }
+
+    /* ══════════════════════════════════════
+       COLONNES DYNAMIQUES
+    ══════════════════════════════════════ */
+    get parsedVisibleFields() {
+        if (!this.visibleFields?.trim()) {
+            return ['Conducteur', 'Civilité', 'Nom complet', 'Rôle', 'CNI', 'Pays', 'Ville', 'État'];
+        }
+        return this.visibleFields.split(',').map(f => f.trim()).filter(f => f);
+    }
+
+    get showColConducteur() { return this.parsedVisibleFields.includes('Conducteur'); }
+    get showColCivilite() { return this.parsedVisibleFields.includes('Civilité'); }
+    get showColNom() { return this.parsedVisibleFields.includes('Nom complet'); }
+    get showColRole() { return this.parsedVisibleFields.includes('Rôle'); }
+    get showColCNI() { return this.parsedVisibleFields.includes('CNI'); }
+    get showColPays() { return this.parsedVisibleFields.includes('Pays'); }
+    get showColVille() { return this.parsedVisibleFields.includes('Ville'); }
+    get showColEtat() { return this.parsedVisibleFields.includes('État'); }
 
     get showPagination() { return this.totalPages > 1; }
     get hasRecords() { return this.filteredRecords.length > 0; }
@@ -197,7 +338,7 @@ export default class PassagerManager extends LightningElement {
 
     get pillAllClass() { return `pm-pill${this.activeFilter === 'all' ? ' pm-pill--active' : ''}`; }
     get pillAssureClass() { return `pm-pill${this.activeFilter === 'Passager assuré' ? ' pm-pill--active' : ''}`; }
-    get pillAdverseClass() { return `pm-pill${this.activeFilter === 'Partie adverse' ? ' pm-pill--active' : ''}`; }
+    get pillAdverseClass() { return `pm-pill${this.activeFilter === 'Passager adverse' ? ' pm-pill--active' : ''}`; }
 
     filterAll() { this.activeFilter = 'all'; this.currentPage = 1; this._applyFilter(); }
     filterRole(e) { this.activeFilter = e.target.dataset.role; this.currentPage = 1; this._applyFilter(); }
@@ -209,12 +350,16 @@ export default class PassagerManager extends LightningElement {
     ══════════════════════════════════════ */
     get showIttIpp() { return this.form.etatPassager === 'Blessé'; }
     get showDecesFields() { return this.form.etatPassager === 'Décédé'; }
+    // "Passager adverse" est la valeur réelle dans votre org (pas "Partie adverse")
     get isAdverse() { return (this.form.roles || '').toLowerCase().includes('adverse'); }
     get isPhoneRequired() { return this.form.typeContact === 'Téléphone'; }
     get isEmailRequired() { return this.form.typeContact === 'Mail'; }
     get isDriverDisabled() { return this.driverCount >= 1 && !this.form.conducteur; }
     get modalTitle() { return this.isUpdateMode ? 'Modifier le passager' : 'Ajouter un passager'; }
     get saveLabel() { return this.isUpdateMode ? 'Enregistrer les modifications' : 'Ajouter le passager'; }
+
+    // Déterminer si la ville est disponible (pays sélectionné + villes chargées)
+    get isVilleDisabled() { return !this.form.pays || this.filteredVilleOptions.length === 0; }
 
     /* ══════════════════════════════════════
        ACTIONS HEADER
@@ -223,7 +368,20 @@ export default class PassagerManager extends LightningElement {
         this.isUpdateMode = false;
         this.form = EMPTY_FORM();
         this.errors = EMPTY_ERRORS();
-        this.filteredCityOptions = [];
+        this.filteredVilleOptions = [];
+
+        // Pré-remplir le rôle si un seul rôle est autorisé (cas paramétré)
+        if (this.allowedRoles?.trim()) {
+            const allowed = this.allowedRoles.split(',').map(r => r.trim());
+            if (allowed.length === 1) {
+                this.form = { ...this.form, roles: allowed[0] };
+            }
+        }
+
+        // Charger les véhicules et compagnies adverses
+        this.loadVehicles();
+        this.loadCompagniesAdverses();
+
         this.showFormModal = true;
     }
 
@@ -243,27 +401,60 @@ export default class PassagerManager extends LightningElement {
         this.showFormModal = true;
         this.isUpdateMode = true;
         this.errors = EMPTY_ERRORS();
+
+        // Charger les véhicules et compagnies adverses au cas où
+        this.loadVehicles();
+        this.loadCompagniesAdverses();
+
         try {
+            console.log('🔍 Chargement du participant:', participantId);
             const data = await getParticipantById({ participantId });
+            console.log('✅ Données reçues:', data);
+
             const fmtDate = v => {
                 if (!v) return '';
-                // Format dd/mm/yyyy → yyyy-mm-dd
                 if (/^\d{2}\/\d{2}\/\d{4}$/.test(v)) {
                     const [d, m, y] = v.split('/');
                     return `${y}-${m}-${d}`;
                 }
                 return v;
             };
+
             this.form = {
-                ...EMPTY_FORM(),
-                ...data,
-                participantId,
+                participantId: data.participantId || '',
+                accountId: data.accountId || '',
+                roles: data.roles || '',
+                civility: data.civility || '',
+                sexe: data.sexe || '',
+                nom: data.nom || '',
+                prenom: data.prenom || '',
+                cni: data.cni || '',
                 dateNaissance: fmtDate(data.dateNaissance),
+                situationFamiliale: data.situationFamiliale || '',
+                pays: data.pays || '',
+                ville: data.ville || '',
+                adresse: data.adresse || '',
+                typeContact: data.typeContact || '',
+                telephone: data.telephone || '',
+                email: data.email || '',
+                etatPassager: data.etatPassager || '',
+                compagnieAdverse: data.compagnieAdverse || '',
+                itt: data.itt ?? null,
+                ipp: data.ipp ?? null,
                 dateDeces: fmtDate(data.dateDeces),
+                revenuAnnuel: data.revenuAnnuel ?? null,
+                conducteur: data.conducteur === true,
+                vehiculeId: data.vehiculeId || '',
             };
-            this._updateCityOptions();
+
+            console.log('📋 Formulaire chargé:', this.form);
+            this._updateVilleOptions();
+
         } catch (e) {
-            this._toast('Erreur', 'Impossible de charger les données du passager', 'error');
+            console.error('❌ Erreur complète:', e);
+            console.error('Message:', e.message);
+            console.error('Body:', e.body);
+            this._toast('Erreur', `Impossible de charger les données du passager: ${e.body?.message || e.message}`, 'error');
             this.showFormModal = false;
         } finally {
             this.isFormLoading = false;
@@ -292,7 +483,15 @@ export default class PassagerManager extends LightningElement {
         // Pays → reset ville + filtrer villes
         if (name === 'pays') {
             this.form = { ...this.form, ville: '' };
-            this._updateCityOptions();
+            this._updateVilleOptions();
+        }
+        // Rôle changé vers Passager adverse → charger les véhicules
+        if (name === 'roles' && (value || '').toLowerCase().includes('adverse')) {
+            if (this.vehiculesOptions.length === 0) {
+                this.loadVehicles();
+            }
+            // Reset vehiculeId si on passe à un autre rôle
+            this.form = { ...this.form, vehiculeId: '' };
         }
         // Réinitialiser erreur du champ
         if (this.errors[name] !== undefined) {
@@ -306,13 +505,29 @@ export default class PassagerManager extends LightningElement {
 
     handleFormSubmit(e) { e.preventDefault(); }
 
-    _updateCityOptions() {
-        if (!this.form.pays || !this.allCityOptions.length) {
-            this.filteredCityOptions = [];
+    /**
+     * Mise à jour des options de ville selon le pays sélectionné.
+     * La dépendance Pays → Ville est configurée dans Salesforce :
+     * le champ Ville__c a Pays__c comme controlling field.
+     * La propriété "validFor" de chaque valeur contient les indices
+     * des valeurs de Pays qui l'activent.
+     */
+    _updateVilleOptions() {
+        if (!this.form.pays || !this.allVilleOptions.length) {
+            this.filteredVilleOptions = [];
             return;
         }
-        const idx = this.paysOptions.findIndex(p => p.value === this.form.pays);
-        this.filteredCityOptions = this.allCityOptions.filter(c => c.validFor?.includes(idx));
+        // Trouver l'index de la valeur pays sélectionnée dans paysOptions
+        const paysIdx = this.paysOptions.findIndex(p => p.value === this.form.pays);
+        if (paysIdx === -1) {
+            this.filteredVilleOptions = this.allVilleOptions;
+            return;
+        }
+        // Filtrer les villes valides pour cet index pays
+        this.filteredVilleOptions = this.allVilleOptions.filter(v => {
+            if (!v.validFor || v.validFor.length === 0) return true;
+            return v.validFor.includes(paysIdx);
+        });
     }
 
     /* ══════════════════════════════════════
@@ -330,6 +545,12 @@ export default class PassagerManager extends LightningElement {
         if (this.form.pays && !this.form.ville) { e.ville = 'Obligatoire'; ok = false; }
         if (!this.form.cni?.trim()) { e.cni = 'Le CNI est obligatoire'; ok = false; }
         if (!this.form.etatPassager) { e.etatPassager = 'Obligatoire'; ok = false; }
+
+        // Validation du véhicule pour passager adverse
+        if (this.isAdverse && !this.form.vehiculeId) {
+            this._toast('Validation', 'Le véhicule est obligatoire pour les passagers adverses', 'warning');
+            ok = false;
+        }
 
         if ((this.form.nom?.trim().length || 0) + (this.form.prenom?.trim().length || 0) > 35) {
             this._toast('Validation', 'Le nom complet dépasse 35 caractères', 'warning');
@@ -357,7 +578,6 @@ export default class PassagerManager extends LightningElement {
         if (!this._validate()) return;
         this.isSaving = true;
         try {
-            // Vérification doublon (seulement en création)
             if (!this.isUpdateMode) {
                 const isDup = await checkDuplicate({
                     nom: this.form.nom,
@@ -372,11 +592,23 @@ export default class PassagerManager extends LightningElement {
                 }
             }
 
+            const cin = this.form.cni?.trim();
+            const fullName = `${this.form.nom || ''} ${this.form.prenom || ''}`.trim();
+            let accountId;
+            try {
+                accountId = await resolveAccountByCIN({ cin, nom: fullName });
+            } catch (err) {
+                this._toast('Erreur', err.body?.message || 'Erreur lors de la résolution du compte.', 'error');
+                this.isSaving = false;
+                return;
+            }
+
             const result = await upsertPassager({
                 formData: this.form,
                 claimId: this.recordId,
-                vehiculeId: this.vehiculeId || null,
+                vehiculeId: this.form.vehiculeId || null,
                 isUpdateMode: this.isUpdateMode,
+                accountId,
             });
 
             if (result.success) {

@@ -267,7 +267,7 @@
             </template>
 
             <template lwc:if={isStep11}>
-                <h1 class="main-title slds-m-bottom_large">Récapitulatif 360° de la déclaration</h1>
+                <h1 class="main-title slds-m-bottom_large">Récapitulatif de la déclaration</h1>
                 
                 <c-lwc014_-recapitulatif
                     policy={selectedPolicyRecord}
@@ -296,7 +296,7 @@
                             </template>
 
                             <template lwc:elseif={isStep11}>
-                                <button class="btn-success" onclick={handleNext}>Consulter le Sinistre &#10145;</button>
+                                <button class="btn-primary" onclick={handleNext}>Ouvrir Sinistre &rarr;</button>
                             </template>
                             
                             <template lwc:else>
@@ -320,9 +320,8 @@
                     <div class={step8Class}><div class="icon-column"><div class={step8IconClass}></div><div class="line"></div></div><div class="label-column">Passager(s) assuré(s)</div></div>
                     <div class={step9Class}><div class="icon-column"><div class={step9IconClass}></div><div class="line"></div></div><div class="label-column">Véhicule(s) & passager(s) adverse(s)</div></div>
                     <div class={step10Class}><div class="icon-column"><div class={step10IconClass}></div><div class="line"></div></div><div class="label-column">Info dommages autres parties</div></div>
-                    <div class={step11Class}><div class="icon-column"><div class={step11IconClass}></div><div class="line"></div></div><div class="label-column">Récapitulatif1</div></div>
+                    <div class={step11Class}><div class="icon-column"><div class={step11IconClass}></div><div class="line"></div></div><div class="label-column">Récapitulatif</div></div>
 
-    
                     
                 </div>
             </div>

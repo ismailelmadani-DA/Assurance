@@ -16,9 +16,21 @@
                 <div key={veh.key} class="slds-box white-box slds-m-bottom_small vehicle-added-card">
                     <div class="slds-grid slds-grid_vertical-align-center">
                         <lightning-icon icon-name="custom:custom31" size="small" class="slds-m-right_small"></lightning-icon>
+                        
                         <div class="slds-col">
                             <p><strong>Immatriculation :</strong> {veh.RegistrationNumber__c} | <strong>Marque :</strong> {veh.Marque__c}</p>
                             <p class="slds-text-color_weak">Passagers blessés : {veh.NbDePassagerBlesses__c}</p>
+                        </div>
+                        
+                        <div class="slds-col slds-grow-none">
+                            <lightning-button-icon 
+                                icon-name="utility:delete" 
+                                variant="bare" 
+                                alternative-text="Supprimer" 
+                                data-key={veh.key} 
+                                onclick={handleDelete}
+                                title="Supprimer ce véhicule">
+                            </lightning-button-icon>
                         </div>
                     </div>
                 </div>
@@ -42,16 +54,16 @@
             <div class="slds-grid slds-wrap slds-gutters">
                 <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
                     <lightning-combobox label="État véhicule" options={optionsEtat} value={formData.VehicleIsDamaged__c} data-field="VehicleIsDamaged__c" onchange={handleInputChange} required></lightning-combobox>
-                    <lightning-combobox label="Type véhicule" options={typeOptions} value={formData.TypeVehicule__c} data-field="TypeVehicule__c" onchange={handleInputChange}></lightning-combobox>
+                    <lightning-combobox label="Type véhicule" options={typeOptions} value={formData.TypeVehicule__c} data-field="TypeVehicule__c" onchange={handleInputChange} required></lightning-combobox>
                     <lightning-input type="date" label="Date de mise en circulation" value={formData.DateMiseEnCirculation__c} data-field="DateMiseEnCirculation__c" onchange={handleInputChange}></lightning-input>
-                    <lightning-input type="number" label="Nombre de passager blessés" value={formData.NbDePassagerBlesses__c} data-field="NbDePassagerBlesses__c" onchange={handleInputChange}></lightning-input>
+                    <lightning-input type="number" label="Nombre de passagers blessés" value={formData.NbDePassagerBlesses__c} data-field="NbDePassagerBlesses__c" onchange={handleInputChange} required></lightning-input>
                     <lightning-input label="Numéro de contrat d'assurance" value={formData.Numéro_de_contrat__c} data-field="Numéro_de_contrat__c" onchange={handleInputChange}></lightning-input>
                 </div>
 
                 <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
                     <lightning-combobox label="Adversaire assuré" options={optionsAssure} value={formData.Adversaire_Assure__c} data-field="Adversaire_Assure__c" onchange={handleInputChange} required></lightning-combobox>
                     <lightning-input label="Numéro d'immatriculation" value={formData.RegistrationNumber__c} data-field="RegistrationNumber__c" onchange={handleInputChange} required></lightning-input>
-                    <lightning-input label="Marque" value={formData.Marque__c} data-field="Marque__c" onchange={handleInputChange}></lightning-input>
+                    <lightning-input label="Marque" value={formData.Marque__c} data-field="Marque__c" onchange={handleInputChange} required></lightning-input>
                     
                     <div class="slds-m-top_x-small">
                         <lightning-record-picker

@@ -1,15 +1,17 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import getPicklistValues from '@salesforce/apex/ClaimSearchController.getPicklistValues';
+// IMPORT POUR LES NOTIFICATIONS TOAST
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 export default class Lwc011_PassagersAssure extends LightningElement {
     @api claimSummary;
     
     // --- Liste des passagers ajoutés ---
-    @track passengers = []; 
+    @track passengers = [];
     
     // --- État du formulaire ---
     @track isFormVisible = false;
-
+    
     // --- Modèle pour un nouveau passager ---
     @track newPassager = {
         Name__c: '', 
@@ -25,7 +27,7 @@ export default class Lwc011_PassagersAssure extends LightningElement {
 
     // --- Options pour les listes déroulantes ---
     @track civilityOptions = []; 
-    @track paysOptions = []; 
+    @track paysOptions = [];
     @track villeOptions = [];
     @track maritalOptions = []; 
     @track stateOptions = [];
@@ -47,10 +49,13 @@ export default class Lwc011_PassagersAssure extends LightningElement {
     wiredMarital({ data }) { if (data) this.maritalOptions = data; }
 
     // --- Actions sur le formulaire ---
-    showForm() { this.isFormVisible = true; }
+    showForm() { 
+        this.isFormVisible = true;
+    }
+    
     hideForm() { 
         this.isFormVisible = false; 
-        this.resetForm(); 
+        this.resetForm();
     }
 
     handleInputChange(event) {
@@ -59,7 +64,7 @@ export default class Lwc011_PassagersAssure extends LightningElement {
     }
 
     handleAjouter() {
-        const allValid = [...this.template.querySelectorAll('.form-input')]
+        const allValid = [...this.template.querySelectorAll('lightning-input, lightning-combobox, lightning-textarea')]
             .reduce((validSoFar, inputCmp) => {
                 inputCmp.reportValidity();
                 return validSoFar && inputCmp.checkValidity();
@@ -69,10 +74,31 @@ export default class Lwc011_PassagersAssure extends LightningElement {
             const newEntry = { ...this.newPassager, key: Date.now() };
             this.passengers = [...this.passengers, newEntry];
             
+            // DÉCLENCHEMENT DU TOAST DE SUCCÈS
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Succès',
+                    message: 'Le passager a été ajouté à la liste.',
+                    variant: 'success',
+                })
+            );
+            
             this.resetForm();
             this.hideForm();
             this.notifyParent();
         }
+    }
+
+    // --- NOUVELLE MÉTHODE : Suppression d'un passager ---
+    handleDelete(event) {
+        // On récupère la clé du passager via le dataset du bouton cliqué
+        const keyToDelete = event.currentTarget.dataset.key;
+        
+        // On filtre la liste pour ne garder que les passagers dont la clé est différente
+        this.passengers = this.passengers.filter(p => p.key.toString() !== keyToDelete.toString());
+        
+        // On notifie le parent de la mise à jour
+        this.notifyParent();
     }
 
     resetForm() {
@@ -87,8 +113,9 @@ export default class Lwc011_PassagersAssure extends LightningElement {
     }
 
     @api validate() {
-        return true; 
+        return true;
     }
+    
     get passengersCount() {
         return this.passengers.length;
     }
