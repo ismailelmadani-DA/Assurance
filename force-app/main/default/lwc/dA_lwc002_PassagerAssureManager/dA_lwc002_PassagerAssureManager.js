@@ -580,13 +580,12 @@ export default class PassagerManager extends LightningElement {
         try {
             if (!this.isUpdateMode) {
                 const isDup = await checkDuplicate({
-                    nom: this.form.nom,
-                    prenom: this.form.prenom,
+                    cin: this.form.cni?.trim(),
                     claimId: this.recordId,
                     excludeId: null,
                 });
                 if (isDup) {
-                    this._toast('Doublon détecté', `Un passager "${this.form.nom} ${this.form.prenom}" existe déjà sur ce sinistre.`, 'warning', 'sticky');
+                    this._toast('Doublon détecté', `Un passager avec le CIN "${this.form.cni}" existe déjà sur ce sinistre.`, 'warning', 'sticky');
                     this.isSaving = false;
                     return;
                 }

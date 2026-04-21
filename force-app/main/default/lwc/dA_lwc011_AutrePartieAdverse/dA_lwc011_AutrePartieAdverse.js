@@ -418,12 +418,12 @@ export default class DA_lwc011_AutrePartieAdverse extends NavigationMixin(Lightn
         this.isSaving = true;
         try {
             const isDup = await checkDuplicate({
-                nomComplet: this.form.nomComplet,
+                cin: this.form.cin?.trim(),
                 claimId: this.recordId,
                 excludeId: this.isUpdateMode ? this.form.participantId : null
             });
             if (isDup) {
-                this._toast('Doublon détecté', `Une autre partie adverse "${this.form.nomComplet}" existe déjà.`, 'warning', 'sticky');
+                this._toast('Doublon détecté', `Une autre partie adverse avec le CIN "${this.form.cin}" existe déjà.`, 'warning', 'sticky');
                 this.isSaving = false;
                 return;
             }

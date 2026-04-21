@@ -171,8 +171,8 @@ public with sharing class DA_PassagerAdverseController {
     }
 
     @AuraEnabled
-    public static Boolean checkDuplicate(String nomComplet, Id claimId, Id excludeId) {
-        if (String.isBlank(nomComplet) || claimId == null) {
+    public static Boolean checkDuplicate(String cin, Id claimId, Id excludeId) {
+        if (String.isBlank(cin) || claimId == null) {
             return false;
         }
         try {
@@ -180,10 +180,10 @@ public with sharing class DA_PassagerAdverseController {
             if (resolvedId == null) {
                 return false;
             }
-            String fullName = String.escapeSingleQuotes(nomComplet.trim());
+            String safeCin = String.escapeSingleQuotes(cin.trim());
             String safeClaimId = String.escapeSingleQuotes(String.valueOf(resolvedId));
             String conditions = 'Claim__c = \'' + safeClaimId + '\' AND Roles__c = \'' + ROLE_ADVERSE +
-                '\' AND ParticipantAccount__r.Name = \'' + fullName + '\'';
+                '\' AND ParticipantCNI__c = \'' + safeCin + '\'';
             if (excludeId != null) {
                 conditions += ' AND Id != \'' + String.escapeSingleQuotes(String.valueOf(excludeId)) + '\'';
             }

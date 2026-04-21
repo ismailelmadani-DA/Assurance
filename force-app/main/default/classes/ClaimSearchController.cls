@@ -168,70 +168,9 @@ public with sharing class ClaimSearchController {
     @AuraEnabled
     public static void savePassengers(Id caseId, String passengersJson) {
         try {
-            // 1. Récupération des infos du dossier pour trouver le compte client
-            List<Case> cases = [SELECT Id, AccountId, Police__r.AccountName__c FROM Case WHERE Id = :caseId LIMIT 1];
-            
-            if (cases.isEmpty()) {
-                throw new AuraHandledException('Le dossier (Case) est introuvable.');
-            }
-            
-            // Détermination du compte parent (souvent obligatoire pour l'objet Passager)
-            Id parentAccountId = cases[0].AccountId != null ? cases[0].AccountId : cases[0].Police__r.AccountName__c;
-            
-            if (parentAccountId == null) {
-                throw new AuraHandledException('Erreur : Aucun compte client n\'est lié à ce dossier.');
-            }
-
-            List<Object> passList = (List<Object>) JSON.deserializeUntyped(passengersJson);
-            List<Passager__c> toInsert = new List<Passager__c>();
-
-            for (Object obj : passList) {
-                Map<String, Object> p = (Map<String, Object>) obj;
-                Passager__c newP = new Passager__c();
-                
-                // --- LIAISONS PIVOTS ---
-                newP.Compte__c = parentAccountId; 
-                newP.Case__c = caseId;
-                
-                // --- MAPPING DES DONNÉES ---
-                newP.Name__c = (String)p.get('Name__c');
-                newP.CIN__c = (String)p.get('CIN__c');
-                newP.Civilite__c = (String)p.get('Civilite__c');
-                
-                if(p.get('BirthDay__c') != null && String.isNotBlank((String)p.get('BirthDay__c'))) {
-                    newP.BirthDay__c = Date.valueOf((String)p.get('BirthDay__c'));
-                }
-                
-                newP.Pays__c = (String)p.get('Pays__c');
-                newP.Ville__c = (String)p.get('Ville__c');
-                newP.Adresse__c = (String)p.get('Adresse__c');
-                newP.StateOfPerson__c = (String)p.get('StateOfPerson__c');
-                newP.MaritalStatus__c = (String)p.get('MaritalStatus__c');
-                newP.Roles__c = 'Passager assuré';
-                // --- NOTIFICATION & ASSURANCE ---
-                newP.MoyenNotification__c = (String)p.get('MoyenNotification__c'); 
-
-                // ==================================================
-                // ---> AJOUT DES NOUVEAUX CHAMPS DE NOTIFICATION <---
-                // ==================================================
-                if (p.get('Telephone__c') != null && String.isNotBlank((String)p.get('Telephone__c'))) {
-                    newP.Telephone__c = (String)p.get('Telephone__c');
-                }
-                
-                if (p.get('Email__c') != null && String.isNotBlank((String)p.get('Email__c'))) {
-                    newP.Email__c = (String)p.get('Email__c');
-                }
-                // ==================================================
-
-                if (p.get('CompagnieAdverse__c') != null && String.isNotBlank((String)p.get('CompagnieAdverse__c'))) { 
-                    newP.Account__c = (Id)p.get('CompagnieAdverse__c'); 
-                }
-                toInsert.add(newP);
-            }
-
-            if (!toInsert.isEmpty()) {
-                insert toInsert;
-            }
+            SM001_PassagerService.savePassagers(caseId, passengersJson);
+        } catch (AuraHandledException ae) {
+            throw ae;
         } catch (Exception e) {
             throw new AuraHandledException('Erreur lors de l\'enregistrement des passagers : ' + e.getMessage());
         }
@@ -423,85 +362,10 @@ public with sharing class ClaimSearchController {
     @AuraEnabled
     public static void saveOtherParties(Id caseId, String partiesJson) {
         try {
-            // Sécurité : On sort tout de suite si aucune donnée n'a été saisie
-            if (String.isBlank(partiesJson) || partiesJson == '[]') {
-                return; 
-            }
-
-            // 1. GESTION DU COMPTE (Fallback pour éviter l'erreur REQUIRED_FIELD_MISSING)
-            Case currentCase = [SELECT Id, AccountId FROM Case WHERE Id = :caseId LIMIT 1];
-            Id accountIdToUse = currentCase.AccountId;
-
-            if (accountIdToUse == null) {
-                Account defaultAcc = new Account(Name = 'Dossier Sans Compte - Tiers Générique');
-                insert defaultAcc;
-                accountIdToUse = defaultAcc.Id;
-                
-                currentCase.AccountId = accountIdToUse;
-                update currentCase;
-            }
-
-            List<Object> partyList = (List<Object>) JSON.deserializeUntyped(partiesJson);
-            List<Passager__c> toInsert = new List<Passager__c>();
-
-            if (!partyList.isEmpty()) {
-                Map<String, Object> firstParty = (Map<String, Object>) partyList[0];
-                update new Case(
-                    Id = caseId, 
-                    OpposingParty__c = (String)firstParty.get('OpposingParty__c')
-                );
-            }
-
-            // 3. Boucle de création des Tiers
-            for (Object obj : partyList) {
-                Map<String, Object> p = (Map<String, Object>) obj;
-                Passager__c newP = new Passager__c();
-                
-                // ==========================================
-                // LIAISONS MULTIPLES (Le Tiers est rattaché à tout !)
-                // ==========================================
-                newP.Compte__c = accountIdToUse; // Le client ou le compte générique
-                newP.Case__c = caseId;           // L'événement global
-                
-                    
-
-                // --- NOMS ---
-                String fullName = (String)p.get('Nom__c') + ' ' + (String)p.get('Prenom__c');
-                newP.Name = (String)p.get('Nom__c'); 
-                newP.Name__c = fullName;             
-
-                // --- INFORMATIONS PERSONNELLES ---
-                newP.Civilite__c = (String)p.get('Civilite__c');
-                newP.CIN__c = (String)p.get('CIN__c');
-                
-                if(p.get('BirthDay__c') != null && String.isNotBlank((String)p.get('BirthDay__c'))) {
-                    newP.BirthDay__c = Date.valueOf((String)p.get('BirthDay__c'));
-                }
-                
-                newP.Pays__c = (String)p.get('Pays__c');
-                newP.Ville__c = (String)p.get('Ville__c');
-                newP.Adresse__c = (String)p.get('Adresse__c');
-                newP.StateOfPerson__c = (String)p.get('StateOfPerson__c');
-                newP.MaritalStatus__c = (String)p.get('MaritalStatus__c');
-                newP.Roles__c = 'Autres partie'; 
-
-                // --- NOTIFICATION & ASSURANCE ---
-                newP.MoyenNotification__c = (String)p.get('MoyenNotification__c');
-                
-                if (p.get('CompagnieAdverse__c') != null && String.isNotBlank((String)p.get('CompagnieAdverse__c'))) {
-                    newP.Account__c = (Id)p.get('CompagnieAdverse__c');
-                }
-
-                toInsert.add(newP);
-            }
-
-            // 4. Insertion en base de données
-            if (!toInsert.isEmpty()) {
-                insert toInsert;
-            }
-
+            SM001_PassagerService.saveOtherParties(caseId, partiesJson);
+        } catch (AuraHandledException ae) {
+            throw ae;
         } catch (Exception e) {
-            // Affichage explicite de l'erreur
             String errorMsg = 'Erreur d\'enregistrement : ' + e.getMessage() + ' (Ligne ' + e.getLineNumber() + ')';
             AuraHandledException ex = new AuraHandledException(errorMsg);
             ex.setMessage(errorMsg);

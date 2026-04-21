@@ -458,12 +458,12 @@ export default class DA_lwc010_PassagerAdverse extends NavigationMixin(Lightning
         this.isSaving = true;
         try {
             const isDup = await checkDuplicate({
-                nomComplet: this.form.nomComplet,
+                cin: this.form.cni?.trim(),
                 claimId: this.recordId,
                 excludeId: this.isUpdateMode ? this.form.participantId : null
             });
             if (isDup) {
-                this._toast('Doublon détecté', `Un passager adverse "${this.form.nomComplet}" existe déjà.`, 'warning', 'sticky');
+                this._toast('Doublon détecté', `Un passager adverse avec le CIN "${this.form.cni}" existe déjà.`, 'warning', 'sticky');
                 this.isSaving = false;
                 return;
             }

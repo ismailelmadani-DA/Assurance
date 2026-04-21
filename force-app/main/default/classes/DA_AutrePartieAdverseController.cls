@@ -146,8 +146,8 @@ public with sharing class DA_AutrePartieAdverseController {
     }
 
     @AuraEnabled
-    public static Boolean checkDuplicate(String nomComplet, Id claimId, Id excludeId) {
-        if (String.isBlank(nomComplet) || claimId == null) {
+    public static Boolean checkDuplicate(String cin, Id claimId, Id excludeId) {
+        if (String.isBlank(cin) || claimId == null) {
             return false;
         }
         try {
@@ -156,9 +156,9 @@ public with sharing class DA_AutrePartieAdverseController {
                 return false;
             }
             String safeClaimId = String.escapeSingleQuotes(String.valueOf(resolvedId));
-            String fullName = String.escapeSingleQuotes(nomComplet.trim());
+            String safeCin = String.escapeSingleQuotes(cin.trim());
             String conditions = 'Claim__c = \'' + safeClaimId + '\' AND Roles__c = \'' + ROLE_AUTRE_PARTIE + '\''
-                + ' AND ParticipantAccount__r.Name = \'' + fullName + '\'';
+                + ' AND ParticipantCNI__c = \'' + safeCin + '\'';
             if (excludeId != null) {
                 conditions += ' AND Id != \'' + String.escapeSingleQuotes(String.valueOf(excludeId)) + '\'';
             }

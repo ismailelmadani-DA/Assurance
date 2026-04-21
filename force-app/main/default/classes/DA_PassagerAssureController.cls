@@ -76,14 +76,14 @@ public with sharing class DA_PassagerAssureController {
         }
 
         @AuraEnabled
-        public static Boolean checkDuplicate(String nom, String prenom, Id claimId, Id excludeId) {
-            if (String.isBlank(nom) || String.isBlank(prenom) || claimId == null) {
+        public static Boolean checkDuplicate(String cin, Id claimId, Id excludeId) {
+            if (String.isBlank(cin) || claimId == null) {
                 return false;
             }
             try {
-                String fullName = String.escapeSingleQuotes(nom.trim() + ' ' + prenom.trim());
+                String safeCin = String.escapeSingleQuotes(cin.trim());
                 String safeClaimId = String.escapeSingleQuotes(String.valueOf(claimId));
-                String conditions = 'Claim__c = \'' + safeClaimId + '\' AND ParticipantAccount__r.Name = \'' + fullName + '\'';
+                String conditions = 'Claim__c = \'' + safeClaimId + '\' AND ParticipantCNI__c = \'' + safeCin + '\'';
                 if (excludeId != null) {
                     conditions += ' AND Id != \'' + String.escapeSingleQuotes(String.valueOf(excludeId)) + '\'';
                 }
