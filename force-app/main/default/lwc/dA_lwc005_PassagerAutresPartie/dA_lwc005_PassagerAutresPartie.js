@@ -1,4 +1,5 @@
 import { LightningElement, api, wire } from 'lwc';
+import { NavigationMixin } from 'lightning/navigation';
 import { refreshApex } from '@salesforce/apex';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getPassagersAutresPartie from '@salesforce/apex/DA_PassagerController.getPassagersAutresPartie';
@@ -12,7 +13,7 @@ const STATE_CLASS_MAP = {
 };
 const DEFAULT_STATE_CLASS = 'pm-state pm-state--default';
 
-export default class DA_lwc005_PassagerAutresPartie extends LightningElement {
+export default class DA_lwc005_PassagerAutresPartie extends NavigationMixin(LightningElement) {
     @api recordId;
 
     passagers;
@@ -37,7 +38,10 @@ export default class DA_lwc005_PassagerAutresPartie extends LightningElement {
             this.passagers = data.map((r) => ({
                 ...r,
                 stateClass: STATE_CLASS_MAP[r.StateOfPerson__c] || DEFAULT_STATE_CLASS,
-                recordUrl: `/lightning/r/Passager__c/${r.Id}/view`
+                recordUrl: `/lightning/r/Passager__c/${r.Id}/view`,
+                accountUrl: r.Compte__c ? `/lightning/r/Account/${r.Compte__c}/view` : null,
+                accountName: r.Compte__r?.Name || r.Name__c || '',
+                hasAccount: !!r.Compte__c
             }));
             this.error = undefined;
         } else if (err) {
@@ -63,6 +67,21 @@ export default class DA_lwc005_PassagerAutresPartie extends LightningElement {
     // --- Type Contact change ---
     handleTypeContactChange(event) {
         this.selectedTypeContact = event.detail.value || '';
+    }
+
+    // --- Navigation vers Account ---
+    navigateToAccount(event) {
+        const accountId = event.currentTarget.dataset.id;
+        if (accountId) {
+            this[NavigationMixin.Navigate]({
+                type: 'standard__recordPage',
+                attributes: {
+                    recordId: accountId,
+                    objectApiName: 'Account',
+                    actionName: 'view'
+                }
+            });
+        }
     }
 
     // --- Ajout ---

@@ -57,7 +57,12 @@
                                 <tr key={rec.Id}>
                                     <td class="pm-td">{rec.Civilite__c}</td>
                                     <td class="pm-td pm-td--name">
-                                        <a class="pm-link" href={rec.recordUrl} target="_blank">{rec.Name__c}</a>
+                                        <template if:true={rec.hasAccount}>
+                                            <a class="pm-link" href="javascript:void(0)" data-id={rec.Compte__c} onclick={navigateToAccount}>{rec.accountName}</a>
+                                        </template>
+                                        <template if:false={rec.hasAccount}>
+                                            {rec.Name__c}
+                                        </template>
                                     </td>
                                     <td class="pm-td pm-td--mono">{rec.CIN__c}</td>
                                     <td class="pm-td">{rec.Pays__c}</td>
