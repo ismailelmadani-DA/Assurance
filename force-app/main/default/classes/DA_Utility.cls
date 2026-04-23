@@ -7,9 +7,9 @@ public with sharing class DA_Utility {
      * @return           :   User
      * -------------------------------------------------------------------------------------------------
     **/ 
-    public static User getCurrentUserInfo(){
-        return [SELECT Id, Name, ManagerId, Manager.Name, Manager.Profile.Name, Email, ProfileId, Profile.Name FROM User WHERE Id = :UserInfo.getUserId() limit 1];
-    }
+    //public static User getCurrentUserInfo(){
+       // return [SELECT Id, Name, ManagerId, Manager.Name, Manager.Profile.Name, Email, ProfileId, Profile.Name FROM User WHERE Id = :UserInfo.getUserId() limit 1];
+    //}
     /*
      * Method for building Queries this one for standard queries
      */

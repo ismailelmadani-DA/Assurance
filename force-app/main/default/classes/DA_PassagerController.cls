@@ -27,6 +27,20 @@ public with sharing class DA_PassagerController {
     }
 
     @AuraEnabled(cacheable=true)
+    public static List<Passager__c> getPassagersAdverses(Id caseId) {
+        System.debug(CLASS_NAME + ' - Start method getPassagersAdverses');
+        try {
+            List<Passager__c> result = SM001_PassagerService.getPassagersAdverses(caseId);
+            System.debug(CLASS_NAME + ' - End method getPassagersAdverses');
+            return result;
+        } catch (AuraHandledException ae) {
+            throw ae;
+        } catch (Exception e) {
+            throw new AuraHandledException('Erreur lors du chargement des passagers adverses.');
+        }
+    }
+
+    @AuraEnabled(cacheable=true)
     public static List<Passager__c> getPassagersAutresPartie(Id caseId) {
         System.debug(CLASS_NAME + ' - Start method getPassagersAutresPartie');
         try {

@@ -1,7 +1,8 @@
 import { LightningElement, track, wire, api } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
-import { NavigationMixin } from 'lightning/navigation'; 
+import { NavigationMixin } from 'lightning/navigation';
+
 // Import des objets et champs pour Picklists dynamiques
 import CASE_OBJECT from '@salesforce/schema/Case';
 import ACCOUNT_OBJECT from '@salesforce/schema/Account';
@@ -23,40 +24,63 @@ import saveOtherParties from '@salesforce/apex/ClaimSearchController.saveOtherPa
 import finalizeClaimProcess from '@salesforce/apex/ClaimSearchController.finalizeClaimProcess';
 
 export default class ClaimCreationWizard extends NavigationMixin(LightningElement) {
-    // --- États et Flags ---
+
+    // =========================================================
+    // ÉTATS ET FLAGS
+    // =========================================================
     @track currentStep = 1;
     @track isLoading = false;
     @track searchResults = [];
-    @track isPoliceConnu; 
+    @track isPoliceConnu;
     @track searchType;
     @track isFileUploaded = false;
     messageObligatoire = false;
     @api errorMessage = 'Prière d\'indexer le(s) document(s).';
 
-    // --- Correctif 3 : Date du jour dynamique ---
+    // =========================================================
+    // ✅ CORRECTION 1 : Variables trackées pour l'étape 1
+    // Sans ça, les champs perdent leur valeur quand on revient
+    // =========================================================
+    @track step1Data = {
+        police: '',
+        immat: '',
+        dateSurvenance: '',
+        heureSurvenance: '',
+        critere: ''
+    };
+
+    // =========================================================
+    // ✅ CORRECTION 4 : Flag pour éviter de recréer un Case 
+    // si on revient à l'étape 4 après l'avoir déjà créé
+    // =========================================================
+    @track caseAlreadyCreated = false;
+
+    // Date du jour dynamique
     @track todayDate = new Date().toISOString().split('T')[0];
 
     // --- Données Police & Véhicule ---
-    @track selectedPolicyId; 
-    @track dateSurvenance; 
-    @track selectedPolicyRecord; 
+    @track selectedPolicyId;
+    @track dateSurvenance;
+    @track selectedPolicyRecord;
     @track IdPolice;
     @track PoliceValue;
     @track adverseVehicleData = [];
+    @track otherPartiesData = [];
+
     // --- Variables pour l'objet Case (Étape 4) ---
-    @track createdCaseId; 
+    @track createdCaseId;
     @track createdCaseNumber;
     @track caseData = {
-        country: '', city: '', address: '', dateDepot: '', declarant: '', 
-        pvConstat: '', commentaire: '', nomContact: '', telContact: '', 
+        country: '', city: '', address: '', dateDepot: '', declarant: '',
+        pvConstat: '', commentaire: '', nomContact: '', telContact: '',
         mailContact: '', moyenNotification: ''
     };
     @track isSameAsInsured = false;
 
     // --- Variables pour l'étape 5 (Documents) ---
-    @track files = []; 
-    @track uploadedDocumentIds = []; 
-    @track allPicklistData = {}; 
+    @track files = [];
+    @track uploadedDocumentIds = [];
+    @track allPicklistData = {};
     @track optionsDirectory = [];
     @track optionsDocType = [];
     @track selectedDirectory = '';
@@ -78,6 +102,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
     @track optionsDeclarant = [];
     @track optionsPV = [];
     @track optionsNotif = [];
+
     optionsOuiNon = [{ label: 'Oui', value: 'Oui' }, { label: 'Non', value: 'Non' }];
     optionsCriteres = [
         { label: "Numéro d'immatriculation", value: 'immatriculation' },
@@ -86,7 +111,9 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
     ];
     optionsContact = [{ label: 'Oui', value: 'true' }, { label: 'Non', value: 'false' }];
 
-    // --- WIRES: Données Case & Account ---
+    // =========================================================
+    // WIRES : Données Case & Account
+    // =========================================================
     @wire(getObjectInfo, { objectApiName: CASE_OBJECT }) caseObjectInfo;
     @wire(getPicklistValues, { recordTypeId: '$caseObjectInfo.data.defaultRecordTypeId', fieldApiName: COUNTRY_FIELD })
     wiredPays({ data }) { if (data) this.optionsPays = data.values; }
@@ -101,7 +128,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
     @wire(getPicklistValues, { recordTypeId: '$accountObjectInfo.data.defaultRecordTypeId', fieldApiName: NOTIF_FIELD })
     wiredNotif({ data }) { if (data) this.optionsNotif = data.values; }
 
-    // --- WIRE: Métadonnées Documents ---
+    // WIRE : Métadonnées Documents
     @wire(getPicklistOptions)
     wiredPicklistOptions({ error, data }) {
         if (data) {
@@ -112,7 +139,9 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
         }
     }
 
-    // --- Getters de Navigation ---
+    // =========================================================
+    // GETTERS DE NAVIGATION
+    // =========================================================
     get isStep1() { return this.currentStep === 1; }
     get isStep2() { return this.currentStep === 2; }
     get isStep3() { return this.currentStep === 3; }
@@ -121,20 +150,30 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
     get isStep6() { return this.currentStep === 6; }
     get isStep7() { return this.currentStep === 7; }
     get isStep8() { return this.currentStep === 8; }
+    get isStep9() { return this.currentStep === 9; }
+    get isStep10() { return this.currentStep === 10; }
+    get isStep11() { return this.currentStep === 11; }
 
     get showFooter() { return this.currentStep <= 11; }
     get showPrecedent() { return this.currentStep > 1; }
-    
+
     get isOuiSelected() { return this.isPoliceConnu === 'Oui'; }
     get isNonSelected() { return this.isPoliceConnu === 'Non'; }
     get isSameAsInsuredString() { return this.isSameAsInsured.toString(); }
     get isUploadDisabled() { return !this.selectedDirectory || !this.selectedDocType; }
+
     get inputLabel() {
-        const labels = { immatriculation: "Numéro d'immatriculation", attestation: "Numéro d'attestation", chassis: "Numéro chassis" };
+        const labels = {
+            immatriculation: "Numéro d'immatriculation",
+            attestation: "Numéro d'attestation",
+            chassis: "Numéro chassis"
+        };
         return labels[this.searchType] || "Valeur";
     }
 
-    // --- Getters Stepper (Classes CSS) ---
+    // =========================================================
+    // GETTERS STEPPER (Classes CSS)
+    // =========================================================
     get step1Class() { return this.currentStep === 1 ? 'step active' : 'step completed'; }
     get step1IconClass() { return this.currentStep > 1 ? 'circle-check' : 'circle-ring'; }
     get step2Class() { return this.currentStep === 2 ? 'step active' : (this.currentStep > 2 ? 'step completed' : 'step'); }
@@ -151,15 +190,13 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
     get step7IconClass() { return this.currentStep === 7 ? 'circle-ring' : (this.currentStep > 7 ? 'circle-check' : 'square-gray'); }
     get step8Class() { return this.currentStep === 8 ? 'step active' : (this.currentStep > 8 ? 'step completed' : 'step'); }
     get step8IconClass() { return this.currentStep === 8 ? 'circle-ring' : (this.currentStep > 8 ? 'circle-check' : 'square-gray'); }
-    get isStep9() { return this.currentStep === 9; }
+    get step9Class() { return this.currentStep === 9 ? 'step active' : (this.currentStep > 9 ? 'step completed' : 'step'); }
+    get step9IconClass() { return this.currentStep === 9 ? 'circle-ring' : (this.currentStep > 9 ? 'circle-check' : 'square-gray'); }
+    get step10Class() { return this.currentStep === 10 ? 'step active' : (this.currentStep > 10 ? 'step completed' : 'step'); }
+    get step10IconClass() { return this.currentStep === 10 ? 'circle-ring' : (this.currentStep > 10 ? 'circle-check' : 'square-gray'); }
+    get step11Class() { return this.currentStep === 11 ? 'step active' : (this.currentStep > 11 ? 'step completed' : 'step'); }
+    get step11IconClass() { return this.currentStep === 11 ? 'circle-ring' : (this.currentStep > 11 ? 'circle-check' : 'square-gray'); }
 
-    get step9Class() { 
-        return this.currentStep === 9 ? 'step active' : (this.currentStep > 9 ? 'step completed' : 'step'); 
-    }
-
-    get step9IconClass() { 
-        return this.currentStep === 9 ? 'circle-ring' : (this.currentStep > 9 ? 'circle-check' : 'square-gray'); 
-    }
     // --- Données pour composants enfants ---
     get summaryForChild() {
         return {
@@ -168,71 +205,90 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
             registrationNumber: this.selectedPolicyRecord?.RegistrationNumber,
             caseNumber: this.createdCaseNumber || 'En cours',
             nbBlesses: this.driverData?.NumberOfInjuredPassengers__c || 0,
-            
-            // Nouvelles données pour l'étape 8
             brand: this.selectedPolicyRecord?.Brand || '-',
-            vehicleName: this.selectedPolicyRecord?.vehicleName || '-', // Sera vide si non requêté en Apex, mais prévu pour l'Auto Number
+            vehicleName: this.selectedPolicyRecord?.vehicleName || '-',
             driverName: this.driverData ? `${this.driverData.FirstName || ''} ${this.driverData.LastName || ''}`.trim() : 'Non renseigné'
         };
     }
-    get isStep10() { return this.currentStep === 10; }
 
-    get step10Class() { 
-        return this.currentStep === 10 ? 'step active' : (this.currentStep > 10 ? 'step completed' : 'step'); 
+    // =========================================================
+    // ✅ CORRECTION 1 : Handler pour sauvegarder les champs étape 1
+    // =========================================================
+    handleStep1Change(event) {
+        const fieldId = event.target.dataset.id;
+        this.step1Data = { ...this.step1Data, [fieldId]: event.target.value };
+        // Synchroniser dateSurvenance utilisée dans toute l'application
+        if (fieldId === 'dateSurvenance') {
+            this.dateSurvenance = event.target.value;
+        }
     }
 
-    get step10IconClass() { 
-        return this.currentStep === 10 ? 'circle-ring' : (this.currentStep > 10 ? 'circle-check' : 'square-gray'); 
-    }
-    get isStep11() { return this.currentStep === 11; }
-
-    get step11Class() { 
-        return this.currentStep === 11 ? 'step active' : (this.currentStep > 11 ? 'step completed' : 'step'); 
+    // =========================================================
+    // HANDLERS RECHERCHE & SÉLECTION
+    // =========================================================
+    handleDateChange(event) {
+        this.dateSurvenance = event.target.value;
     }
 
-    get step11IconClass() { 
-        return this.currentStep === 11 ? 'circle-ring' : (this.currentStep > 11 ? 'circle-check' : 'square-gray'); 
-    }
-
-    // --- Handlers Recherche & Case ---
-    handleDateChange(event) { this.dateSurvenance = event.target.value; }
-    handlePoliceConnuChange(event) { 
-        this.isPoliceConnu = event.detail.value; 
-        this.searchType = undefined; 
-        this.searchResults = []; 
+    handlePoliceConnuChange(event) {
+        this.isPoliceConnu = event.detail.value;
+        this.searchType = undefined;
+        this.searchResults = [];
         this.selectedPolicyId = undefined;
     }
-    handleSearchTypeChange(event) { 
-        this.searchType = event.detail.value; 
+
+    handleSearchTypeChange(event) {
+        this.searchType = event.detail.value;
         this.selectedPolicyId = undefined;
     }
+
+    // =========================================================
+    // ✅ CORRECTION 2 : handleRowClick mémorise la sélection dans les données
+    // Ainsi, quand on revient à l'étape 2, la ligne reste cochée
+    // =========================================================
     handleRowClick(event) {
         const policyId = event.currentTarget.dataset.id;
         this.selectedPolicyId = policyId;
-        const radioBtn = this.template.querySelector(`input[data-radio-id="${policyId}"]`);
-        if (radioBtn) radioBtn.checked = true;
-        this.template.querySelectorAll('.clickable-row').forEach(row => row.classList.remove('row-selected'));
-        event.currentTarget.classList.add('row-selected');
-    }
-    handleCaseInputChange(event) {
-        const field = event.target.dataset.field;
-        this.caseData[field] = event.target.value;
-    }
-    handleContactToggle(event) {
-        this.isSameAsInsured = event.detail.value === 'true';
-        this.caseData.nomContact = this.isSameAsInsured && this.selectedPolicyRecord ? this.selectedPolicyRecord.InsuredName : '';
+
+        // On enrichit chaque ligne avec isSelected et rowClass
+        this.searchResults = this.searchResults.map(p => ({
+            ...p,
+            isSelected: p.Id === policyId,
+            rowClass: p.Id === policyId ? 'clickable-row row-selected' : 'clickable-row'
+        }));
     }
 
-    // --- Handlers Documents (Votre code conservé à 100%) ---
+    // =========================================================
+    // HANDLER FORMULAIRE CASE (Étape 4)
+    // =========================================================
+    handleCaseInputChange(event) {
+        const field = event.target.dataset.field;
+        this.caseData = { ...this.caseData, [field]: event.target.value };
+    }
+
+    handleContactToggle(event) {
+        this.isSameAsInsured = event.detail.value === 'true';
+        if (this.isSameAsInsured && this.selectedPolicyRecord) {
+            this.caseData = { ...this.caseData, nomContact: this.selectedPolicyRecord.InsuredName };
+        } else {
+            this.caseData = { ...this.caseData, nomContact: '' };
+        }
+    }
+
+    // =========================================================
+    // HANDLERS DOCUMENTS (Étape 5)
+    // =========================================================
     handleFolderChange(event) {
         this.selectedDirectory = event.target.value;
         const types = this.allPicklistData[this.selectedDirectory] || [];
         this.optionsDocType = types.map(t => ({ label: t, value: t }));
         this.selectedDocType = '';
     }
+
     handleDocTypeChange(event) {
         this.selectedDocType = event.target.value;
     }
+
     handleUploadFinished(event) {
         const uploadedFiles = event.detail.files;
         const currentFileCount = this.files.length;
@@ -250,12 +306,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
         this.isFileUploaded = true;
         this.showToast('Success', `${uploadedFiles.length} fichier(s) chargé(s)`, 'success');
     }
-    handleAdverseVehicleUpdate(event) {
-    this.adverseVehicleData = event.detail;
-    }
-    handleOtherPartiesUpdate(event) {
-    this.otherPartiesData = event.detail;
-}
+
     async handleUploadSingle(event) {
         const fileName = event.target.dataset.id;
         const file = this.files.find(f => f.fileName === fileName);
@@ -269,7 +320,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
                 RegistrationNumber__c: this.selectedPolicyRecord.RegistrationNumber,
                 Police__c: this.selectedPolicyId,
                 Directory__c: file.repertoire,
-                Type_de_document__c: file.typeDocument 
+                Type_de_document__c: file.typeDocument
             };
             const result = await saveDocumentLocally({
                 fileData: { document: docObj, caseId: this.createdCaseId, typeDocument: file.typeDocument }
@@ -281,181 +332,226 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
             }
         } catch (error) {
             this.showToast('Erreur', 'Indexation échouée', 'error');
-        } finally { this.isLoading = false; }
+        } finally {
+            this.isLoading = false;
+        }
     }
+
     handleRemoveFile(event) {
         const id = event.target.dataset.id;
         this.files = this.files.filter(f => f.fileName !== id);
         this.isFileUploaded = this.files.length > 0;
     }
 
-    // --- Handlers Enfants (Étapes 6, 7, 8) ---
+    // =========================================================
+    // HANDLERS ENFANTS (Étapes 6, 7, 8, 9, 10)
+    // =========================================================
     handleCircumstancesUpdate(event) { this.circumstancesData = event.detail; }
     handleDriverUpdate(event) { this.driverData = event.detail; }
     handlePassengersUpdate(event) { this.passengersData = event.detail; }
+    handleAdverseVehicleUpdate(event) { this.adverseVehicleData = event.detail; }
+    handleOtherPartiesUpdate(event) { this.otherPartiesData = event.detail; }
 
-    // --- NAVIGATION PRINCIPALE (CONSOLIDÉE) ---
+    // =========================================================
+    // NAVIGATION PRINCIPALE
+    // =========================================================
     async handleNext() {
-    this.isLoading = true;
-    try {
-        // --- ÉTAPE 1 : Recherche Police & Validation Date ---
-        if (this.currentStep === 1) {
-            const allValid = [...this.template.querySelectorAll('lightning-input, lightning-radio-group')]
-                .reduce((v, i) => { i.reportValidity(); return v && i.checkValidity(); }, true);
-            if (!allValid) { this.isLoading = false; return; }
+        this.isLoading = true;
+        try {
 
-            const params = {
-                policyNumber: this.template.querySelector('[data-id="police"]')?.value,
-                registrationNumber: this.template.querySelector('[data-id="immat"]')?.value || (this.searchType === 'immatriculation' ? this.template.querySelector('[data-id="critere"]')?.value : null),
-                chassisNumber: this.searchType === 'chassis' ? this.template.querySelector('[data-id="critere"]')?.value : null,
-                attestationNumber: this.searchType === 'attestation' ? this.template.querySelector('[data-id="critere"]')?.value : null
-            };
-            
-            const data = await searchPolicies(params);
-            if (data && data.length > 0) {
-                const dSurv = new Date(this.dateSurvenance).setHours(0,0,0,0);
-                const validPols = data.filter(p => {
-                    const dEf = new Date(p.DateEffet).setHours(0,0,0,0);
-                    const dEx = new Date(p.DateExpiration).setHours(0,0,0,0);
-                    return dSurv >= dEf && dSurv <= dEx;
-                });
-                if (validPols.length > 0) {
-                    this.searchResults = validPols;
-                    this.currentStep = 2;
+            // -----------------------------------------------
+            // ÉTAPE 1 : Recherche Police & Validation Date
+            // -----------------------------------------------
+            if (this.currentStep === 1) {
+                const allValid = [...this.template.querySelectorAll('lightning-input, lightning-radio-group')]
+                    .reduce((v, i) => { i.reportValidity(); return v && i.checkValidity(); }, true);
+                if (!allValid) { this.isLoading = false; return; }
+
+                // ✅ On lit depuis step1Data au lieu du DOM
+                const params = {
+                    policyNumber: this.step1Data.police || null,
+                    registrationNumber: this.isOuiSelected
+                        ? (this.step1Data.immat || null)
+                        : (this.searchType === 'immatriculation' ? this.step1Data.critere : null),
+                    chassisNumber: this.searchType === 'chassis' ? this.step1Data.critere : null,
+                    attestationNumber: this.searchType === 'attestation' ? this.step1Data.critere : null
+                };
+
+                const data = await searchPolicies(params);
+                if (data && data.length > 0) {
+                    const dSurv = new Date(this.dateSurvenance).setHours(0, 0, 0, 0);
+                    const validPols = data.filter(p => {
+                        const dEf = new Date(p.DateEffet).setHours(0, 0, 0, 0);
+                        const dEx = new Date(p.DateExpiration).setHours(0, 0, 0, 0);
+                        return dSurv >= dEf && dSurv <= dEx;
+                    });
+                    if (validPols.length > 0) {
+                        // ✅ On initialise rowClass et isSelected pour chaque résultat
+                        this.searchResults = validPols.map(p => ({
+                            ...p,
+                            isSelected: false,
+                            rowClass: 'clickable-row'
+                        }));
+                        this.currentStep = 2;
+                    } else {
+                        this.showToast('Erreur', 'Période non couverte par ce contrat.', 'error');
+                    }
                 } else {
-                    this.showToast('Erreur', 'Période non couverte par ce contrat.', 'error');
+                    this.showToast('Info', 'Aucune police trouvée avec ces critères.', 'info');
                 }
-            } else {
-                this.showToast('Info', 'Aucune police trouvée avec ces critères.', 'info');
             }
-        } 
-        // --- ÉTAPE 2 : Sélection de la Police ---
-        else if (this.currentStep === 2) {
-            if (!this.selectedPolicyId) {
-                this.showToast('Attention', 'Veuillez sélectionner une police avant de continuer.', 'warning');
-                this.isLoading = false;
-                return;
-            }
-            this.selectedPolicyRecord = this.searchResults.find(p => p.Id === this.selectedPolicyId);
-            this.currentStep = 3;
-        } 
-        // --- ÉTAPE 3 : Consultation Infos (Navigation simple) ---
-        else if (this.currentStep === 3) {
-            this.currentStep = 4;
-        } 
-        // --- ÉTAPE 4 : Création de la Déclaration (Case) ---
-        // --- ÉTAPE 4 : Création du Case ET du Claim (Le pivot) ---
-        else if (this.currentStep === 4) {
-            const allValid = [...this.template.querySelectorAll('lightning-input, lightning-combobox')]
-                .reduce((v, i) => { i.reportValidity(); return v && i.checkValidity(); }, true);
-            if (!allValid) { this.isLoading = false; return; }
 
-            const payload = { 
-                ...this.caseData, 
-                policyId: this.selectedPolicyId, 
-                vehicleId: this.selectedPolicyRecord.vehicleId, 
-                dateSurvenance: this.dateSurvenance 
-            };
-
-            // L'Apex doit maintenant retourner un objet contenant les deux IDs
-            const result = await createCase({ payload: JSON.stringify(payload) });
-            
-            this.createdCaseId = result.id;
-            this.createdCaseNumber = result.caseNumber;
-            
-            this.showToast('Succès', 'Déclaration initialisée', 'success');
-            this.currentStep = 5;
-        } 
-        // --- ÉTAPE 5 : Documents (Navigation simple) ---
-        else if (this.currentStep === 5) {
-            this.currentStep = 6;
-        } 
-        // --- ÉTAPE 6 : Création du Sinistre (Claim__c) ---
-        // --- ÉTAPE 6 : Mise à jour des Circonstances sur le Claim existant ---
-        else if (this.currentStep === 6) {
-            const formChild = this.template.querySelector('c-d-a_lwc005_-claim-circumstances-form');
-            if (formChild && formChild.validate()) {
-                // On appelle une méthode "updateClaim" au lieu de "create"
-                await updateCaseRecord({
-                    caseId: this.createdCaseId, // On utilise l'ID déjà stocké
-                    caseData: formChild.formData // On récupère les champs saisis
-                });
-                this.showToast('Succès', 'Circonstances enregistrées', 'success');
-                this.currentStep = 7;
-            }
-        }
-        // --- ÉTAPE 7 : Infos Conducteur (Validation Enfant) ---
-        else if (this.currentStep === 7) {
-            const driverChild = this.template.querySelector('c-lwc007_-driver-info');
-            if (driverChild && driverChild.validate()) {
-                this.currentStep = 8;
-            }
-        }
-        // --- ÉTAPE 8 : Passagers Assurés ---
-        else if (this.currentStep === 8) {
-            const passengerChild = this.template.querySelector('c-lwc011_-passagers-assure');
-            if (passengerChild && passengerChild.validate()) {
-                if (this.passengersData && this.passengersData.length > 0) {
-                    await savePassengers({ 
-                        caseId: this.createdCaseId, 
-                        passengersJson: JSON.stringify(this.passengersData) 
-                    });
-                }
-                this.currentStep = 9; 
-            }
-        }
-        else if (this.currentStep === 9) {
-            const adverseChild = this.template.querySelector('c-lwc012_-vehicule-adverse');
-            if (adverseChild && adverseChild.validate()) {
-                
-                // --- LA MAGIE EST ICI : On lit la donnée via l'enfant qui renvoie toujours un tableau [] ---
-                const dataFromChild = adverseChild.adverseVehicleData; 
-
-                // Maintenant, la vérification de liste vide marchera parfaitement
-                if (!dataFromChild || dataFromChild.length === 0) {
-                    this.currentStep = 10; 
+            // -----------------------------------------------
+            // ÉTAPE 2 : Sélection de la Police
+            // -----------------------------------------------
+            else if (this.currentStep === 2) {
+                if (!this.selectedPolicyId) {
+                    this.showToast('Attention', 'Veuillez sélectionner une police avant de continuer.', 'warning');
                     this.isLoading = false;
-                    return; 
+                    return;
+                }
+                this.selectedPolicyRecord = this.searchResults.find(p => p.Id === this.selectedPolicyId);
+                this.currentStep = 3;
+            }
+
+            // -----------------------------------------------
+            // ÉTAPE 3 : Consultation Infos (Navigation simple)
+            // -----------------------------------------------
+            else if (this.currentStep === 3) {
+                this.currentStep = 4;
+            }
+
+            // -----------------------------------------------
+            // ÉTAPE 4 : Création de la Déclaration (Case)
+            // -----------------------------------------------
+            else if (this.currentStep === 4) {
+                const allValid = [...this.template.querySelectorAll('lightning-input, lightning-combobox')]
+                    .reduce((v, i) => { i.reportValidity(); return v && i.checkValidity(); }, true);
+                if (!allValid) { this.isLoading = false; return; }
+
+                // ✅ CORRECTION 4 : Si le Case a déjà été créé (retour arrière), on ne recrée pas
+                if (this.caseAlreadyCreated) {
+                    this.currentStep = 5;
+                    this.isLoading = false;
+                    return;
                 }
 
-                try {
-                    await saveAdverseVehicle({
+                const payload = {
+                    ...this.caseData,
+                    policyId: this.selectedPolicyId,
+                    vehicleId: this.selectedPolicyRecord.vehicleId,
+                    dateSurvenance: this.dateSurvenance
+                };
+
+                const result = await createCase({ payload: JSON.stringify(payload) });
+
+                this.createdCaseId = result.id;
+                this.createdCaseNumber = result.caseNumber;
+                this.caseAlreadyCreated = true; // ✅ On marque le Case comme créé
+
+                this.showToast('Succès', 'Déclaration initialisée', 'success');
+                this.currentStep = 5;
+            }
+
+            // -----------------------------------------------
+            // ÉTAPE 5 : Documents (Navigation simple)
+            // -----------------------------------------------
+            else if (this.currentStep === 5) {
+                this.currentStep = 6;
+            }
+
+            // -----------------------------------------------
+            // ÉTAPE 6 : Mise à jour des Circonstances
+            // -----------------------------------------------
+            else if (this.currentStep === 6) {
+                const formChild = this.template.querySelector('c-d-a_lwc005_-claim-circumstances-form');
+                if (formChild && formChild.validate()) {
+                    await updateCaseRecord({
                         caseId: this.createdCaseId,
-                        adverseDataJson: JSON.stringify(dataFromChild) 
+                        caseData: formChild.formData
                     });
-                    this.showToast('Succès', 'Informations du tiers enregistrées', 'success');
-                    this.currentStep = 10; 
-                } catch (error) {
-                    this.showToast('Erreur', error.body?.message || error.message, 'error');
-                } finally {
-                    this.isLoading = false;
+                    this.showToast('Succès', 'Circonstances enregistrées', 'success');
+                    this.currentStep = 7;
                 }
-            } else {
-                this.isLoading = false;
             }
-        }
-            // ÉTAPE 10 -> 11
-        // ÉTAPE 10 -> 11 (Validation des dommages tiers et passage au récap)
-            else if (this.currentStep === 10) {
-                const partyChild = this.template.querySelector('c-lwc013_-dommages-autres-parties');
-                
-                if (partyChild && partyChild.validate()) {
-                    // NOUVEAU : Si la liste est vide, on passe direct au récapitulatif sans appeler Apex !
-                    if (!this.otherPartiesData || this.otherPartiesData.length === 0) {
-                        this.currentStep = 11;
-                        return; 
+
+            // -----------------------------------------------
+            // ÉTAPE 7 : Infos Conducteur
+            // -----------------------------------------------
+            else if (this.currentStep === 7) {
+                const driverChild = this.template.querySelector('c-lwc007_-driver-info');
+                if (driverChild && driverChild.validate()) {
+                    this.currentStep = 8;
+                }
+            }
+
+            // -----------------------------------------------
+            // ÉTAPE 8 : Passagers Assurés
+            // -----------------------------------------------
+            else if (this.currentStep === 8) {
+                const passengerChild = this.template.querySelector('c-lwc011_-passagers-assure');
+                if (passengerChild && passengerChild.validate()) {
+                    if (this.passengersData && this.passengersData.length > 0) {
+                        await savePassengers({
+                            caseId: this.createdCaseId,
+                            passengersJson: JSON.stringify(this.passengersData)
+                        });
+                    }
+                    this.currentStep = 9;
+                }
+            }
+
+            // -----------------------------------------------
+            // ÉTAPE 9 : Véhicule Adverse
+            // -----------------------------------------------
+            else if (this.currentStep === 9) {
+                const adverseChild = this.template.querySelector('c-lwc012_-vehicule-adverse');
+                if (adverseChild && adverseChild.validate()) {
+                    const dataFromChild = adverseChild.adverseVehicleData;
+
+                    if (!dataFromChild || dataFromChild.length === 0) {
+                        this.currentStep = 10;
+                        this.isLoading = false;
+                        return;
                     }
 
-                    // S'il y a des données, on sauvegarde
+                    try {
+                        await saveAdverseVehicle({
+                            caseId: this.createdCaseId,
+                            adverseDataJson: JSON.stringify(dataFromChild)
+                        });
+                        this.showToast('Succès', 'Informations du tiers enregistrées', 'success');
+                        this.currentStep = 10;
+                    } catch (error) {
+                        this.showToast('Erreur', error.body?.message || error.message, 'error');
+                    } finally {
+                        this.isLoading = false;
+                    }
+                } else {
+                    this.isLoading = false;
+                }
+            }
+
+            // -----------------------------------------------
+            // ÉTAPE 10 : Dommages Autres Parties
+            // -----------------------------------------------
+            else if (this.currentStep === 10) {
+                const partyChild = this.template.querySelector('c-lwc013_-dommages-autres-parties');
+
+                if (partyChild && partyChild.validate()) {
+                    if (!this.otherPartiesData || this.otherPartiesData.length === 0) {
+                        this.currentStep = 11;
+                        return;
+                    }
+
                     this.isLoading = true;
                     try {
                         await saveOtherParties({
                             caseId: this.createdCaseId,
                             partiesJson: JSON.stringify(this.otherPartiesData)
                         });
-
                         this.showToast('Succès', 'Informations Tiers enregistrées', 'success');
-                        this.currentStep = 11; 
+                        this.currentStep = 11;
                     } catch (error) {
                         this.showToast('Erreur', error.body?.message || error.message, 'error');
                     } finally {
@@ -463,51 +559,60 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
                     }
                 }
             }
-            // ÉTAPE 11 (Action finale : Création du Claim et Redirection)
-        else if (this.currentStep === 11) {
-            this.isLoading = true;
-            try {
-                // 1. On déclenche la création du Claim et les liaisons
-                const finalClaimId = await finalizeClaimProcess({ 
-                    caseId: this.createdCaseId 
-                });
-                
-                this.showToast('Succès', 'Le dossier sinistre a été finalisé et mis en traitement !', 'success');
-                
-                // 2. On redirige vers le nouveau Sinistre
-                this[NavigationMixin.Navigate]({
-                    type: 'standard__recordPage',
-                    attributes: {
-                        recordId: finalClaimId,
-                        objectApiName: 'Claim__c',
-                        actionName: 'view'
-                    }
-                });
-            } catch (error) {
-                this.showToast('Erreur', error.body?.message || error.message, 'error');
-            } finally {
-                this.isLoading = false;
+
+            // -----------------------------------------------
+            // ÉTAPE 11 : Finalisation et création du Sinistre
+            // -----------------------------------------------
+            else if (this.currentStep === 11) {
+                this.isLoading = true;
+                try {
+                    const finalClaimId = await finalizeClaimProcess({
+                        caseId: this.createdCaseId
+                    });
+
+                    this.showToast('Succès', 'Le dossier sinistre a été finalisé et mis en traitement !', 'success');
+
+                    this[NavigationMixin.Navigate]({
+                        type: 'standard__recordPage',
+                        attributes: {
+                            recordId: finalClaimId,
+                            objectApiName: 'Claim__c',
+                            actionName: 'view'
+                        }
+                    });
+                } catch (error) {
+                    this.showToast('Erreur', error.body?.message || error.message, 'error');
+                } finally {
+                    this.isLoading = false;
+                }
             }
-        }
 
         } catch (error) {
-            // Gestion générique des erreurs avec Toast Sticky
             this.showToast('Erreur', error.body?.message || error.message, 'error');
         } finally {
             this.isLoading = false;
         }
     }
 
-    handlePrecedent() { if (this.currentStep > 1) this.currentStep -= 1; }
+    // =========================================================
+    // ✅ BOUTON PRÉCÉDENT : simple, pas de logique destructive
+    // Les données sont dans les @track, elles survivent au retour
+    // =========================================================
+    handlePrecedent() {
+        if (this.currentStep > 1) {
+            this.currentStep -= 1;
+        }
+    }
 
-    // --- Correctif 2 : Toast Sticky (persistent) ---
+    // =========================================================
+    // TOAST
+    // =========================================================
     showToast(title, message, variant) {
-        this.dispatchEvent(new ShowToastEvent({ 
-            title: title, 
-            message: message, 
+        this.dispatchEvent(new ShowToastEvent({
+            title: title,
+            message: message,
             variant: variant,
-            mode: 'sticky' 
+            mode: 'sticky'
         }));
     }
-    
 }

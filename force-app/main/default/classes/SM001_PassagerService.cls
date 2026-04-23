@@ -3,6 +3,17 @@ public with sharing class SM001_PassagerService {
     private static final String CLASS_NAME = SM001_PassagerService.class.getName();
     private static final String ROLE_AUTRES_PARTIE = 'Autres partie';
     private static final String ROLE_PASSAGER_ASSURE = 'Passager assure';
+    private static final String ROLE_PASSAGER_ADVERSE = 'Passager adverse';
+
+    public static List<Passager__c> getPassagersAdverses(Id caseId) {
+        System.debug(CLASS_NAME + ' - Start method getPassagersAdverses');
+        if (caseId == null) {
+            throw new AuraHandledException('L\'identifiant du dossier est requis.');
+        }
+        List<Passager__c> result = DM001_Passager.getPassagersByCaseAndRole(caseId, ROLE_PASSAGER_ADVERSE);
+        System.debug(CLASS_NAME + ' - End method getPassagersAdverses');
+        return result;
+    }
 
     public static List<Passager__c> getPassagersAutresPartie(Id caseId) {
         System.debug(CLASS_NAME + ' - Start method getPassagersAutresPartie');

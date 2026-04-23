@@ -1,12 +1,13 @@
 import { LightningElement, api, track } from 'lwc';
-import getPassagersAdverses from '@salesforce/apex/DA_PassagerAdverseCaseController.getPassagersAdverses';
+// ✅ CORRECT
+import getPassagersAdverses from '@salesforce/apex/DA_LWC008_ListPassagerAdverseController.getPassagersAdverses';
 
 const PAGE_SIZE = 10;
 
 export default class DA_lwc008_ListPassagerAdverse extends LightningElement {
 
     @api recordId;
-@api isReadonly = false;  // ← ajouter cette ligne
+    @api isReadonly = false;
     @track records         = [];
     @track filteredRecords = [];
     @track isLoading       = false;

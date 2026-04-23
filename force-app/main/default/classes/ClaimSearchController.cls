@@ -7,7 +7,7 @@ public with sharing class ClaimSearchController {
     public static List<Map<String, Object>> searchPolicies(
         String policyNumber, 
         String registrationNumber, 
-        String attestationNumber, 
+        String attestationNumber,  
         String chassisNumber
     ) {
         String query = 'SELECT Id, PolicyNumber__c, AccountName__r.Name, PolicyCategory__c, Status__c, ' +
@@ -329,93 +329,99 @@ public with sharing class ClaimSearchController {
                 throw new AuraHandledException('Données manquantes pour la sauvegarde du véhicule adverse.');
             }
 
-            // Désérialisation du JSON envoyé par le LWC
+            // Désérialisation du JSON
             List<Object> vehiclesList = (List<Object>) JSON.deserializeUntyped(adverseDataJson);
+            
+            // Listes pour les insertions finales
             List<VehicleCaseAssignment__c> assignmentsToInsert = new List<VehicleCaseAssignment__c>();
+            List<Passager__c> passagersToInsert = new List<Passager__c>();
+            
             String etatVehiculePourCase = null; 
 
             for (Object obj : vehiclesList) {
                 Map<String, Object> v = (Map<String, Object>) obj;
-                VehicleCaseAssignment__c newAssignment = new VehicleCaseAssignment__c();
                 
-                // Lien obligatoire avec la déclaration
-                newAssignment.Case__c = caseId; 
-
-                // ==========================================
-                // ÉTAPE 1 : GESTION DE LA VOITURE PHYSIQUE (Vehicule__c)
-                // ==========================================
-                String vehiculeId = (String)v.get('Vehicule__c'); 
+                // =========================================================
+                // ÉTAPE 1 : RÉCUPÉRATION OU CRÉATION DU VÉHICULE
+                // =========================================================
+                Id currentVehiculeId = (String)v.get('Vehicule__c');
                 
-                if (String.isNotBlank(vehiculeId)) {
-                    // Le véhicule a été trouvé via la barre de recherche, on le lie directement
-                    newAssignment.Vehicule__c = (Id)vehiculeId;
-                } else {
-                    // Le véhicule est INCONNU : on le crée dans la base de données !
+                // Si le véhicule n'existe pas, on le crée IMMÉDIATEMENT pour avoir son ID
+                if (String.isBlank(currentVehiculeId)) {
                     Vehicule__c newCar = new Vehicule__c();
-                    
                     newCar.RegistrationNumber__c = (String)v.get('RegistrationNumber__c');
                     newCar.Brand__c = (String)v.get('Marque__c'); 
                     newCar.TypeVehicule__c = (String)v.get('TypeVehicule__c');
-                    
-                    // ---> CORRECTION : Le numéro de contrat se place bien sur le véhicule ici <---
                     newCar.NbDeContratDAssurance__c = (String)v.get('Numéro_de_contrat__c');
+                    newCar.isOpposingCar__c = true; // Véhicule adverse
                     
-                    // Gestion de la Date de mise en circulation sur le Véhicule
                     if (v.get('DateMiseEnCirculation__c') != null && String.isNotBlank((String)v.get('DateMiseEnCirculation__c'))) {
                         newCar.DateOfFirstRegistration__c = Date.valueOf((String)v.get('DateMiseEnCirculation__c'));
                     }
                     
-                    // On insère le nouveau véhicule pour générer son ID Salesforce
-                    insert newCar; 
-                    
-                    // On relie l'accident à ce tout nouveau véhicule
-                    newAssignment.Vehicule__c = newCar.Id; 
+                    insert newCar; // Insertion !
+                    currentVehiculeId = newCar.Id; // On récupère l'ID du véhicule tout neuf
                 }
 
-                // ==========================================
-                // ÉTAPE 2 : INFORMATIONS DE L'ACCIDENT (VehicleCaseAssignment__c)
-                // ==========================================
+                // =========================================================
+                // ÉTAPE 2 : CRÉATION DE L'ASSIGNATION (Case <-> Véhicule)
+                // =========================================================
+                VehicleCaseAssignment__c newAssignment = new VehicleCaseAssignment__c();
+                newAssignment.Case__c = caseId;
+                newAssignment.Vehicule__c = currentVehiculeId; // Lien avec le véhicule
                 
-                // Conversion propre du texte en Booléen
                 if (v.get('Adversaire_Assure__c') != null) {
                     newAssignment.AdversaireAssure__c = Boolean.valueOf((String)v.get('Adversaire_Assure__c'));
                 }
-
-                // Gestion des Lookups (Compagnie d'assurance)
                 if (v.get('CompagnieAdverse__c') != null && String.isNotBlank((String)v.get('CompagnieAdverse__c'))) {
                     newAssignment.CompagnieAdverse__c = (Id)v.get('CompagnieAdverse__c');
                 }
-
-                // Gestion des Nombres (Passagers blessés)
                 if (v.get('NbDePassagerBlesses__c') != null && String.isNotBlank(String.valueOf(v.get('NbDePassagerBlesses__c')))) {
                     newAssignment.NbDePassagerBlesses__c = Integer.valueOf(v.get('NbDePassagerBlesses__c'));
                 }
-
-                // Ajout à la liste d'insertion
-                assignmentsToInsert.add(newAssignment);
-                
-                // ==========================================
-                // ÉTAPE 3 : CAPTURE DE L'ÉTAT POUR L'OBJET CASE
-                // ==========================================
                 if (etatVehiculePourCase == null) {
                     etatVehiculePourCase = (String)v.get('VehicleIsDamaged__c');
                 }
+                
+                assignmentsToInsert.add(newAssignment);
+
+                // =========================================================
+                // ÉTAPE 3 : CRÉATION DES PASSAGERS (Liés au Véhicule)
+                // =========================================================
+                if (v.get('passengers') != null) {
+                    List<Object> passListObj = (List<Object>) v.get('passengers');
+                    
+                    for (Object pObj : passListObj) {
+                        Map<String, Object> pMap = (Map<String, Object>) pObj;
+                        
+                        Passager__c newPass = new Passager__c();
+                        newPass.Case__c = caseId; 
+                        newPass.Roles__c = 'Passager adverse'; 
+                        
+                        // ---> LA CORRECTION EST ICI : LIEN DIRECT AU VÉHICULE <---
+                        newPass.Vehicule__c = currentVehiculeId; 
+                        
+                        newPass.Name__c = (String)pMap.get('Name__c'); 
+                        newPass.CIN__c = (String)pMap.get('CIN__c');
+                        newPass.StateOfPerson__c = (String)pMap.get('StateOfPerson__c');
+                        
+                        passagersToInsert.add(newPass);
+                    }
+                }
             }
 
-            // --- SAUVEGARDE FINALE EN BASE DE DONNÉES ---
-            
-            // 1. On insère les liaisons Véhicules <-> Accident
+            // Insertion globale finale (beaucoup plus propre et optimisé)
             if (!assignmentsToInsert.isEmpty()) {
                 insert assignmentsToInsert;
             }
-            
-            // 2. On met à jour la déclaration (Case) avec l'état d'endommagement
+            if (!passagersToInsert.isEmpty()) {
+                insert passagersToInsert;
+            }
             if (etatVehiculePourCase != null) {
                 update new Case(Id = caseId, VehicleIsDamaged__c = etatVehiculePourCase);
             }
 
         } catch (Exception e) {
-            // En cas d'erreur, on renvoie la ligne exacte pour faciliter le débogage
             throw new AuraHandledException('Erreur : ' + e.getMessage() + ' (Ligne ' + e.getLineNumber() + ')');
         }
     }

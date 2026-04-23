@@ -6,6 +6,16 @@ public with sharing class DM001_Passager {
         'Id, Civilite__c, Name, CIN__c, Pays__c, Ville__c, ' +
         'StateOfPerson__c, isDriver__c, Compte__c';
 
+    // Champs étendus pour les passagers adverses (cas sinistre)
+    private static final String PASSENGER_ADVERSE_FIELDS =
+        'Id, Name, Civilite__c, CIN__c, Sexe__c, ' +
+        'Pays__c, Ville__c, StateOfPerson__c, ' +
+        'isDriver__c, Passager_mineurisMinorPassenger__c, ' +
+        'Vehicule__c, Vehicule__r.RegistrationNumber__c, ' +
+        'Roles__c, Case__c';
+
+    private static final String ROLE_ADVERSE = 'Passager adverse';
+
     public static List<Passager__c> getPassengersByCase(Id caseId, String role) {
         String conditions =
             'Case__c = \'' + String.escapeSingleQuotes(String.valueOf(caseId)) + '\'' +
@@ -30,16 +40,17 @@ public with sharing class DM001_Passager {
         return getPassengersByCase(caseId, role);
     }
 
-    public static List<Passager__c> getPassagersByCIN(String cin, Id caseId) {
+    // Nouvelle méthode — champs complets pour le contexte sinistre/case
+    public static List<Passager__c> getPassagersAdversesByCase(Id caseId) {
         String conditions =
-            'CIN__c = \'' + String.escapeSingleQuotes(cin) + '\'' +
-            ' AND Case__c = \'' + String.escapeSingleQuotes(String.valueOf(caseId)) + '\'';
+            'Case__c = \'' + String.escapeSingleQuotes(String.valueOf(caseId)) + '\'' +
+            ' AND Roles__c = \'' + ROLE_ADVERSE + '\'';
 
         List<SObject> records = DA_Utility.query(
-            PASSENGER_LIST_FIELDS,
+            PASSENGER_ADVERSE_FIELDS,
             PASSENGER_OBJECT,
             conditions,
-            null,
+            'CreatedDate DESC',
             null
         );
 
@@ -49,5 +60,4 @@ public with sharing class DM001_Passager {
         }
         return passengers;
     }
-
 }

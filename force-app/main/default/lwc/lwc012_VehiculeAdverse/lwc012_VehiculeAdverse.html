@@ -14,24 +14,36 @@
         <div class="slds-m-bottom_medium">
             <template for:each={adverseVehicles} for:item="veh">
                 <div key={veh.key} class="slds-box white-box slds-m-bottom_small vehicle-added-card">
-                    <div class="slds-grid slds-grid_vertical-align-center">
+                    <div class="slds-grid slds-grid_vertical-align-center slds-m-bottom_small">
                         <lightning-icon icon-name="custom:custom31" size="small" class="slds-m-right_small"></lightning-icon>
-                        
                         <div class="slds-col">
                             <p><strong>Immatriculation :</strong> {veh.RegistrationNumber__c} | <strong>Marque :</strong> {veh.Marque__c}</p>
-                            <p class="slds-text-color_weak">Passagers blessés : {veh.NbDePassagerBlesses__c}</p>
+                            <p class="slds-text-color_weak">Passagers blessés déclarés : {veh.NbDePassagerBlesses__c}</p>
+                        </div>
+                        <div class="slds-col slds-grow-none">
+                            <lightning-button-icon icon-name="utility:delete" variant="bare" alternative-text="Supprimer" data-key={veh.key} onclick={handleDelete} title="Supprimer ce véhicule"></lightning-button-icon>
+                        </div>
+                    </div>
+
+                    <div class="slds-box slds-theme_default slds-m-top_small" style="background-color: #fafaf9;">
+                        <div class="slds-grid slds-grid_align-spread slds-vertical-align-center slds-m-bottom_x-small">
+                            <strong>Passagers liés ({veh.passengers.length})</strong>
+                            <lightning-button label="Ajouter un passager" icon-name="utility:add" size="small" data-key={veh.key} onclick={openPassengerModal}></lightning-button>
                         </div>
                         
-                        <div class="slds-col slds-grow-none">
-                            <lightning-button-icon 
-                                icon-name="utility:delete" 
-                                variant="bare" 
-                                alternative-text="Supprimer" 
-                                data-key={veh.key} 
-                                onclick={handleDelete}
-                                title="Supprimer ce véhicule">
-                            </lightning-button-icon>
-                        </div>
+                        <template if:true={veh.passengers.length}>
+                            <ul class="slds-has-dividers_bottom-space">
+                                <template for:each={veh.passengers} for:item="pass">
+                                    <li class="slds-item slds-grid slds-grid_align-spread" key={pass.key}>
+                                        <span>
+                                            <lightning-icon icon-name="standard:user" size="x-small" class="slds-m-right_x-small"></lightning-icon> 
+                                            {pass.Name__c} (CIN: {pass.CIN__c} - {pass.StateOfPerson__c})
+                                        </span>
+                                        <lightning-button-icon icon-name="utility:delete" variant="bare" data-vehkey={veh.key} data-passkey={pass.key} onclick={handleDeletePassenger}></lightning-button-icon>
+                                    </li>
+                                </template>
+                            </ul>
+                        </template>
                     </div>
                 </div>
             </template>
@@ -79,8 +91,32 @@
 
             <div class="slds-grid slds-grid_align-center slds-m-top_large">
                 <button class="btn-secondary slds-m-right_small" onclick={handleAnnuler}>Annuler</button>
-                <button class="btn-primary" onclick={handleAjouter}>Ajouter</button>
+                <button class="btn-primary" onclick={handleAjouter}>Ajouter le véhicule</button>
             </div>
         </div>
+    </template>
+
+    <template if:true={isPassengerModalOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Fermer" onclick={closePassengerModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse" size="small"></lightning-icon>
+                    </button>
+                    <h2 class="slds-modal__title slds-hyphenate">Ajouter un passager adverse</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-input label="Nom" data-passfield="Nom__c" value={passengerData.Nom__c} onchange={handlePassInputChange} required></lightning-input>
+                    <lightning-input label="Prénom" data-passfield="Prenom__c" value={passengerData.Prenom__c} onchange={handlePassInputChange} required></lightning-input>
+                    <lightning-input label="CIN" data-passfield="CIN__c" value={passengerData.CIN__c} onchange={handlePassInputChange} required></lightning-input>
+                    <lightning-combobox label="État de la personne" options={etatPersonneOptions} data-passfield="StateOfPerson__c" value={passengerData.StateOfPerson__c} onchange={handlePassInputChange} required></lightning-combobox>
+                </div>
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick={closePassengerModal}>Annuler</button>
+                    <button class="slds-button slds-button_brand" onclick={handleSavePassenger}>Enregistrer le passager</button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
     </template>
 </template>
