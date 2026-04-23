@@ -19,7 +19,7 @@ public with sharing class SM001_PassagerService {
         if (passagerId == null) {
             throw new AuraHandledException('L\'identifiant du participant est requis.');
         }
-        DM001_Passager.deletePassagerById(passagerId);
+        EM001_Passager.deletePassagerById(passagerId);
         System.debug(CLASS_NAME + ' - End method deletePassager');
     }
 
@@ -71,7 +71,7 @@ public with sharing class SM001_PassagerService {
 
         // 4. Inserer via DM
         if (!toInsert.isEmpty()) {
-            DM001_Passager.insertPassagers(toInsert);
+            EM001_Passager.insertPassagers(toInsert);
         }
 
         System.debug(CLASS_NAME + ' - End method savePassagers');
@@ -108,7 +108,7 @@ public with sharing class SM001_PassagerService {
         }
 
         if (!toInsert.isEmpty()) {
-            DM001_Passager.insertPassagers(toInsert);
+            EM001_Passager.insertPassagers(toInsert);
         }
 
         System.debug(CLASS_NAME + ' - End method saveOtherParties');

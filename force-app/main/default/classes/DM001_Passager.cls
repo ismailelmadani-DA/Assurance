@@ -25,4 +25,29 @@ public with sharing class DM001_Passager {
         }
         return passengers;
     }
+
+    public static List<Passager__c> getPassagersByCaseAndRole(Id caseId, String role) {
+        return getPassengersByCase(caseId, role);
+    }
+
+    public static List<Passager__c> getPassagersByCIN(String cin, Id caseId) {
+        String conditions =
+            'CIN__c = \'' + String.escapeSingleQuotes(cin) + '\'' +
+            ' AND Case__c = \'' + String.escapeSingleQuotes(String.valueOf(caseId)) + '\'';
+
+        List<SObject> records = DA_Utility.query(
+            PASSENGER_LIST_FIELDS,
+            PASSENGER_OBJECT,
+            conditions,
+            null,
+            null
+        );
+
+        List<Passager__c> passengers = new List<Passager__c>();
+        for (SObject record : records) {
+            passengers.add((Passager__c) record);
+        }
+        return passengers;
+    }
+
 }

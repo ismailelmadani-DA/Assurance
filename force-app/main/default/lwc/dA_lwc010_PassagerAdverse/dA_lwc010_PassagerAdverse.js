@@ -209,6 +209,7 @@ export default class DA_lwc010_PassagerAdverse extends NavigationMixin(Lightning
             stateClass,
             civility: r.ParticipantAccount__r?.Civility__c || '',
             accountName: r.ParticipantAccount__r?.Name || '',
+            accountId: r.ParticipantAccount__c || null,
             vehicleName: r.Vehicule__r?.RegistrationNumber__c || '',
             vehicleUrl: r.Vehicule__c ? `/lightning/r/Vehicule__c/${r.Vehicule__c}/view` : '',
             hasVehicle: !!r.Vehicule__c,

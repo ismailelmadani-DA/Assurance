@@ -100,6 +100,15 @@ public with sharing class EM001_Passager {
         return p;
     }
 
+    public static void insertPassagers(List<Passager__c> passagers) {
+        insert passagers;
+    }
+
+    public static void deletePassagerById(Id passagerId) {
+        Passager__c p = new Passager__c(Id = passagerId);
+        delete p;
+    }
+
     public static Passager__c mapOtherPartyToPassager(Map<String, Object> data, Id caseId, Id compteId) {
         System.debug(CLASS_NAME + ' - Start method mapOtherPartyToPassager');
         Passager__c p = mapDataToPassager(data, caseId, compteId);
