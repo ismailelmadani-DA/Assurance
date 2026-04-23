@@ -15,7 +15,7 @@ export default class DA_lwc012_HistoriquesSinistres extends NavigationMixin(Ligh
     @track errorMessage = '';
     @track currentPage = 1;
 
-    @wire(getHistoriques, { passagerId: '$recordId' })
+    @wire(getHistoriques, { accountId: '$recordId' })
     wiredHistoriques({ data, error }) {
         this.isLoading = true;
         if (data) {

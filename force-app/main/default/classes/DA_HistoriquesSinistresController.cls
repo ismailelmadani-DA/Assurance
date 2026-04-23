@@ -8,8 +8,8 @@ public with sharing class DA_HistoriquesSinistresController {
         'Roles__c, StateOfPerson__c';
 
     @AuraEnabled(cacheable=true)
-    public static List<Map<String, Object>> getHistoriques(Id passagerId) {
-        String conditions = 'Passager__c = \'' + String.escapeSingleQuotes(String.valueOf(passagerId)) + '\'';
+    public static List<Map<String, Object>> getHistoriques(Id accountId) {
+        String conditions = 'ParticipantAccount__c = \'' + String.escapeSingleQuotes(String.valueOf(accountId)) + '\'';
         List<SObject> records = DA_Utility.query(FIELDS, CLAIM_PARTICIPANT, conditions, 'CreatedDate DESC', null);
 
         List<Map<String, Object>> result = new List<Map<String, Object>>();
