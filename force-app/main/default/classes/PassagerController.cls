@@ -1,39 +1,10 @@
 public with sharing class PassagerController {
-
-    private static final String CLASS_NAME = PassagerController.class.getName();
-
+    private static final String INSURED_PASSENGER_ROLE = 'Passager assuré';
+    // ─────────────────────────────────────────────────────────
+    // Récupérer la liste des passagers assurés d'un dossier
+    // ─────────────────────────────────────────────────────────
     @AuraEnabled(cacheable=true)
-    public static List<Passager__c> getPassagersAutresPartie(Id caseId) {
-        System.debug(CLASS_NAME + ' - Start method getPassagersAutresPartie');
-        try {
-            return SM001_PassagerService.getPassagersAutresPartie(caseId);
-        } catch (AuraHandledException ae) {
-            throw ae;
-        } catch (Exception e) {
-            throw new AuraHandledException(e.getMessage());
-        }
-    }
-
-    @AuraEnabled
-    public static void deletePassager(Id passagerId) {
-        System.debug(CLASS_NAME + ' - Start method deletePassager');
-        try {
-            SM001_PassagerService.deletePassager(passagerId);
-        } catch (AuraHandledException ae) {
-            throw ae;
-        } catch (Exception e) {
-            throw new AuraHandledException(e.getMessage());
-        }
-    }
-
-    @AuraEnabled
-    public static Id resolveAccountByCIN(String cin, String nom) {
-        try {
-            return SM001_PassagerService.resolveAccountByCIN(cin, nom);
-        } catch (AuraHandledException ae) {
-            throw ae;
-        } catch (Exception e) {
-            throw new AuraHandledException(e.getMessage());
-        }
+    public static List<Passager__c> getPassengers(Id caseId) {
+        return DM001_Passager.getPassengersByCase(caseId, INSURED_PASSENGER_ROLE);
     }
 }

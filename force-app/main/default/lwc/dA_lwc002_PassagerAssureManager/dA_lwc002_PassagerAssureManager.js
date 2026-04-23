@@ -15,7 +15,7 @@ import getParticipantById from '@salesforce/apex/DA_PassagerGenerateTable.getPar
 import upsertPassager from '@salesforce/apex/DA_PassagerGenerateTable.upsertPassager';
 import deletePassager from '@salesforce/apex/DA_PassagerGenerateTable.deletePassager';
 import checkDuplicate from '@salesforce/apex/DA_PassagerGenerateTable.checkDuplicate';
-import resolveAccountByCIN from '@salesforce/apex/PassagerController.resolveAccountByCIN';
+import resolveAccountByCIN from '@salesforce/apex/DA_PassagerController.resolveAccountByCIN';
 import getVehiclesForClaim from '@salesforce/apex/DA_PassagerGenerateTable.getVehiclesForClaim';
 import getCompagniesAdverses from '@salesforce/apex/DA_PassagerGenerateTable.getCompagniesAdverses';
 
@@ -109,7 +109,7 @@ export default class PassagerManager extends LightningElement {
     selectedParticipantName = '';
 
     /* ─── picklists depuis ClaimParticipant__c ─── */
-    @track claimParticipantRecordTypeId;
+
     @track rolesOptions = [];
     @track paysOptions = [];
     @track allVilleOptions = [];
@@ -133,17 +133,9 @@ export default class PassagerManager extends LightningElement {
        WIRE – Object info & picklists depuis ClaimParticipant__c
     ══════════════════════════════════════ */
     @wire(getObjectInfo, { objectApiName: CLAIM_PARTICIPANT_OBJECT })
-    wiredCPInfo({ data, error }) {
-        if (data) {
-            // Si pas de record types, utiliser le master record type ID
-            const rtis = data.recordTypeInfos;
-            const masterRT = Object.keys(rtis).find(id => rtis[id].master === true);
-            this.claimParticipantRecordTypeId = masterRT;
-        }
-        if (error) console.error('getObjectInfo ClaimParticipant error', error);
-    }
+    claimParticipantInfo;
 
-    @wire(getPicklistValues, { recordTypeId: '$claimParticipantRecordTypeId', fieldApiName: ROLES_FIELD })
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: ROLES_FIELD })
     wiredRoles({ data, error }) {
         if (data) {
             this.rolesOptions = data.values;
@@ -156,7 +148,7 @@ export default class PassagerManager extends LightningElement {
         if (error) console.error('Roles picklist error', error);
     }
 
-    @wire(getPicklistValues, { recordTypeId: '$claimParticipantRecordTypeId', fieldApiName: PAYS_FIELD })
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: PAYS_FIELD })
     wiredPays({ data, error }) {
         if (data) {
             this.paysOptions = data.values;
@@ -164,7 +156,7 @@ export default class PassagerManager extends LightningElement {
         if (error) console.error('Pays picklist error', error);
     }
 
-    @wire(getPicklistValues, { recordTypeId: '$claimParticipantRecordTypeId', fieldApiName: VILLE_FIELD })
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: VILLE_FIELD })
     wiredVille({ data, error }) {
         if (data) {
             this.allVilleOptions = data.values;
@@ -176,25 +168,25 @@ export default class PassagerManager extends LightningElement {
         if (error) console.error('Ville picklist error', error);
     }
 
-    @wire(getPicklistValues, { recordTypeId: '$claimParticipantRecordTypeId', fieldApiName: STATE_OF_PERSON_FIELD })
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: STATE_OF_PERSON_FIELD })
     wiredState({ data, error }) {
         if (data) this.etatPassagerOptions = data.values;
         if (error) console.error('StateOfPerson picklist error', error);
     }
 
-    @wire(getPicklistValues, { recordTypeId: '$claimParticipantRecordTypeId', fieldApiName: SEXE_FIELD })
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: SEXE_FIELD })
     wiredSexe({ data, error }) {
         if (data) this.sexeOptions = data.values;
         if (error) console.error('Sexe picklist error', error);
     }
 
-    @wire(getPicklistValues, { recordTypeId: '$claimParticipantRecordTypeId', fieldApiName: MARITAL_STATUS_FIELD })
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: MARITAL_STATUS_FIELD })
     wiredMarital({ data, error }) {
         if (data) this.situationFamilialeOptions = data.values;
         if (error) console.error('MaritalStatus picklist error', error);
     }
 
-    @wire(getPicklistValues, { recordTypeId: '$claimParticipantRecordTypeId', fieldApiName: TYPE_CONTACT_FIELD })
+    @wire(getPicklistValues, { recordTypeId: '$claimParticipantInfo.data.defaultRecordTypeId', fieldApiName: TYPE_CONTACT_FIELD })
     wiredTypeContact({ data, error }) {
         if (data) this.typeContactOptions = data.values;
         if (error) console.error('TypeContact picklist error', error);

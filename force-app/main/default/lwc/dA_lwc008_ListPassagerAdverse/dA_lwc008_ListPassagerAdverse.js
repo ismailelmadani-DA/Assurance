@@ -1,14 +1,12 @@
 import { LightningElement, api, track } from 'lwc';
-
-import getAdverseVehiclesForCase from '@salesforce/apex/DA_PassagerAdverseCaseController.getAdverseVehiclesForCase';
-import getPassagersAdverses      from '@salesforce/apex/DA_PassagerAdverseCaseController.getPassagersAdverses';
+import getPassagersAdverses from '@salesforce/apex/DA_PassagerAdverseCaseController.getPassagersAdverses';
 
 const PAGE_SIZE = 10;
 
 export default class DA_lwc008_ListPassagerAdverse extends LightningElement {
 
     @api recordId;
-    @api isReadonly = false;
+@api isReadonly = false;  // ← ajouter cette ligne
     @track records         = [];
     @track filteredRecords = [];
     @track isLoading       = false;
@@ -43,7 +41,11 @@ export default class DA_lwc008_ListPassagerAdverse extends LightningElement {
             'Indemne': 'pm-state pm-state--indemne',
         }[r.StateOfPerson__c] || 'pm-state pm-state--default';
 
-        return { ...r, stateClass };
+        return {
+            ...r,
+            stateClass,
+            RegistrationNumber__c: r.Vehicule__r?.RegistrationNumber__c || '—'
+        };
     }
 
     _applyFilter() {

@@ -20,7 +20,7 @@ import getParticipantById from '@salesforce/apex/DA_PassagerAdverseController.ge
 import upsertPassager from '@salesforce/apex/DA_PassagerAdverseController.upsertPassager';
 import deletePassager from '@salesforce/apex/DA_PassagerAdverseController.deletePassager';
 import checkDuplicate from '@salesforce/apex/DA_PassagerAdverseController.checkDuplicate';
-import resolveAccountByCIN from '@salesforce/apex/PassagerController.resolveAccountByCIN';
+import resolveAccountByCIN from '@salesforce/apex/DA_PassagerController.resolveAccountByCIN';
 
 const PAGE_SIZE = 10;
 

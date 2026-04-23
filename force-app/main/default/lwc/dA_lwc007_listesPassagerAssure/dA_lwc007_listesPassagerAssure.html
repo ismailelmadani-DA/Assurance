@@ -54,7 +54,9 @@
                                             </span>
                                         </template>
                                         <template if:false={rec.isDriver__c}>
-                                            <span class="pm-badge pm-badge--no">&#8212;</span>
+                                           <span class="pm-badge pm-badge--non-driver">
+                <lightning-icon icon-name="utility:close" size="xx-small"></lightning-icon>
+            </span>
                                         </template>
                                     </td>
                                     <td class="pm-td">{rec.Civilite__c}</td>

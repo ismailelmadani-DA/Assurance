@@ -22,7 +22,7 @@ import upsertPartie from '@salesforce/apex/DA_AutrePartieAdverseController.upser
 import deletePartie from '@salesforce/apex/DA_AutrePartieAdverseController.deletePartie';
 import checkDuplicate from '@salesforce/apex/DA_AutrePartieAdverseController.checkDuplicate';
 import searchCompagnies from '@salesforce/apex/DA_AutrePartieAdverseController.searchCompagnies';
-import resolveAccountByCIN from '@salesforce/apex/PassagerController.resolveAccountByCIN';
+import resolveAccountByCIN from '@salesforce/apex/DA_PassagerController.resolveAccountByCIN';
 
 const PAGE_SIZE = 10;
 

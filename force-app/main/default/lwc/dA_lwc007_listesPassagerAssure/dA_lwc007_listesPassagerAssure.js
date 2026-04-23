@@ -1,5 +1,5 @@
 import { LightningElement, api, track, wire } from 'lwc';
-import getPassengers from '@salesforce/apex/DA_PassagerController.getPassengers';
+import getPassengers from '@salesforce/apex/PassagerController.getPassengers';
 import { refreshApex } from '@salesforce/apex';
 
 const PAGE_SIZE = 10;

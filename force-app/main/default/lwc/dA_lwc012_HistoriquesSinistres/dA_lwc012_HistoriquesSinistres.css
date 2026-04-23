@@ -1,0 +1,160 @@
+/* ═══════════════════════════════════════
+   dA_lwc012_HistoriquesSinistres
+   ═══════════════════════════════════════ */
+
+.hs-card {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 98, 51, 0.08);
+    background: #fff;
+}
+
+/* HEADER */
+.hs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #006233, #008c47);
+    color: #fff;
+}
+.hs-header__left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.hs-header__icon-wrap {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+}
+.hs-header__title {
+    font-size: 16px; font-weight: 700; margin: 0; color: #fff;
+}
+.hs-header__subtitle {
+    font-size: 12px; opacity: 0.85;
+}
+
+/* BODY */
+.hs-body {
+    padding: 0;
+    position: relative;
+    min-height: 80px;
+}
+
+/* SPINNER */
+.hs-spinner-overlay {
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px 0;
+}
+
+/* TABLE */
+.hs-table-wrap {
+    overflow-x: auto;
+}
+.hs-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.hs-th {
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #006233;
+    background: #f0f7f3;
+    border-bottom: 2px solid #e0ece5;
+    white-space: nowrap;
+}
+.hs-td {
+    padding: 10px 16px;
+    font-size: 13px;
+    color: #2c3e50;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+}
+.hs-table tbody tr:hover {
+    background: #f8fdf9;
+}
+.hs-link {
+    color: #006233;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+}
+.hs-link:hover {
+    text-decoration: underline;
+    color: #004d26;
+}
+
+/* STATE BADGES */
+.hs-state {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.hs-state--indemne {
+    background: #e8f5e9; color: #1a7a4a;
+}
+.hs-state--blesse {
+    background: #fff3e0; color: #d35400;
+}
+.hs-state--deces {
+    background: #fce4ec; color: #c0392b;
+}
+.hs-state--default {
+    background: #f5f5f5; color: #666;
+}
+
+/* EMPTY STATE */
+.hs-empty {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 40px 20px; text-align: center;
+}
+.hs-empty__icon {
+    margin-bottom: 12px; opacity: 0.4;
+}
+.hs-empty__text {
+    font-size: 14px; color: #7f8c8d; margin: 0;
+}
+
+/* ERROR */
+.hs-alert {
+    display: flex; align-items: center; gap: 8px;
+    margin: 16px; padding: 12px 16px;
+    border-radius: 8px; font-size: 13px;
+}
+.hs-alert--error {
+    background: #fef2f2; color: #c0392b;
+    border: 1px solid #fecaca;
+}
+
+/* PAGINATION */
+.hs-pagination {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 12px 16px;
+    border-top: 1px solid #f0f0f0;
+}
+.hs-btn--page {
+    display: flex; align-items: center; gap: 4px;
+    padding: 6px 12px; border: 1px solid #ddd;
+    border-radius: 6px; background: #fff;
+    font-size: 12px; color: #006233;
+    cursor: pointer; transition: all 0.15s;
+}
+.hs-btn--page:hover:not(.hs-btn--disabled) {
+    background: #f0f7f3; border-color: #006233;
+}
+.hs-btn--disabled {
+    opacity: 0.4; cursor: not-allowed;
+}
+.hs-page-info {
+    font-size: 12px; color: #666; padding: 0 8px;
+}

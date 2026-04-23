@@ -617,16 +617,14 @@
     border-radius: 50%;
 }
 
-.pm-badge--driver {
-    background: #3a9e60;
+.pm-badge--driver { background: #3a9e60; color: var(--white); box-shadow: 0 2px 6px rgba(58, 158, 96, .4); }
+.pm-badge--no { color: var(--text-muted); font-size: .85rem; }
+.pm-badge--non-driver {
+    background: var(--pm-red);
     color: var(--white);
-    box-shadow: 0 2px 6px rgba(58, 158, 96, .4);
+    box-shadow: 0 2px 6px rgba(192, 57, 43, .4);
 }
 
-.pm-badge--no {
-    color: var(--text-muted);
-    font-size: .85rem;
-}
 
 /* ════════════════════════════════════════
    ROW ACTIONS

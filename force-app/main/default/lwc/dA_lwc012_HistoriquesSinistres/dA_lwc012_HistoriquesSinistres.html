@@ -1,0 +1,110 @@
+<template>
+    <div class="hs-card">
+
+        <!-- HEADER -->
+        <div class="hs-header">
+            <div class="hs-header__left">
+                <div class="hs-header__icon-wrap">
+                    <lightning-icon icon-name="standard:case" size="small" variant="inverse"></lightning-icon>
+                </div>
+                <div>
+                    <h2 class="hs-header__title">Historiques Sinistres</h2>
+                    <span class="hs-header__subtitle">{totalLabel}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SPINNER -->
+        <template if:true={isLoading}>
+            <div class="hs-spinner-overlay">
+                <lightning-spinner alternative-text="Chargement..." size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- CONTENU -->
+        <div class="hs-body">
+
+            <!-- TABLE -->
+            <template if:true={hasRecords}>
+                <div class="hs-table-wrap">
+                    <table class="hs-table">
+                        <thead>
+                            <tr>
+                                <th class="hs-th">N&#176; Sinistre</th>
+                                <th class="hs-th">N&#176; Immatriculation</th>
+                                <th class="hs-th">Type</th>
+                                <th class="hs-th">&#201;tat</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={filteredRecords} for:item="rec">
+                                <tr key={rec.id}>
+                                    <td class="hs-td">
+                                        <template if:true={rec.hasClaim}>
+                                            <a class="hs-link" href="javascript:void(0)"
+                                                data-id={rec.claimId} onclick={navigateToRecord}>
+                                                {rec.displayClaimNumber}
+                                            </a>
+                                        </template>
+                                        <template if:false={rec.hasClaim}>
+                                            &#8212;
+                                        </template>
+                                    </td>
+                                    <td class="hs-td">
+                                        <template if:true={rec.hasVehicule}>
+                                            <a class="hs-link" href="javascript:void(0)"
+                                                data-id={rec.vehiculeId} onclick={navigateToRecord}>
+                                                {rec.immatriculation}
+                                            </a>
+                                        </template>
+                                        <template if:false={rec.hasVehicule}>
+                                            &#8212;
+                                        </template>
+                                    </td>
+                                    <td class="hs-td">{rec.type}</td>
+                                    <td class="hs-td">
+                                        <span class={rec.stateClass}>{rec.etat}</span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PAGINATION -->
+                <template if:true={showPagination}>
+                    <div class="hs-pagination">
+                        <button class={prevClass} onclick={prevPage} disabled={isFirstPage}>
+                            <lightning-icon icon-name="utility:chevronleft" size="xx-small"></lightning-icon>
+                            Pr&#233;c.
+                        </button>
+                        <span class="hs-page-info">Page {currentPage} / {totalPages}</span>
+                        <button class={nextClass} onclick={nextPage} disabled={isLastPage}>
+                            Suiv.
+                            <lightning-icon icon-name="utility:chevronright" size="xx-small"></lightning-icon>
+                        </button>
+                    </div>
+                </template>
+            </template>
+
+            <!-- ETAT VIDE -->
+            <template if:false={hasRecords}>
+                <div class="hs-empty">
+                    <div class="hs-empty__icon">
+                        <lightning-icon icon-name="standard:case" size="large"></lightning-icon>
+                    </div>
+                    <p class="hs-empty__text">Il n'y a actuellement aucune mission &#224; afficher.</p>
+                </div>
+            </template>
+
+            <!-- ERREUR -->
+            <template if:true={hasError}>
+                <div class="hs-alert hs-alert--error">
+                    <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                    <span>{errorMessage}</span>
+                </div>
+            </template>
+
+        </div>
+    </div>
+</template>

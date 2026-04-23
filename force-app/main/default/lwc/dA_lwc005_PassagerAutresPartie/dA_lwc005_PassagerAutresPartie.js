@@ -1,9 +1,9 @@
 import { LightningElement, api, wire } from 'lwc';
 import { refreshApex } from '@salesforce/apex';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import getPassagersAutresPartie from '@salesforce/apex/PassagerController.getPassagersAutresPartie';
-import deletePassager from '@salesforce/apex/PassagerController.deletePassager';
-import resolveAccountByCIN from '@salesforce/apex/PassagerController.resolveAccountByCIN';
+import getPassagersAutresPartie from '@salesforce/apex/DA_PassagerController.getPassagersAutresPartie';
+import deletePassager from '@salesforce/apex/DA_PassagerController.deletePassager';
+import resolveAccountByCIN from '@salesforce/apex/DA_PassagerController.resolveAccountByCIN';
 
 const STATE_CLASS_MAP = {
     Blessé: 'pm-state pm-state--blesse',
