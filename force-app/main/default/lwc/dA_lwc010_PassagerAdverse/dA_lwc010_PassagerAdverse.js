@@ -55,6 +55,7 @@ const EMPTY_FORM = () => ({
 });
 
 const EMPTY_ERRORS = () => ({
+    vehicule: '',
     nomComplet: '', civility: '', cni: '',
     pays: '', ville: '', etatPassager: '',
     email: '', telephone: '',
@@ -429,6 +430,7 @@ export default class DA_lwc010_PassagerAdverse extends NavigationMixin(Lightning
         const e = EMPTY_ERRORS();
         let ok = true;
 
+        if (!this.form.vehiculeId) { e.vehicule = 'Obligatoire'; ok = false; }
         if (!this.form.nomComplet?.trim()) { e.nomComplet = 'Obligatoire'; ok = false; }
         if (!this.form.civility) { e.civility = 'Obligatoire'; ok = false; }
         if (!this.form.cni?.trim()) { e.cni = 'Obligatoire'; ok = false; }

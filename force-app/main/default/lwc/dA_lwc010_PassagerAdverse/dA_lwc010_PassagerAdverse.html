@@ -131,13 +131,7 @@
                     <div class="pm-empty__icon">
                         <lightning-icon icon-name="standard:person_account" size="large"></lightning-icon>
                     </div>
-                    <p class="pm-empty__text">Aucun passager adverse enregistr&#233; pour ce sinistre.</p>
-                    <template if:false={isReadonly}>
-                        <button class="pm-btn pm-btn--add pm-btn--outlined" onclick={handleAdd}>
-                            <lightning-icon icon-name="utility:add" size="xx-small"></lightning-icon>
-                            Ajouter le premier passager adverse
-                        </button>
-                    </template>
+                    <p class="pm-empty__text">Il n'y a actuellement aucun participant &agrave; afficher.</p>
                 </div>
             </template>
 
@@ -188,7 +182,7 @@
                             </div>
                             <div class="pm-grid">
                                 <div class="pm-field pm-field--full">
-                                    <label class="pm-lookup-label">V&#233;hicule adverse</label>
+                                    <label class="pm-lookup-label">V&#233;hicule adverse <abbr class="slds-required" title="required">*</abbr></label>
                                     <template if:false={hasSelectedVehicle}>
                                         <div class="pm-lookup-container">
                                             <div class="pm-lookup-input-wrap">
@@ -230,6 +224,9 @@
                                                 <lightning-icon icon-name="utility:new_window" size="xx-small"></lightning-icon>
                                             </a>
                                         </div>
+                                    </template>
+                                    <template if:true={errors.vehicule}>
+                                        <div class="pm-error">{errors.vehicule}</div>
                                     </template>
                                 </div>
                             </div>
