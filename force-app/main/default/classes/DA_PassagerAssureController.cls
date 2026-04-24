@@ -28,7 +28,7 @@ public with sharing class DA_PassagerAssureController {
             }
             try {
                 String conditions = 'Claim__c = \'' + String.escapeSingleQuotes(String.valueOf(claimId)) + '\'';
-                return DM_DataManager.query(PARTICIPANT_LIST_FIELDS, CLAIM_PARTICIPANT, conditions, 'CreatedDate DESC', null);
+                return DA_Utility.query(PARTICIPANT_LIST_FIELDS, CLAIM_PARTICIPANT, conditions, 'CreatedDate DESC', null);
             } catch (Exception e) {
                 throw new AuraHandledException(e.getMessage());
             }
@@ -40,7 +40,7 @@ public with sharing class DA_PassagerAssureController {
                 throw new AuraHandledException('L\'identifiant du participant est requis.');
             }
             try {
-                ClaimParticipant__c p = (ClaimParticipant__c) DM_DataManager.getById(PARTICIPANT_DETAIL_FIELDS, CLAIM_PARTICIPANT, participantId);
+                ClaimParticipant__c p = (ClaimParticipant__c) DA_Utility.getById(PARTICIPANT_DETAIL_FIELDS, CLAIM_PARTICIPANT, participantId);
                 if (p == null) {
                     throw new AuraHandledException('Participant introuvable.');
                 }
@@ -87,7 +87,7 @@ public with sharing class DA_PassagerAssureController {
                 if (excludeId != null) {
                     conditions += ' AND Id != \'' + String.escapeSingleQuotes(String.valueOf(excludeId)) + '\'';
                 }
-                List<SObject> existing = DM_DataManager.query('Id', CLAIM_PARTICIPANT, conditions, null, 1);
+                List<SObject> existing = DA_Utility.query('Id', CLAIM_PARTICIPANT, conditions, null, 1);
                 return !existing.isEmpty();
             } catch (Exception e) {
                 throw new AuraHandledException(e.getMessage());
@@ -192,7 +192,7 @@ public with sharing class DA_PassagerAssureController {
                 return response;
             }
             try {
-                DM_DataManager.deleteById(CLAIM_PARTICIPANT, participantId);
+                DA_Utility.deleteById(CLAIM_PARTICIPANT, participantId);
                 response.put('success', true);
                 response.put('message', 'Passager supprimé avec succès.');
                 return response;

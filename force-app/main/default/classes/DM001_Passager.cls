@@ -36,6 +36,11 @@ public with sharing class DM001_Passager {
         return passengers;
     }
 
+    public static Passager__c getPassagerById(Id passagerId) {
+        SObject record = DA_Utility.getById(PASSENGER_LIST_FIELDS, PASSENGER_OBJECT, passagerId);
+        return record != null ? (Passager__c) record : null;
+    }
+
     public static List<Passager__c> getPassagersByCaseAndRole(Id caseId, String role) {
         return getPassengersByCase(caseId, role);
     }

@@ -29,7 +29,7 @@ public with sharing class DA_Utility {
     }
 
     /**
-     * @description      :   Recherche générique par LIKE sur un champ donné via DM_DataManager
+     * @description      :   Recherche générique par LIKE sur un champ donné
      * @param fields     :   Champs à retourner (ex: 'Id, Name')
      * @param sObjectName:   Nom de l'objet (ex: 'Account')
      * @param searchField:   Champ sur lequel chercher (ex: 'Name')
@@ -84,9 +84,8 @@ public with sharing class DA_Utility {
      */
     public static void deleteById(String sObjectName, Id recordId) {
         if (recordId == null) return;
-        List<SObject> toDelete = query('Id', sObjectName,
-            'Id = \'' + String.escapeSingleQuotes(String.valueOf(recordId)) + '\'', null, 1);
-        if (!toDelete.isEmpty()) delete toDelete[0];
+        SObject record = Schema.getGlobalDescribe().get(sObjectName).newSObject(recordId);
+        delete record;
     }
 
     /**

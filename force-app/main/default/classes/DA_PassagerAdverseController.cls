@@ -33,7 +33,7 @@ public with sharing class DA_PassagerAdverseController {
         if (prefix == claimPrefix) {
             return recordId;
         }
-        List<SObject> claims = DM_DataManager.query(
+        List<SObject> claims = DA_Utility.query(
             'Id', 'Claim__c',
             'Case__c = \'' + String.escapeSingleQuotes(String.valueOf(recordId)) + '\'',
             'CreatedDate DESC', 1
@@ -87,7 +87,7 @@ public with sharing class DA_PassagerAdverseController {
                 throw new AuraHandledException('Aucun sinistre trouvé pour cet enregistrement.');
             }
             String safeId = String.escapeSingleQuotes(String.valueOf(resolvedId));
-            return DM_DataManager.query(
+            return DA_Utility.query(
                 'Id, Vehicule__c, Vehicule__r.RegistrationNumber__c, Vehicule__r.Brand__c, RegistrationNumber__c, Marque__c',
                 VEHICLE_ASSIGNMENT,
                 'Claim__c = \'' + safeId + '\' AND isOpposingCar__c = true',
@@ -111,7 +111,7 @@ public with sharing class DA_PassagerAdverseController {
                 throw new AuraHandledException('Aucun sinistre trouvé pour cet enregistrement.');
             }
             String safeId = String.escapeSingleQuotes(String.valueOf(resolvedId));
-            return DM_DataManager.query(
+            return DA_Utility.query(
                 PARTICIPANT_LIST_FIELDS, CLAIM_PARTICIPANT,
                 'Claim__c = \'' + safeId + '\' AND Roles__c = \'' + ROLE_ADVERSE + '\'',
                 'CreatedDate DESC', null
@@ -129,7 +129,7 @@ public with sharing class DA_PassagerAdverseController {
             throw new AuraHandledException('L\'identifiant du participant est requis.');
         }
         try {
-            ClaimParticipant__c p = (ClaimParticipant__c) DM_DataManager.getById(
+            ClaimParticipant__c p = (ClaimParticipant__c) DA_Utility.getById(
                 PARTICIPANT_DETAIL_FIELDS, CLAIM_PARTICIPANT, participantId
             );
             if (p == null) {
@@ -187,7 +187,7 @@ public with sharing class DA_PassagerAdverseController {
             if (excludeId != null) {
                 conditions += ' AND Id != \'' + String.escapeSingleQuotes(String.valueOf(excludeId)) + '\'';
             }
-            List<SObject> existing = DM_DataManager.query('Id', CLAIM_PARTICIPANT, conditions, null, 1);
+            List<SObject> existing = DA_Utility.query('Id', CLAIM_PARTICIPANT, conditions, null, 1);
             return !existing.isEmpty();
         } catch (Exception e) {
             return false;
@@ -221,7 +221,7 @@ public with sharing class DA_PassagerAdverseController {
             // Validate state transition on update
             if (isUpdateMode && formData.get('participantId') != null) {
                 String newEtat = (String) formData.get('etatPassager');
-                ClaimParticipant__c existing = (ClaimParticipant__c) DM_DataManager.getById(
+                ClaimParticipant__c existing = (ClaimParticipant__c) DA_Utility.getById(
                     'Id, StateOfPerson__c', CLAIM_PARTICIPANT, (Id) formData.get('participantId')
                 );
                 if (existing != null && String.isNotBlank(existing.StateOfPerson__c) && String.isNotBlank(newEtat)) {
@@ -241,7 +241,7 @@ public with sharing class DA_PassagerAdverseController {
             }
 
             // Validate dates against sinistre creation date
-            List<SObject> claims = DM_DataManager.query(
+            List<SObject> claims = DA_Utility.query(
                 'Id, CreatedDate', 'Claim__c',
                 'Id = \'' + String.escapeSingleQuotes(String.valueOf(resolvedClaimId)) + '\'',
                 null, 1
@@ -363,7 +363,7 @@ public with sharing class DA_PassagerAdverseController {
             return response;
         }
         try {
-            DM_DataManager.deleteById(CLAIM_PARTICIPANT, participantId);
+            DA_Utility.deleteById(CLAIM_PARTICIPANT, participantId);
             response.put('success', true);
             response.put('message', 'Passager adverse supprimé avec succès.');
             return response;
