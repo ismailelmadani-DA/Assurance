@@ -1,10 +1,7 @@
 import { LightningElement, api, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { refreshApex } from '@salesforce/apex';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getPassagersAutresPartie from '@salesforce/apex/DA_PassagerController.getPassagersAutresPartie';
-import deletePassager from '@salesforce/apex/DA_PassagerController.deletePassager';
-import resolveAccountByCIN from '@salesforce/apex/DA_PassagerController.resolveAccountByCIN';
 
 const STATE_CLASS_MAP = {
     Blessé: 'pm-state pm-state--blesse',
@@ -18,14 +15,6 @@ export default class DA_lwc005_PassagerAutresPartie extends NavigationMixin(Ligh
 
     passagers;
     error;
-    isDeleting = false;
-    showModal = false;
-    showDeleteModal = false;
-    editRecordId;
-    deleteRecordId;
-    deleteRecordName;
-    modalTitle = '';
-    selectedTypeContact = '';
 
     _wiredResult;
 
@@ -60,15 +49,6 @@ export default class DA_lwc005_PassagerAutresPartie extends NavigationMixin(Ligh
         return `${count} participant${count > 1 ? 's' : ''}`;
     }
 
-    get showContactField() {
-        return !!this.selectedTypeContact;
-    }
-
-    // --- Type Contact change ---
-    handleTypeContactChange(event) {
-        this.selectedTypeContact = event.detail.value || '';
-    }
-
     // --- Navigation vers Account ---
     navigateToAccount(event) {
         const accountId = event.currentTarget.dataset.id;
@@ -84,129 +64,8 @@ export default class DA_lwc005_PassagerAutresPartie extends NavigationMixin(Ligh
         }
     }
 
-    // --- Ajout ---
-    handleAddPassager() {
-        this.editRecordId = undefined;
-        this.modalTitle = 'Ajouter un participant';
-        this.selectedTypeContact = '';
-        this.showModal = true;
-    }
-
-    // --- Row actions ---
-    handleRowActionClick(event) {
-        const { id, action } = event.currentTarget.dataset;
-
-        if (action === 'edit') {
-            this.editRecordId = id;
-            this.modalTitle = 'Modifier le participant';
-            this.showModal = true;
-        } else if (action === 'delete') {
-            this.deleteRecordId = id;
-            const rec = this.passagers.find((p) => p.Id === id);
-            this.deleteRecordName = rec?.Name__c || rec?.Name || '';
-            this.showDeleteModal = true;
-        }
-    }
-
-    // --- Modal Ajout/Modification ---
-    handleCloseModal() {
-        this.showModal = false;
-        this.editRecordId = undefined;
-        this.selectedTypeContact = '';
-    }
-
-    handleOverlayClick(event) {
-        if (event.target === event.currentTarget) {
-            this.handleCloseModal();
-        }
-    }
-
-    stopPropagation(event) {
-        event.stopPropagation();
-    }
-
-    async handleFormSubmit(event) {
-        event.preventDefault();
-        const fields = event.detail.fields;
-        const cin = fields.CIN__c;
-
-        if (!cin?.trim()) {
-            this._showToast('Erreur', 'Le champ CIN est obligatoire.', 'error');
-            return;
-        }
-
-        const trimmedCin = cin.trim().toLowerCase();
-        const duplicate = this.passagers?.find(
-            (p) =>
-                p.CIN__c?.toLowerCase() === trimmedCin &&
-                p.Id !== this.editRecordId
-        );
-
-        if (duplicate) {
-            this._showToast(
-                'Erreur',
-                `Un participant avec le CIN "${cin}" existe déjà (${duplicate.Name__c || ''}).`,
-                'error'
-            );
-            return;
-        }
-
-        try {
-            const accountId = await resolveAccountByCIN({
-                cin: cin.trim(),
-                nom: fields.Name__c || ''
-            });
-            
-            fields.Compte__c = accountId;
-            // On force la liaison avec le Case courant
-            fields.Case__c = this.recordId; 
-            
-        } catch (err) {
-            this._showToast('Erreur', err.body?.message || 'Erreur lors de la résolution du compte.', 'error');
-            return;
-        }
-
-        this.template.querySelector('lightning-record-edit-form').submit(fields);
-    }
-
-    handleSuccess() {
-        this.handleCloseModal();
-        this._showToast('Succès', 'Le participant a été enregistré avec succès.', 'success');
-        return refreshApex(this._wiredResult);
-    }
-
-    handleError(event) {
-        this._showToast('Erreur', event.detail.message || 'Une erreur est survenue.', 'error');
-    }
-
-    // --- Modal Suppression ---
-    handleCloseDeleteModal() {
-        this.showDeleteModal = false;
-        this.deleteRecordId = undefined;
-        this.deleteRecordName = undefined;
-    }
-
-    async handleConfirmDelete() {
-        this.isDeleting = true;
-        try {
-            await deletePassager({ passagerId: this.deleteRecordId });
-            this.handleCloseDeleteModal();
-            this._showToast('Succès', 'Le participant a été supprimé.', 'success');
-            await refreshApex(this._wiredResult);
-        } catch (err) {
-            this._showToast('Erreur', err.body?.message || 'Erreur lors de la suppression.', 'error');
-        } finally {
-            this.isDeleting = false;
-        }
-    }
-
     // --- Refresh ---
     handleRefresh() {
         return refreshApex(this._wiredResult);
-    }
-
-    // --- Toast helper ---
-    _showToast(title, message, variant) {
-        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
 }
