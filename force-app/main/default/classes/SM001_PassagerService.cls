@@ -51,6 +51,10 @@ public with sharing class SM001_PassagerService {
         Account newAcc = new Account();
         newAcc.Name = nom != null ? nom.trim() : cin;
         newAcc.CIN__c = cin;
+        Id passagerRtId = DA_Utility.getRecordTypeId('Account', 'Passager');
+        if (passagerRtId != null) {
+            newAcc.RecordTypeId = passagerRtId;
+        }
         insert newAcc;
         System.debug(CLASS_NAME + ' - End method resolveAccountByCIN (created)');
         return newAcc.Id;
@@ -155,6 +159,10 @@ public with sharing class SM001_PassagerService {
 
         if (accountIdToUse == null) {
             Account defaultAcc = new Account(Name = 'Dossier Sans Compte - Tiers Generique');
+            Id passagerRtId = DA_Utility.getRecordTypeId('Account', 'Passager');
+            if (passagerRtId != null) {
+                defaultAcc.RecordTypeId = passagerRtId;
+            }
             insert defaultAcc;
             accountIdToUse = defaultAcc.Id;
 

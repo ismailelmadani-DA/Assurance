@@ -98,6 +98,21 @@ public with sharing class DA_Utility {
      * @return           :   Id
      * -------------------------------------------------------------------------------------------------
      **/
+    public static SObject addByRecordType(String sObjectName, String developerName, Map<String, Object> fieldValues) {
+        Id rtId = getRecordTypeId(sObjectName, developerName);
+        SObject record = Schema.getGlobalDescribe().get(sObjectName).newSObject();
+        if (rtId != null) {
+            record.put('RecordTypeId', rtId);
+        }
+        if (fieldValues != null) {
+            for (String fieldName : fieldValues.keySet()) {
+                record.put(fieldName, fieldValues.get(fieldName));
+            }
+        }
+        insert record;
+        return record;
+    }
+
     public static Id getRecordTypeId(String objectName, String developerName) {
         try {
             if(String.isNotBlank(objectName) && String.isNotBlank(developerName)){

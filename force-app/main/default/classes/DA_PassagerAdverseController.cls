@@ -320,8 +320,12 @@ public with sharing class DA_PassagerAdverseController {
             participant.isOwner__c = isOwner;
             upsert participant;
 
-            // Update Account with civility, email, phone
+            // Update Account with civility, email, phone + RecordType Passager
             Account acc = new Account(Id = accountId);
+            Id passagerRtId = DA_Utility.getRecordTypeId('Account', 'Passager');
+            if (passagerRtId != null) {
+                acc.RecordTypeId = passagerRtId;
+            }
             String civility = (String) formData.get('civility');
             if (String.isNotBlank(civility)) {
                 acc.Civility__c = civility;
