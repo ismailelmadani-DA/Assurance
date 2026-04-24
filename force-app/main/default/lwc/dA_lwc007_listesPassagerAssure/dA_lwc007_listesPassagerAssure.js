@@ -37,9 +37,7 @@ export default class DA_lwc007_listesPassagerAssure extends LightningElement {
     }
 
     async handleRefresh() {
-        if (!this.wiredPassengersResult) {
-            return;
-        }
+        if (!this.wiredPassengersResult) return;
 
         this.isLoading = true;
         this.hasError = false;
@@ -65,6 +63,7 @@ export default class DA_lwc007_listesPassagerAssure extends LightningElement {
         }
     }
 
+    // ✅ VERSION FINALE
     _enrichRecord(r) {
         const stateClass = {
             'Blessé': 'pm-state pm-state--blesse',
@@ -72,7 +71,13 @@ export default class DA_lwc007_listesPassagerAssure extends LightningElement {
             'Indemne': 'pm-state pm-state--indemne'
         }[r.StateOfPerson__c] || 'pm-state pm-state--default';
 
-        return { ...r, stateClass };
+        const displayName = r.Name || '-';
+
+        return {
+            ...r,
+            stateClass,
+            displayName
+        };
     }
 
     _applyFilter() {
@@ -132,12 +137,12 @@ export default class DA_lwc007_listesPassagerAssure extends LightningElement {
     _cleanError(e) {
         const raw = e?.body?.message || e?.message || '';
 
-        if (!raw || raw.includes('FIELD_INTEGRITY') || raw.includes('EXCEPTION') || raw.includes('first error')) {
-            return 'Une erreur est survenue lors du traitement. Veuillez réessayer.';
+        if (!raw || raw.includes('FIELD_INTEGRITY') || raw.includes('EXCEPTION')) {
+            return 'Une erreur est survenue. Veuillez réessayer.';
         }
 
         if (raw.includes('INSUFFICIENT_ACCESS')) {
-            return 'Vous n\'avez pas les droits nécessaires pour effectuer cette action.';
+            return 'Accès insuffisant.';
         }
 
         return raw;

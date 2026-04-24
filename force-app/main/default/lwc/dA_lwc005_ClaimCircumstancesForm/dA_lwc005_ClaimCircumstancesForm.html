@@ -1,3 +1,4 @@
+<!-- DA_lwc005_ClaimCircumstancesForm.html -->
 <template>
     <div class="slds-m-top_medium">
         <h1 class="main-title slds-m-bottom_medium">Informations des Circonstances</h1>
@@ -24,29 +25,27 @@
 
             <div class="slds-grid slds-wrap slds-p-around_small">
                 <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
-                    <!-- ✅ CORRECTION : value={_formData.TriggeringEventOfClaim__c} -->
+                    <!-- ✅ AJOUT value= pour restaurer la sélection -->
                     <lightning-combobox label="Evénement déclencheur de sinistre" name="TriggeringEventOfClaim__c"
                         options={triggerOptions} value={_formData.TriggeringEventOfClaim__c}
                         placeholder="Select an Option" required onchange={handleChange}>
                     </lightning-combobox>
                 </div>
                 <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
-                    <!-- ✅ CORRECTION : value={anyDamageStringValue} -->
+                    <!-- ✅ AJOUT value= pour restaurer la sélection -->
                     <lightning-combobox label="Est-ce qu'il y a un dommage ?" name="AnyDamage__c"
-                        options={ouiNonOptions} value={anyDamageStringValue} placeholder="Select an Option" required
+                        options={ouiNonOptions} value={anyDamageValue} placeholder="Select an Option" required
                         onchange={handleChange}>
                     </lightning-combobox>
                 </div>
 
                 <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
-                    <!-- ✅ CORRECTION : value={_formData.CausesOfClaim__c} -->
                     <lightning-combobox label="Causes de sinistre" name="CausesOfClaim__c" options={causeOptions}
                         value={_formData.CausesOfClaim__c} placeholder="Select an Option" required
                         onchange={handleChange}>
                     </lightning-combobox>
                 </div>
                 <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
-                    <!-- ✅ CORRECTION : value={_formData.NumberOfVehiclesInvolved__c} -->
                     <lightning-input type="number" label="Nombre de véhicules impliqués"
                         name="NumberOfVehiclesInvolved__c" value={_formData.NumberOfVehiclesInvolved__c} required
                         onchange={handleChange}>
@@ -54,30 +53,29 @@
                 </div>
 
                 <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
-                    <!-- ✅ CORRECTION : value={_formData.OpposingParty__c} -->
                     <lightning-combobox label="Partie adverse" name="OpposingParty__c" options={partyOptions}
                         value={_formData.OpposingParty__c} placeholder="Select an Option" required
                         onchange={handleChange}>
                     </lightning-combobox>
                 </div>
                 <div class="slds-col slds-size_1-of-2 slds-p-around_x-small">
-                    <!-- ✅ CORRECTION : value={_formData.Commentaire__c} -->
                     <lightning-textarea label="Commentaire" name="Commentaire__c" value={_formData.Commentaire__c}
                         onchange={handleChange}>
                     </lightning-textarea>
                 </div>
             </div>
         </div>
-
-        <template lwc:if={isDamageYes}>
-            <div class="slds-section slds-is-open slds-m-top_medium">
-                <h3 class="section-header slds-p-horizontal_small">
-                    Sélectionnez les points de choc
-                </h3>
-
-                <c-lwc006_-point-choc onpointchocchange={handlePointChocUpdate}>
-                </c-lwc006_-point-choc>
-            </div>
-        </template>
     </div>
+
+    <template lwc:if={isDamageYes}>
+        <div class="slds-section slds-is-open slds-m-top_medium">
+            <h3 class="section-header slds-p-horizontal_small">
+                Sélectionnez les points de choc
+            </h3>
+            <!-- ✅ AJOUT : passer les données sauvegardées au composant enfant -->
+            <c-lwc006_-point-choc saved-points={pointsDeChocSaved} saved-precisions={precisionsSaved}
+                onpointchocchange={handlePointChocUpdate}>
+            </c-lwc006_-point-choc>
+        </div>
+    </template>
 </template>

@@ -1,26 +1,91 @@
+// lwc006_PointChoc.js
 import { LightningElement, track, api, wire } from 'lwc';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 
-// Importation des champs de l'objet Claim__c
 import POINTS_CHOC_FIELD from '@salesforce/schema/Claim__c.PointsDeChoc__c';
 import PRECISIONS_FIELD from '@salesforce/schema/Claim__c.PrecisionsDommages__c';
 
 export default class Lwc006_PointChoc extends LightningElement {
-    @api recordId; // Identifiant de l'enregistrement (rempli automatiquement sur la page de consultation)
-    
-    @track parts = []; // Liste des objets {id, val} sélectionnés
-    @track motifVal = ''; // Texte saisi dans le textarea
+    @api recordId;
+
+    // ✅ AJOUT : Propriétés @api pour recevoir les données du parent (mode wizard)
+    @api
+    get savedPoints() {
+        return this._savedPoints;
+    }
+    set savedPoints(value) {
+        this._savedPoints = value;
+        // Restaurer les points dès que la valeur arrive
+        if (value) {
+            this._scheduleRestore();
+        }
+    }
+
+    @api
+    get savedPrecisions() {
+        return this._savedPrecisions;
+    }
+    set savedPrecisions(value) {
+        this._savedPrecisions = value;
+    }
+
+    _savedPoints = '';
+    _savedPrecisions = '';
+    _restoreScheduled = false;
+
+    @track parts = [];
+    @track motifVal = '';
     @track messageObligatoire = false;
 
     @api errorMessage = 'Veuillez sélectionner au moins un point de choc.';
 
-    // --- MODE LECTURE SEULE ---
-    // Si recordId est présent, cela signifie que le composant est sur une page de consultation
     get isReadOnly() {
         return !!this.recordId;
     }
 
-    // Récupération automatique des données si on est sur la page d'un Sinistre
+    // ✅ AJOUT : Restaurer après rendu
+    renderedCallback() {
+        if (this._restoreScheduled && !this._restored) {
+            this._restored = true;
+            this._restoreScheduled = false;
+            this._doRestore();
+        }
+    }
+
+    _scheduleRestore() {
+        this._restored = false;
+        this._restoreScheduled = true;
+    }
+
+    _doRestore() {
+        const pointsStr = this._savedPoints;
+        const precisions = this._savedPrecisions;
+
+        if (!pointsStr) return;
+
+        // Réinitialiser d'abord
+        this.parts = [];
+
+        const partiesEndommagees = pointsStr.split(';').map(p => p.trim()).filter(p => p !== '');
+
+        partiesEndommagees.forEach(partval => {
+            const myPartElement = this.template.querySelector(`path[data-value='${partval}']`);
+            if (myPartElement) {
+                myPartElement.style.fill = '#FF0000';
+                myPartElement.style.fillOpacity = '0.6';
+                this.parts.push({ id: myPartElement.id, val: partval });
+            }
+        });
+
+        this.parts = [...this.parts];
+
+        if (precisions) {
+            this.motifVal = precisions;
+        }
+
+        this.updateLayout();
+    }
+
     @wire(getRecord, { recordId: '$recordId', fields: [POINTS_CHOC_FIELD, PRECISIONS_FIELD] })
     wiredClaim({ error, data }) {
         if (data) {
@@ -30,7 +95,6 @@ export default class Lwc006_PointChoc extends LightningElement {
             if (precisionsSauvegardees) {
                 this.motifVal = precisionsSauvegardees;
             }
-
             if (pointsSauvegardes) {
                 this.colorierPointsExistants(pointsSauvegardes);
             }
@@ -39,55 +103,34 @@ export default class Lwc006_PointChoc extends LightningElement {
         }
     }
 
-    /**
-     * Colorie le SVG en fonction des données sauvegardées (Mode Lecture)
-     */
     colorierPointsExistants(pointsStr) {
-        // Dans votre méthode notifyChange, vous sépariez les valeurs par un point-virgule (;)
         const partiesEndommagees = pointsStr.split(';').map(p => p.trim()).filter(p => p !== '');
-
-        // Un petit délai pour s'assurer que le HTML et le SVG sont bien chargés à l'écran
         setTimeout(() => {
             partiesEndommagees.forEach(partval => {
                 const myPartElement = this.template.querySelector(`path[data-value='${partval}']`);
-                
                 if (myPartElement) {
-                    // On simule visuellement le clic
-                    myPartElement.style.fill = "#FF0000";
-                    myPartElement.style.fillOpacity = "0.6";
-                    
-                    // On l'ajoute à la liste pour que les badges s'affichent aussi en bas
+                    myPartElement.style.fill = '#FF0000';
+                    myPartElement.style.fillOpacity = '0.6';
                     this.parts.push({ id: myPartElement.id, val: partval });
                 }
             });
-            
-            // Forcer la réactivité pour afficher les badges
             this.parts = [...this.parts];
             this.updateLayout();
-
-        }, 500); 
+        }, 500);
     }
 
-    /**
-     * Gère le clic sur une partie du SVG ou sur la croix d'un badge
-     */
     onclickPart(event) {
-        // SÉCURITÉ : Si on est en mode lecture seule, on bloque toute interaction
-        if (this.isReadOnly) {
-            return;
-        }
+        if (this.isReadOnly) return;
 
         try {
             const type = event.target.getAttribute('data-type');
             const partval = event.target.getAttribute('data-value');
             let partId;
 
-            if (type === "div") {
-                // Si on clique sur le bouton fermer du badge, on retrouve l'élément SVG via son data-value
+            if (type === 'div') {
                 const myPartElement = this.template.querySelector(`path[data-value='${partval}']`);
                 partId = myPartElement ? myPartElement.id : null;
             } else {
-                // Clic direct sur une zone de la voiture (l'id du path SVG)
                 partId = event.target.id;
             }
 
@@ -97,23 +140,17 @@ export default class Lwc006_PointChoc extends LightningElement {
             const index = this.parts.findIndex(p => p.id === partId);
 
             if (index > -1) {
-                // --- LOGIQUE DE DÉSÉLECTION ---
-                partDom.style.fill = "";
-                partDom.style.fillOpacity = "0";
+                partDom.style.fill = '';
+                partDom.style.fillOpacity = '0';
                 this.parts.splice(index, 1);
             } else {
-                // --- LOGIQUE DE SÉLECTION ---
-                partDom.style.fill = "#FF0000"; 
-                partDom.style.fillOpacity = "0.6";
+                partDom.style.fill = '#FF0000';
+                partDom.style.fillOpacity = '0.6';
                 this.parts.push({ id: partId, val: partval });
             }
 
-            // Forcer la réactivité
             this.parts = [...this.parts];
-            
-            // Mise à jour de l'interface
             this.updateLayout();
-            // Notification du parent
             this.notifyChange();
 
         } catch (e) {
@@ -121,22 +158,12 @@ export default class Lwc006_PointChoc extends LightningElement {
         }
     }
 
-    /**
-     * Gère la saisie dans le champ de commentaire
-     */
     handleMotifChange(event) {
-        // SÉCURITÉ : Si on est en mode lecture seule, on ne met pas à jour (bien que le HTML doive aussi être en disabled)
-        if (this.isReadOnly) {
-            return;
-        }
-
+        if (this.isReadOnly) return;
         this.motifVal = event.target.value;
         this.notifyChange();
     }
 
-    /**
-     * Alterne les classes CSS pour l'animation
-     */
     updateLayout() {
         const hasParts = this.parts.length > 0;
         const car = this.template.querySelector('.my-car-container');
@@ -157,30 +184,19 @@ export default class Lwc006_PointChoc extends LightningElement {
         }
     }
 
-    /**
-     * Émet l'événement vers dA_lwc005 avec la clé correcte pour PrecisionsDommages__c
-     */
     notifyChange() {
         const selectedPartsString = this.parts.map(p => p.val).join(';');
-        
         this.dispatchEvent(new CustomEvent('pointchocchange', {
             detail: {
                 clickedParts: selectedPartsString,
-                precisionDommage: this.motifVal // On envoie motifVal sous le nom attendu par le parent
+                precisionDommage: this.motifVal
             }
         }));
     }
 
-    /**
-     * Méthode de validation
-     */
-    @api 
+    @api
     checkValidity() {
-        // En mode lecture, on renvoie toujours true pour ne pas bloquer
-        if (this.isReadOnly) {
-            return true;
-        }
-
+        if (this.isReadOnly) return true;
         this.messageObligatoire = (this.parts.length === 0);
         return !this.messageObligatoire;
     }

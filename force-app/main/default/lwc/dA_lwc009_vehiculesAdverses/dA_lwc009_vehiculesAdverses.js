@@ -1,8 +1,9 @@
 import { LightningElement, api, wire, track } from 'lwc';
+import { NavigationMixin }                    from 'lightning/navigation';
 import { ShowToastEvent }                     from 'lightning/platformShowToastEvent';
 import getVehiculesAdverses                   from '@salesforce/apex/DA_VehiculeAdverseController.getVehiculesAdverses';
 
-export default class DA_lwc009_vehiculesAdverses extends LightningElement {
+export default class DA_lwc009_vehiculesAdverses extends NavigationMixin(LightningElement) {
 
     @api recordId;
 
@@ -22,6 +23,7 @@ export default class DA_lwc009_vehiculesAdverses extends LightningElement {
         if (result.data) {
             this.vehicules = result.data.map(v => ({
                 ...v,
+                vehiculeId      : v.Vehicule__c || null,                               // ══ AJOUT : ID Vehicule pour la navigation ══
                 nomVehicule     : v.Vehicule__r ? v.Vehicule__r.Name                  || '—' : '—',
                 immatriculation : v.Vehicule__r ? v.Vehicule__r.RegistrationNumber__c || '—' : '—',
                 marqueAffichee  : v.Vehicule__r ? v.Vehicule__r.Brand__c              || '—' : '—',
@@ -34,6 +36,21 @@ export default class DA_lwc009_vehiculesAdverses extends LightningElement {
         } else if (result.error) {
             this.showToast('Erreur', result.error.body?.message ?? 'Erreur inconnue', 'error');
         }
+    }
+
+    // ══ AJOUT : Navigation vers le détail du véhicule ══
+    handleNavigateToVehicule(event) {
+        event.preventDefault();
+        const vehiculeId = event.currentTarget.dataset.vehiculeId;
+        if (!vehiculeId) return;
+        this[NavigationMixin.Navigate]({
+            type       : 'standard__recordPage',
+            attributes : {
+                recordId      : vehiculeId,
+                objectApiName : 'Vehicule__c',
+                actionName    : 'view'
+            }
+        });
     }
 
     // ── Toast ─────────────────────────────────────────────────────────────

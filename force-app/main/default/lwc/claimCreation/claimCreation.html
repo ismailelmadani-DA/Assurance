@@ -354,28 +354,28 @@
 
                 <!-- ===================== ÉTAPE 6 ===================== -->
                 <template lwc:if={isStep6}>
-                    <c-d-a_lwc005_-claim-circumstances-form claim-summary={summaryForChild}
+                    <c-d-a_lwc005_-claim-circumstances-form claim-summary={summaryForChild} saved-form-data={circumstancesData}
                         onformupdate={handleCircumstancesUpdate}>
                     </c-d-a_lwc005_-claim-circumstances-form>
                 </template>
 
                 <!-- ===================== ÉTAPE 7 ===================== -->
                 <template lwc:if={isStep7}>
-                    <c-lwc007_-driver-info claim-summary={summaryForChild} policy-id={selectedPolicyId}
+                    <c-lwc007_-driver-info claim-summary={summaryForChild} policy-id={selectedPolicyId} saved-driver-data={driverData}
                         ondriverupdate={handleDriverUpdate}>
                     </c-lwc007_-driver-info>
                 </template>
 
                 <!-- ===================== ÉTAPE 8 ===================== -->
                 <template lwc:if={isStep8}>
-                    <c-lwc011_-passagers-assure claim-summary={summaryForChild}
+                    <c-lwc011_-passagers-assure claim-summary={summaryForChild} saved-passengers={passengersData}
                         onpassengersupdate={handlePassengersUpdate}>
                     </c-lwc011_-passagers-assure>
                 </template>
 
                 <!-- ===================== ÉTAPE 9 ===================== -->
                 <template lwc:if={isStep9}>
-                    <c-lwc012_-vehicule-adverse claim-summary={summaryForChild}
+                    <c-lwc012_-vehicule-adverse claim-summary={summaryForChild} saved-adverse-vehicles={adverseVehicleData}
                         onadversevehicleupdate={handleAdverseVehicleUpdate}>
                     </c-lwc012_-vehicule-adverse>
                 </template>

@@ -50,7 +50,7 @@
                             <th scope="col"><div class="slds-truncate">Nom & Prénom</div></th>
                             <th scope="col"><div class="slds-truncate">CIN</div></th>
                             <th scope="col"><div class="slds-truncate">État</div></th>
-                            <th scope="col" style="width: 3rem;"><div class="slds-truncate slds-text-align_center">Action</div></th>
+                            <th scope="col" style="width: 5rem;"><div class="slds-truncate slds-text-align_center">Action</div></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -61,12 +61,20 @@
                                 <td>{p.StateOfPerson__c}</td>
                                 <td class="slds-text-align_center">
                                     <lightning-button-icon 
+                                        icon-name="utility:edit" 
+                                        variant="bare" 
+                                        alternative-text="Modifier" 
+                                        data-key={p.key} 
+                                        onclick={handleEdit}
+                                        title="Modifier ce passager"
+                                        class="slds-m-right_medium"> </lightning-button-icon>
+                                    
+                                    <lightning-button-icon 
                                         icon-name="utility:delete" 
                                         variant="bare" 
                                         alternative-text="Supprimer" 
                                         data-key={p.key} 
                                         onclick={handleDelete}
-                                        class="slds-m-left_xx-small"
                                         title="Supprimer ce passager">
                                     </lightning-button-icon>
                                 </td>

@@ -48,14 +48,10 @@ public with sharing class SM001_PassagerService {
             return existing[0].Id;
         }
 
-        Account newAcc = new Account();
-        newAcc.Name = nom != null ? nom.trim() : cin;
-        newAcc.CIN__c = cin;
-        Id passagerRtId = DA_Utility.getRecordTypeId('Account', 'Passager');
-        if (passagerRtId != null) {
-            newAcc.RecordTypeId = passagerRtId;
-        }
-        insert newAcc;
+        SObject newAcc = DA_Utility.addByRecordType('Account', 'Passager', new Map<String, Object>{
+            'Name' => nom != null ? nom.trim() : cin,
+            'CIN__c' => cin
+        });
         System.debug(CLASS_NAME + ' - End method resolveAccountByCIN (created)');
         return newAcc.Id;
     }
@@ -158,12 +154,9 @@ public with sharing class SM001_PassagerService {
         Id accountIdToUse = cases[0].AccountId;
 
         if (accountIdToUse == null) {
-            Account defaultAcc = new Account(Name = 'Dossier Sans Compte - Tiers Generique');
-            Id passagerRtId = DA_Utility.getRecordTypeId('Account', 'Passager');
-            if (passagerRtId != null) {
-                defaultAcc.RecordTypeId = passagerRtId;
-            }
-            insert defaultAcc;
+            SObject defaultAcc = DA_Utility.addByRecordType('Account', 'Passager', new Map<String, Object>{
+                'Name' => 'Dossier Sans Compte - Tiers Generique'
+            });
             accountIdToUse = defaultAcc.Id;
 
             cases[0].AccountId = accountIdToUse;

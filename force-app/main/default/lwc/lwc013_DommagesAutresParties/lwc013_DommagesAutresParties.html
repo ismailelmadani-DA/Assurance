@@ -23,6 +23,16 @@
                         
                         <div class="slds-col slds-grow-none">
                             <lightning-button-icon 
+                                icon-name="utility:edit" 
+                                variant="bare" 
+                                alternative-text="Modifier" 
+                                data-key={party.key} 
+                                onclick={handleEdit}
+                                title="Modifier cette personne"
+                                class="slds-m-right_medium">
+                            </lightning-button-icon>
+                            
+                            <lightning-button-icon 
                                 icon-name="utility:delete" 
                                 variant="bare" 
                                 alternative-text="Supprimer" 

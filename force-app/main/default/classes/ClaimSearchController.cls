@@ -397,12 +397,22 @@ public with sharing class ClaimSearchController {
                         Passager__c newPass = new Passager__c();
                         newPass.Case__c = caseId; 
                         newPass.Roles__c = 'Passager adverse'; 
-                        
-                        // ---> LA CORRECTION EST ICI : LIEN DIRECT AU VÉHICULE <---
                         newPass.Vehicule__c = currentVehiculeId; 
                         
+                        // --- CHAMPS DU PASSAGER ---
                         newPass.Name__c = (String)pMap.get('Name__c'); 
+                        newPass.Civilite__c = (String)pMap.get('Civilite__c');
                         newPass.CIN__c = (String)pMap.get('CIN__c');
+                        newPass.Pays__c = (String)pMap.get('Pays__c');
+                        newPass.Adresse__c = (String)pMap.get('Adresse__c');
+                        
+                        // Gestion de la date de naissance
+                        if (pMap.get('BirthDay__c') != null && String.isNotBlank((String)pMap.get('BirthDay__c'))) {
+                            newPass.BirthDay__c = Date.valueOf((String)pMap.get('BirthDay__c'));
+                        }
+
+                        newPass.MaritalStatus__c = (String)pMap.get('MaritalStatus__c');
+                        newPass.Ville__c = (String)pMap.get('Ville__c');
                         newPass.StateOfPerson__c = (String)pMap.get('StateOfPerson__c');
                         
                         passagersToInsert.add(newPass);

@@ -321,28 +321,16 @@ public with sharing class DA_AutrePartieAdverseController {
             upsert participant;
 
             // Update Account with civility, nomComplet, email, phone + RecordType Passager
-            Account acc = new Account(Id = accountId);
-            Id passagerRtId = DA_Utility.getRecordTypeId('Account', 'Passager');
-            if (passagerRtId != null) {
-                acc.RecordTypeId = passagerRtId;
-            }
+            Map<String, Object> accFields = new Map<String, Object>();
             String civility = (String) formData.get('civility');
-            if (String.isNotBlank(civility)) {
-                acc.Civility__c = civility;
-            }
+            if (String.isNotBlank(civility)) { accFields.put('Civility__c', civility); }
             String nomComplet = (String) formData.get('nomComplet');
-            if (String.isNotBlank(nomComplet)) {
-                acc.Nom__c = nomComplet.trim();
-            }
+            if (String.isNotBlank(nomComplet)) { accFields.put('Nom__c', nomComplet.trim()); }
             String email = (String) formData.get('email');
-            if (String.isNotBlank(email)) {
-                acc.Email__c = email;
-            }
+            if (String.isNotBlank(email)) { accFields.put('Email__c', email); }
             String phone = (String) formData.get('telephone');
-            if (String.isNotBlank(phone)) {
-                acc.Phone = phone;
-            }
-            update acc;
+            if (String.isNotBlank(phone)) { accFields.put('Phone', phone); }
+            DA_Utility.updateByRecordType('Account', 'Passager', accountId, accFields);
 
             response.put('success', true);
             response.put('message', isUpdateMode ? 'Autre partie adverse modifiée avec succès.' : 'Autre partie adverse ajoutée avec succès.');

@@ -16,6 +16,7 @@ export default class Lwc013_DommagesAutresParties extends LightningElement {
     @api claimSummary;
     @track otherParties = [];
     @track isFormVisible = true;
+    currentPartyKeyForEdit = null;
 
     @track formData = {
         OpposingParty__c: '', 
@@ -32,7 +33,6 @@ export default class Lwc013_DommagesAutresParties extends LightningElement {
         CompagnieAdverse__c: '',
         Numéro_de_contrat__c: '',
         MoyenNotification__c: '',
-        // Nouveaux champs pour la notification
         Telephone__c: '',
         Email__c: ''
     };
@@ -45,7 +45,6 @@ export default class Lwc013_DommagesAutresParties extends LightningElement {
     @track situationOptions = [];
     @track etatOptions = [];
 
-    // --- Wire Metadata ---
     @wire(getObjectInfo, { objectApiName: CASE_OBJECT }) caseInfo;
     @wire(getObjectInfo, { objectApiName: PASSAGER_OBJECT }) passagerInfo;
 
@@ -70,7 +69,6 @@ export default class Lwc013_DommagesAutresParties extends LightningElement {
     @wire(getPicklistValues, { recordTypeId: '$passagerInfo.data.defaultRecordTypeId', fieldApiName: ETAT_PERSONNE_FIELD })
     wiredEtat({ data }) { if (data) this.etatOptions = data.values; }
 
-    // --- Getters Conditionnels pour la notification ---
     get isTelephoneOrSMS() {
         return this.formData.MoyenNotification__c === 'Téléphone' || this.formData.MoyenNotification__c === 'SMS';
     }
@@ -88,33 +86,62 @@ export default class Lwc013_DommagesAutresParties extends LightningElement {
         this.formData.CompagnieAdverse__c = event.detail.recordId;
     }
 
+    handleEdit(event) {
+        const keyToEdit = event.currentTarget.dataset.key;
+        this.currentPartyKeyForEdit = keyToEdit;
+
+        // On cherche la personne dans la liste
+        const party = this.otherParties.find(p => p.key.toString() === keyToEdit.toString());
+        
+        if (party) {
+            this.formData = { ...party };
+            this.isFormVisible = true;
+
+            setTimeout(() => {
+                const picker = this.template.querySelector('lightning-record-picker');
+                if (picker && party.CompagnieAdverse__c) {
+                    picker.value = party.CompagnieAdverse__c;
+                }
+            }, 100);
+        }
+    }
+
     handleAjouter() {
         const allValid = [...this.template.querySelectorAll('lightning-input, lightning-combobox, lightning-record-picker')]
             .reduce((v, i) => { 
                 if(i.reportValidity) i.reportValidity(); 
                 return v && (i.checkValidity ? i.checkValidity() : true); 
             }, true);
-            
+
         if (allValid) {
-            const newParty = { ...this.formData, key: Date.now() };
-            this.otherParties = [...this.otherParties, newParty];
+            if (this.currentPartyKeyForEdit) {
+                this.otherParties = this.otherParties.map(p => {
+                    if (p.key.toString() === this.currentPartyKeyForEdit.toString()) {
+                        return { ...this.formData, key: p.key }; // On conserve la même clé
+                    }
+                    return p;
+                });
+            } else {
+                const newParty = { ...this.formData, key: Date.now() };
+                this.otherParties = [...this.otherParties, newParty];
+            }
             
-            // DÉCLENCHEMENT DU TOAST DE SUCCÈS
+            const toastMessage = this.currentPartyKeyForEdit ? 'La personne a été mise à jour avec succès.' : 'La personne a été ajoutée à la liste.';
+            
             this.dispatchEvent(
                 new ShowToastEvent({
                     title: 'Succès',
-                    message: 'La personne a été ajoutée à la liste.',
+                    message: toastMessage,
                     variant: 'success',
                 })
             );
-            
+
             this.resetForm();
             this.isFormVisible = false;
             this.notifyParent();
         }
     }
 
-    // --- NOUVELLE MÉTHODE : Suppression d'une personne ---
     handleDelete(event) {
         const keyToDelete = event.currentTarget.dataset.key;
         this.otherParties = this.otherParties.filter(p => p.key.toString() !== keyToDelete.toString());
@@ -136,6 +163,7 @@ export default class Lwc013_DommagesAutresParties extends LightningElement {
     }
 
     resetForm() {
+        this.currentPartyKeyForEdit = null; // On nettoie le mode édition
         this.formData = { 
             OpposingParty__c: '', Nom__c: '', Prenom__c: '', Civilite__c: '', 
             Pays__c: 'Sénégal', Ville__c: '', Adresse__c: '', BirthDay__c: null, 

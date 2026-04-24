@@ -2,7 +2,6 @@ import { LightningElement, api, track, wire } from 'lwc';
 import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
 import ACCOUNT_OBJECT from '@salesforce/schema/Account';
 
-// Import des schémas de champs
 import CIVILITY_FIELD from '@salesforce/schema/Account.Civility__c';
 import PAYS_FIELD from '@salesforce/schema/Account.Pays__c';
 import VILLE_FIELD from '@salesforce/schema/Account.Ville__c';
@@ -16,6 +15,20 @@ import getInsuredDetails from '@salesforce/apex/ClaimSearchController.getInsured
 export default class Lwc007_DriverInfo extends LightningElement {
     @api claimSummary;
     @api policyId;
+
+    // Propriété @api pour recevoir les données sauvegardées du parent
+    @api
+    get savedDriverData() {
+        return this._savedDriverData;
+    }
+    set savedDriverData(value) {
+        if (value && Object.keys(value).length > 0) {
+            this._savedDriverData = value;
+            // On recopie les données sauvegardées dans formData
+            this.formData = { ...this.formData, ...value };
+        }
+    }
+    _savedDriverData = {};
 
     @track formData = {
         QuiEstConducteur__c: '',
@@ -36,8 +49,10 @@ export default class Lwc007_DriverInfo extends LightningElement {
         MaritalStatus__c: ''
     };
 
-    // Options pour les combos
-    quiEstConducteurOptions = [{ label: 'Assuré', value: 'Assuré' }, { label: 'Autre', value: 'Autre' }];
+    quiEstConducteurOptions = [
+        { label: 'Assuré', value: 'Assuré' },
+        { label: 'Autre', value: 'Autre' }
+    ];
     @track civilityOptions = [];
     @track paysOptions = [];
     @track villeOptions = [];
@@ -46,43 +61,60 @@ export default class Lwc007_DriverInfo extends LightningElement {
     @track conditionPersonOptions = [];
     @track maritalStatusOptions = [];
 
-    // --- Récupération des infos de l'objet Account ---
     @wire(getObjectInfo, { objectApiName: ACCOUNT_OBJECT })
     accountMetadata;
 
-    // --- Récupération des valeurs de Picklist ---
-    @wire(getPicklistValues, { recordTypeId: '$accountMetadata.data.defaultRecordTypeId', fieldApiName: CIVILITY_FIELD })
+    @wire(getPicklistValues, {
+        recordTypeId: '$accountMetadata.data.defaultRecordTypeId',
+        fieldApiName: CIVILITY_FIELD
+    })
     wiredCivility({ data }) { if (data) this.civilityOptions = data.values; }
 
-    @wire(getPicklistValues, { recordTypeId: '$accountMetadata.data.defaultRecordTypeId', fieldApiName: PAYS_FIELD })
+    @wire(getPicklistValues, {
+        recordTypeId: '$accountMetadata.data.defaultRecordTypeId',
+        fieldApiName: PAYS_FIELD
+    })
     wiredPays({ data }) { if (data) this.paysOptions = data.values; }
 
-    @wire(getPicklistValues, { recordTypeId: '$accountMetadata.data.defaultRecordTypeId', fieldApiName: VILLE_FIELD })
+    @wire(getPicklistValues, {
+        recordTypeId: '$accountMetadata.data.defaultRecordTypeId',
+        fieldApiName: VILLE_FIELD
+    })
     wiredVille({ data }) { if (data) this.villeOptions = data.values; }
 
-    @wire(getPicklistValues, { recordTypeId: '$accountMetadata.data.defaultRecordTypeId', fieldApiName: ORIGINE_PERMIS_FIELD })
+    @wire(getPicklistValues, {
+        recordTypeId: '$accountMetadata.data.defaultRecordTypeId',
+        fieldApiName: ORIGINE_PERMIS_FIELD
+    })
     wiredOrigine({ data }) { if (data) this.originePermisOptions = data.values; }
 
-    @wire(getPicklistValues, { recordTypeId: '$accountMetadata.data.defaultRecordTypeId', fieldApiName: TYPE_PERMIS_FIELD })
+    @wire(getPicklistValues, {
+        recordTypeId: '$accountMetadata.data.defaultRecordTypeId',
+        fieldApiName: TYPE_PERMIS_FIELD
+    })
     wiredType({ data }) { if (data) this.typePermisOptions = data.values; }
 
-    @wire(getPicklistValues, { recordTypeId: '$accountMetadata.data.defaultRecordTypeId', fieldApiName: CONDITION_FIELD })
+    @wire(getPicklistValues, {
+        recordTypeId: '$accountMetadata.data.defaultRecordTypeId',
+        fieldApiName: CONDITION_FIELD
+    })
     wiredCondition({ data }) { if (data) this.conditionPersonOptions = data.values; }
 
-    @wire(getPicklistValues, { recordTypeId: '$accountMetadata.data.defaultRecordTypeId', fieldApiName: MARITAL_FIELD })
+    @wire(getPicklistValues, {
+        recordTypeId: '$accountMetadata.data.defaultRecordTypeId',
+        fieldApiName: MARITAL_FIELD
+    })
     wiredMarital({ data }) { if (data) this.maritalStatusOptions = data.values; }
 
-    // --- Handlers ---
     handleInputChange(event) {
         const field = event.target.dataset.field;
         const value = event.target.value;
-        this.formData[field] = value;
-        
-        // Auto-remplissage si "Assuré" est sélectionné
+        this.formData = { ...this.formData, [field]: value };
+
         if (field === 'QuiEstConducteur__c' && value === 'Assuré') {
             this.fillWithInsuredData();
         }
-        
+
         this.notifyParent();
     }
 
@@ -90,8 +122,8 @@ export default class Lwc007_DriverInfo extends LightningElement {
         try {
             const data = await getInsuredDetails({ policyId: this.policyId });
             if (data) {
-                // On mappe Name sur LastName et on remplit le reste
                 this.formData = { ...this.formData, ...data, LastName: data.Name };
+                this.notifyParent();
             }
         } catch (error) {
             console.error('Erreur auto-remplissage', error);
@@ -99,7 +131,9 @@ export default class Lwc007_DriverInfo extends LightningElement {
     }
 
     notifyParent() {
-        this.dispatchEvent(new CustomEvent('driverupdate', { detail: this.formData }));
+        this.dispatchEvent(new CustomEvent('driverupdate', {
+            detail: { ...this.formData }
+        }));
     }
 
     @api

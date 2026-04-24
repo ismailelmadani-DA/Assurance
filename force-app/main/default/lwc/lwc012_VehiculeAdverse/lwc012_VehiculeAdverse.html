@@ -3,7 +3,7 @@
         <div class="slds-grid slds-wrap">
             <div class="slds-col slds-size_1-of-4 summary-item">Date Survenance: <strong>{claimSummary.dateSurvenance}</strong></div>
             <div class="slds-col slds-size_1-of-4 summary-item">N° Police: <strong>{claimSummary.policyNumber}</strong></div>
-            <div class="slds-col slds-size_1-of-4 summary-item">N° Immat: <strong>{claimSummary.registrationNumber}</strong></div>
+            <div class="slds-col slds-size_1-of-4 summary-item">N° Immatriculation: <strong>{claimSummary.registrationNumber}</strong></div>
             <div class="slds-col slds-size_1-of-4 summary-item">N° Déclaration: <strong>{claimSummary.caseNumber}</strong></div>
         </div>
     </div>
@@ -21,6 +21,7 @@
                             <p class="slds-text-color_weak">Passagers blessés déclarés : {veh.NbDePassagerBlesses__c}</p>
                         </div>
                         <div class="slds-col slds-grow-none">
+                            <lightning-button-icon icon-name="utility:edit" variant="bare" data-key={veh.key} onclick={handleEditVehicle} class="slds-m-right_medium" title="Modifier ce véhicule"></lightning-button-icon>
                             <lightning-button-icon icon-name="utility:delete" variant="bare" alternative-text="Supprimer" data-key={veh.key} onclick={handleDelete} title="Supprimer ce véhicule"></lightning-button-icon>
                         </div>
                     </div>
@@ -28,7 +29,7 @@
                     <div class="slds-box slds-theme_default slds-m-top_small" style="background-color: #fafaf9;">
                         <div class="slds-grid slds-grid_align-spread slds-vertical-align-center slds-m-bottom_x-small">
                             <strong>Passagers liés ({veh.passengers.length})</strong>
-                            <lightning-button label="Ajouter un passager" icon-name="utility:add" size="small" data-key={veh.key} onclick={openPassengerModal}></lightning-button>
+                            <lightning-button label="Ajouter un passager" icon-name="utility:add" size="small" data-key={veh.key} onclick={openPassengerForm} disabled={veh.isPassengerFormOpen}></lightning-button>
                         </div>
                         
                         <template if:true={veh.passengers.length}>
@@ -39,10 +40,38 @@
                                             <lightning-icon icon-name="standard:user" size="x-small" class="slds-m-right_x-small"></lightning-icon> 
                                             {pass.Name__c} (CIN: {pass.CIN__c} - {pass.StateOfPerson__c})
                                         </span>
-                                        <lightning-button-icon icon-name="utility:delete" variant="bare" data-vehkey={veh.key} data-passkey={pass.key} onclick={handleDeletePassenger}></lightning-button-icon>
+                                        <div>
+                                            <lightning-button-icon icon-name="utility:edit" variant="bare" data-vehkey={veh.key} data-passkey={pass.key} onclick={handleEditPassenger} class="slds-m-right_medium" title="Modifier ce passager"></lightning-button-icon>
+                                            <lightning-button-icon icon-name="utility:delete" variant="bare" data-vehkey={veh.key} data-passkey={pass.key} onclick={handleDeletePassenger} title="Supprimer ce passager"></lightning-button-icon>
+                                        </div>
                                     </li>
                                 </template>
                             </ul>
+                        </template>
+
+                        <template if:true={veh.isPassengerFormOpen}>
+                            <div class="slds-box slds-m-top_medium" style="background-color: white; border-top: 3px solid #5a1ba9;">
+                                <h3 class="slds-text-heading_small slds-m-bottom_medium">Saisie du passager</h3>
+                                <div class="slds-grid slds-wrap slds-gutters">
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input label="Nom & Prénom" data-passfield="Name__c" value={passengerData.Name__c} onchange={handlePassInputChange} required></lightning-input>
+                                        <lightning-combobox label="Civilité" options={civiliteOptions} data-passfield="Civilite__c" value={passengerData.Civilite__c} onchange={handlePassInputChange}></lightning-combobox>
+                                        <lightning-input label="CIN" data-passfield="CIN__c" value={passengerData.CIN__c} onchange={handlePassInputChange} required></lightning-input>
+                                        <lightning-combobox label="Pays" options={paysOptions} data-passfield="Pays__c" value={passengerData.Pays__c} onchange={handlePassInputChange} required></lightning-combobox>
+                                        <lightning-textarea label="Adresse" data-passfield="Adresse__c" value={passengerData.Adresse__c} onchange={handlePassInputChange}></lightning-textarea>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                        <lightning-input type="date" label="Date de naissance" data-passfield="BirthDay__c" value={passengerData.BirthDay__c} onchange={handlePassInputChange} required></lightning-input>
+                                        <lightning-combobox label="Situation familiale" options={situationOptions} data-passfield="MaritalStatus__c" value={passengerData.MaritalStatus__c} onchange={handlePassInputChange}></lightning-combobox>
+                                        <lightning-combobox label="Ville" options={villeOptions} data-passfield="Ville__c" value={passengerData.Ville__c} onchange={handlePassInputChange} required></lightning-combobox>
+                                        <lightning-combobox label="État passager" options={etatPersonneOptions} data-passfield="StateOfPerson__c" value={passengerData.StateOfPerson__c} onchange={handlePassInputChange} required></lightning-combobox>
+                                    </div>
+                                </div>
+                                <div class="slds-grid slds-grid_align-end slds-m-top_medium">
+                                    <button class="btn-secondary slds-m-right_small" onclick={closePassengerForm}>Annuler</button>
+                                    <button class="btn-primary" onclick={handleSavePassenger}>Enregistrer le passager</button>
+                                </div>
+                            </div>
                         </template>
                     </div>
                 </div>
@@ -62,7 +91,6 @@
                 <lightning-icon icon-name="utility:car" size="x-small" class="slds-m-right_small"></lightning-icon>
                 Information du véhicule
             </h3>
-            
             <div class="slds-grid slds-wrap slds-gutters">
                 <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
                     <lightning-combobox label="État véhicule" options={optionsEtat} value={formData.VehicleIsDamaged__c} data-field="VehicleIsDamaged__c" onchange={handleInputChange} required></lightning-combobox>
@@ -71,12 +99,10 @@
                     <lightning-input type="number" label="Nombre de passagers blessés" value={formData.NbDePassagerBlesses__c} data-field="NbDePassagerBlesses__c" onchange={handleInputChange} required></lightning-input>
                     <lightning-input label="Numéro de contrat d'assurance" value={formData.Numéro_de_contrat__c} data-field="Numéro_de_contrat__c" onchange={handleInputChange}></lightning-input>
                 </div>
-
                 <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
                     <lightning-combobox label="Adversaire assuré" options={optionsAssure} value={formData.Adversaire_Assure__c} data-field="Adversaire_Assure__c" onchange={handleInputChange} required></lightning-combobox>
                     <lightning-input label="Numéro d'immatriculation" value={formData.RegistrationNumber__c} data-field="RegistrationNumber__c" onchange={handleInputChange} required></lightning-input>
                     <lightning-input label="Marque" value={formData.Marque__c} data-field="Marque__c" onchange={handleInputChange} required></lightning-input>
-                    
                     <div class="slds-m-top_x-small">
                         <lightning-record-picker
                             label="Compagnie véhicule adverse"
@@ -88,35 +114,10 @@
                     </div>
                 </div>
             </div>
-
             <div class="slds-grid slds-grid_align-center slds-m-top_large">
                 <button class="btn-secondary slds-m-right_small" onclick={handleAnnuler}>Annuler</button>
-                <button class="btn-primary" onclick={handleAjouter}>Ajouter le véhicule</button>
+                <button class="btn-primary" onclick={handleAjouter}>Enregistrer le véhicule</button>
             </div>
         </div>
-    </template>
-
-    <template if:true={isPassengerModalOpen}>
-        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
-            <div class="slds-modal__container">
-                <header class="slds-modal__header">
-                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Fermer" onclick={closePassengerModal}>
-                        <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse" size="small"></lightning-icon>
-                    </button>
-                    <h2 class="slds-modal__title slds-hyphenate">Ajouter un passager adverse</h2>
-                </header>
-                <div class="slds-modal__content slds-p-around_medium">
-                    <lightning-input label="Nom" data-passfield="Nom__c" value={passengerData.Nom__c} onchange={handlePassInputChange} required></lightning-input>
-                    <lightning-input label="Prénom" data-passfield="Prenom__c" value={passengerData.Prenom__c} onchange={handlePassInputChange} required></lightning-input>
-                    <lightning-input label="CIN" data-passfield="CIN__c" value={passengerData.CIN__c} onchange={handlePassInputChange} required></lightning-input>
-                    <lightning-combobox label="État de la personne" options={etatPersonneOptions} data-passfield="StateOfPerson__c" value={passengerData.StateOfPerson__c} onchange={handlePassInputChange} required></lightning-combobox>
-                </div>
-                <footer class="slds-modal__footer">
-                    <button class="slds-button slds-button_neutral" onclick={closePassengerModal}>Annuler</button>
-                    <button class="slds-button slds-button_brand" onclick={handleSavePassenger}>Enregistrer le passager</button>
-                </footer>
-            </div>
-        </section>
-        <div class="slds-backdrop slds-backdrop_open"></div>
     </template>
 </template>

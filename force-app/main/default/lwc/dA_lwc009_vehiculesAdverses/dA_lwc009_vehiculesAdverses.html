@@ -1,70 +1,78 @@
 <template>
-    <!-- ════ CARD PRINCIPALE ════ -->
-    <div class="pm-card">
+        <!-- ════ CARD PRINCIPALE ════ -->
+        <div class="pm-card">
 
-        <!-- HEADER -->
-        <div class="pm-header">
-            <div class="pm-header__left">
-                <div class="pm-header__icon-wrap">
-                    <lightning-icon icon-name="standard:vehicle" size="small"></lightning-icon>
-                </div>
-                <div>
-                    <h2 class="pm-header__title">Véhicules adverses</h2>
-                    <span class="pm-header__subtitle">Gestion des véhicules impliqués</span>
+            <!-- HEADER -->
+            <div class="pm-header">
+                <div class="pm-header__left">
+                    <div class="pm-header__icon-wrap">
+                        <lightning-icon icon-name="utility:truck" alternative-text="Véhicule" size="small"></lightning-icon>
+                    </div>
+                    <div>
+                        <h2 class="pm-header__title">Véhicules adverses</h2>
+                        <span class="pm-header__subtitle">Gestion des véhicules impliqués</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- BODY -->
-        <div class="pm-body">
+            <!-- BODY -->
+            <div class="pm-body">
 
-            <!-- Spinner -->
-            <template lwc:if={isLoading}>
-                <div class="pm-spinner-overlay">
-                    <lightning-spinner alternative-text="Chargement..." size="medium"></lightning-spinner>
-                </div>
-            </template>
-
-            <!-- Empty state -->
-            <template lwc:elseif={isEmpty}>
-                <div class="pm-empty">
-                    <div class="pm-empty__icon">
-                        <lightning-icon icon-name="standard:vehicle" size="large"></lightning-icon>
+                <!-- Spinner -->
+                <template lwc:if={isLoading}>
+                    <div class="pm-spinner-overlay">
+                        <lightning-spinner alternative-text="Chargement..." size="medium"></lightning-spinner>
                     </div>
-                    <p class="pm-empty__text">Il n'y a actuellement aucun véhicule à afficher.</p>
-                </div>
-            </template>
+                </template>
 
-            <!-- Tableau -->
-            <template lwc:else>
-                <div class="pm-table-wrap">
-                    <table class="pm-table">
-                        <thead>
-                            <tr>
-                                <th class="pm-th">Nom de véhicule</th>
-                                <th class="pm-th">État du véhicule</th>
-                                <th class="pm-th">N° d'immatriculation</th>
-                                <th class="pm-th">Marque</th>
-                                <th class="pm-th pm-th--center">Nb passagers</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template for:each={vehicules} for:item="v">
-                                <tr key={v.Id}>
-                                    <td class="pm-td pm-td--mono">{v.nomVehicule}</td>
-                                    <td class="pm-td">
-                                        <span class={v.etatBadgeClass}>{v.EtatVehicule__c}</span>
-                                    </td>
-                                    <td class="pm-td pm-td--mono">{v.immatriculation}</td>
-                                    <td class="pm-td pm-td--name">{v.marqueAffichee}</td>
-                                    <td class="pm-td pm-td--center">{v.NbDePassagerBlesses__c}</td>
+                <!-- Empty state -->
+                <template lwc:elseif={isEmpty}>
+                    <div class="pm-empty">
+                        <div class="pm-empty__icon">
+                            <lightning-icon icon-name="standard:vehicle" size="large"></lightning-icon>
+                        </div>
+                        <p class="pm-empty__text">Il n'y a actuellement aucun véhicule à afficher.</p>
+                    </div>
+                </template>
+
+                <!-- Tableau -->
+                <template lwc:else>
+                    <div class="pm-table-wrap">
+                        <table class="pm-table">
+                            <thead>
+                                <tr>
+                                    <th class="pm-th">Nom de véhicule</th>
+                                    <th class="pm-th">État du véhicule</th>
+                                    <th class="pm-th">N° d'immatriculation</th>
+                                    <th class="pm-th">Marque</th>
+                                    <th class="pm-th pm-th--center">Nb passagers</th>
                                 </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-            </template>
+                            </thead>
+                            <tbody>
+                                <template for:each={vehicules} for:item="v">
+                                    <tr key={v.Id}>
+                                        <!-- ══ LIEN NAVIGATION INTERNE VERS LE VEHICULE ══ -->
+                                        <td class="pm-td pm-td--mono">
+                                            <a href="javascript:void(0)"
+                                            class="pm-link"
+                                            data-vehicule-id={v.vehiculeId}
+                                            onclick={handleNavigateToVehicule}>
+                                                {v.nomVehicule}
+                                            </a>
+                                        </td>
+                                        <td class="pm-td">
+                                            <span class={v.etatBadgeClass}>{v.EtatVehicule__c}</span>
+                                        </td>
+                                        <td class="pm-td pm-td--mono">{v.immatriculation}</td>
+                                        <td class="pm-td pm-td--name">{v.marqueAffichee}</td>
+                                        <td class="pm-td pm-td--center">{v.NbDePassagerBlesses__c}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
 
+            </div>
         </div>
-    </div>
-</template>
+    </template>

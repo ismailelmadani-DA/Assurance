@@ -1,38 +1,38 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import getPicklistValues from '@salesforce/apex/ClaimSearchController.getPicklistValues';
-// IMPORT POUR LES NOTIFICATIONS TOAST
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 export default class Lwc011_PassagersAssure extends LightningElement {
     @api claimSummary;
-    
-    // --- Liste des passagers ajoutés ---
+
+    // Recevoir les données sauvegardées du parent
+    @api
+    get savedPassengers() {
+        return this._savedPassengers;
+    }
+    set savedPassengers(value) {
+        if (value && value.length > 0) {
+            this._savedPassengers = value;
+            this.passengers = [...value];
+        }
+    }
+    _savedPassengers = [];
+
     @track passengers = [];
-    
-    // --- État du formulaire ---
     @track isFormVisible = false;
-    
-    // --- Modèle pour un nouveau passager ---
+    currentPassengerKey = null;
+
     @track newPassager = {
-        Name__c: '', 
-        CIN__c: '',
-        Civilite__c: '',
-        BirthDay__c: null,
-        MaritalStatus__c: '',
-        Pays__c: '',
-        Ville__c: '',
-        Adresse__c: '',
-        StateOfPerson__c: ''
+        Name__c: '', CIN__c: '', Civilite__c: '', BirthDay__c: null,
+        MaritalStatus__c: '', Pays__c: '', Ville__c: '', Adresse__c: '', StateOfPerson__c: ''
     };
 
-    // --- Options pour les listes déroulantes ---
-    @track civilityOptions = []; 
+    @track civilityOptions = [];
     @track paysOptions = [];
     @track villeOptions = [];
-    @track maritalOptions = []; 
+    @track maritalOptions = [];
     @track stateOptions = [];
 
-    // --- Récupération des valeurs de Picklist via Apex ---
     @wire(getPicklistValues, { objectName: 'Passager__c', fieldName: 'Civilite__c' })
     wiredCiv({ data }) { if (data) this.civilityOptions = data; }
 
@@ -48,13 +48,11 @@ export default class Lwc011_PassagersAssure extends LightningElement {
     @wire(getPicklistValues, { objectName: 'Passager__c', fieldName: 'MaritalStatus__c' })
     wiredMarital({ data }) { if (data) this.maritalOptions = data; }
 
-    // --- Actions sur le formulaire ---
-    showForm() { 
-        this.isFormVisible = true;
-    }
-    
-    hideForm() { 
-        this.isFormVisible = false; 
+    showForm() { this.isFormVisible = true; }
+
+    hideForm() {
+        this.isFormVisible = false;
+        this.currentPassengerKey = null;
         this.resetForm();
     }
 
@@ -71,40 +69,50 @@ export default class Lwc011_PassagersAssure extends LightningElement {
             }, true);
 
         if (allValid) {
-            const newEntry = { ...this.newPassager, key: Date.now() };
-            this.passengers = [...this.passengers, newEntry];
-            
-            // DÉCLENCHEMENT DU TOAST DE SUCCÈS
-            this.dispatchEvent(
-                new ShowToastEvent({
-                    title: 'Succès',
-                    message: 'Le passager a été ajouté à la liste.',
-                    variant: 'success',
-                })
-            );
-            
+            if (this.currentPassengerKey) {
+                this.passengers = this.passengers.map(p => {
+                    if (p.key.toString() === this.currentPassengerKey.toString()) {
+                        return { ...this.newPassager, key: p.key };
+                    }
+                    return p;
+                });
+            } else {
+                const newEntry = { ...this.newPassager, key: Date.now() };
+                this.passengers = [...this.passengers, newEntry];
+            }
+
+            this.dispatchEvent(new ShowToastEvent({
+                title: 'Succès',
+                message: this.currentPassengerKey ? 'Passager mis à jour.' : 'Passager ajouté.',
+                variant: 'success'
+            }));
+
             this.resetForm();
             this.hideForm();
             this.notifyParent();
         }
     }
 
-    // --- NOUVELLE MÉTHODE : Suppression d'un passager ---
+    handleEdit(event) {
+        const keyToEdit = event.currentTarget.dataset.key;
+        this.currentPassengerKey = keyToEdit;
+        const passengerToEdit = this.passengers.find(p => p.key.toString() === keyToEdit.toString());
+        if (passengerToEdit) {
+            this.newPassager = { ...passengerToEdit };
+            this.isFormVisible = true;
+        }
+    }
+
     handleDelete(event) {
-        // On récupère la clé du passager via le dataset du bouton cliqué
         const keyToDelete = event.currentTarget.dataset.key;
-        
-        // On filtre la liste pour ne garder que les passagers dont la clé est différente
         this.passengers = this.passengers.filter(p => p.key.toString() !== keyToDelete.toString());
-        
-        // On notifie le parent de la mise à jour
         this.notifyParent();
     }
 
     resetForm() {
-        this.newPassager = { 
-            Name__c: '', CIN__c: '', Civilite__c: '', BirthDay__c: null, 
-            MaritalStatus__c: '', Pays__c: '', Ville__c: '', Adresse__c: '', StateOfPerson__c: '' 
+        this.newPassager = {
+            Name__c: '', CIN__c: '', Civilite__c: '', BirthDay__c: null,
+            MaritalStatus__c: '', Pays__c: '', Ville__c: '', Adresse__c: '', StateOfPerson__c: ''
         };
     }
 
@@ -112,15 +120,8 @@ export default class Lwc011_PassagersAssure extends LightningElement {
         this.dispatchEvent(new CustomEvent('passengersupdate', { detail: this.passengers }));
     }
 
-    @api validate() {
-        return true;
-    }
-    
-    get passengersCount() {
-        return this.passengers.length;
-    }
+    @api validate() { return true; }
 
-    get hasPassengers() {
-        return this.passengers.length > 0;
-    }
+    get passengersCount() { return this.passengers.length; }
+    get hasPassengers() { return this.passengers.length > 0; }
 }

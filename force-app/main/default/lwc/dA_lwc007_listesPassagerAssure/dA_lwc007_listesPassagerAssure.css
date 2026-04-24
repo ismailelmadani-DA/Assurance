@@ -608,6 +608,7 @@
 /* ════════════════════════════════════════
    DRIVER BADGE
 ════════════════════════════════════════ */
+
 .pm-badge {
     display: inline-flex;
     align-items: center;
@@ -617,15 +618,32 @@
     border-radius: 50%;
 }
 
-.pm-badge--driver { background: #3a9e60; color: var(--white); box-shadow: 0 2px 6px rgba(58, 158, 96, .4); }
-.pm-badge--no { color: var(--text-muted); font-size: .85rem; }
-.pm-badge--non-driver {
-    background: var(--pm-red);
+.pm-badge--driver {
+    background: #3a9e60;
     color: var(--white);
-    box-shadow: 0 2px 6px rgba(192, 57, 43, .4);
+    box-shadow: 0 2px 6px rgba(58, 158, 96, .4);
 }
 
+/* Tiret pour les non-conducteurs */
+.pm-driver-dash {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
 
+    font-size: 1.55rem;
+    font-weight: 900;
+    line-height: 1;
+
+    color: var(--text-mid);
+    transform: translateY(-1px);
+}
+
+/* Effet hover comme les lignes */
+.pm-table tbody tr:hover .pm-driver-dash {
+    color: var(--wafa-green);
+}
 /* ════════════════════════════════════════
    ROW ACTIONS
 ════════════════════════════════════════ */
