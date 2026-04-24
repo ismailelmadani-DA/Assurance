@@ -39,7 +39,7 @@ export default class DA_lwc001_GenericDataTable extends NavigationMixin(Lightnin
     @api orderDirection = 'DESC';
     @api pageSize = 10;
     @api limitSize = 200;
-    @api clickableField = '';          // ex: "CaseNumber" ou "Id" (rend la cellule cliquable)
+    @api clickableField = '';          // ex: "CaseNumber,Account.Name" (rend les cellules cliquables, séparées par virgule)
     @api statusField = '';             // ex: "Status" — pour les badges colorés
     @api showRecordCount = false;
 
@@ -56,6 +56,9 @@ export default class DA_lwc001_GenericDataTable extends NavigationMixin(Lightnin
 
     _sortBy = '';
     _sortDirection = 'desc';
+    get _clickableFields() {
+        return (this.clickableField || '').split(',').map(f => f.trim()).filter(Boolean);
+    }
     _picklistLabels = {};              // { fieldApiName: { value: label } }
     _fieldsMeta = [];                  // métadonnées des champs
     _configReady = false;
@@ -210,9 +213,9 @@ export default class DA_lwc001_GenericDataTable extends NavigationMixin(Lightnin
                 }
             });
 
-            // Colonne cliquable (ex: CaseNumber → lien vers record)
-            row._clickableValue = this.clickableField ? row[this.clickableField] : null;
-            row._clickableField = this.clickableField || null;
+            // Colonnes cliquables
+            row._clickableValue = this._clickableFields.length > 0 ? row[this._clickableFields[0]] : null;
+            row._clickableField = this._clickableFields.length > 0 ? this._clickableFields[0] : null;
 
             // Badges de statut
             if (this.statusField) {
@@ -234,7 +237,7 @@ export default class DA_lwc001_GenericDataTable extends NavigationMixin(Lightnin
         return this._fieldsMeta.map(meta => {
             const apiName = meta.apiName;
             const value = row[apiName];
-            const isClickable = this.clickableField === apiName;
+            const isClickable = this._clickableFields.includes(apiName);
 
             // Résoudre l'Id pour la navigation (si la valeur cliquable est dans ce champ)
             let navigateId = record.Id;
