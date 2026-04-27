@@ -7,6 +7,6 @@ public with sharing class DA_HistoriquesSinistresController {
 
     @AuraEnabled(cacheable=true)
     public static List<ClaimParticipant__c> getHistoriques(Id accountId) {
-        return DM_ClaimParticipant.getByAccountId(FIELDS, accountId);
+        return DM005_ClaimParticipant.getByAccountId(FIELDS, accountId);
     }
 }

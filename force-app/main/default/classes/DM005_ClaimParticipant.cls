@@ -1,4 +1,4 @@
-public with sharing class DM_ClaimParticipant {
+public with sharing class DM005_ClaimParticipant {
 
     private static final String CLAIM_PARTICIPANT = 'ClaimParticipant__c';
 
