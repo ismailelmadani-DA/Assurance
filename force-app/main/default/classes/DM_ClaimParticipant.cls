@@ -14,17 +14,17 @@ public with sharing class DM_ClaimParticipant {
     public static List<ClaimParticipant__c> getByClaimId(String fields, Id claimId) {
         String queryFields = String.isNotBlank(fields) ? fields : FIELDS;
         String conditions = 'Claim__c = \'' + String.escapeSingleQuotes(String.valueOf(claimId)) + '\'';
-        return (List<ClaimParticipant__c>) DM_DataManager.query(queryFields, CLAIM_PARTICIPANT, conditions, 'CreatedDate DESC', null);
+        return (List<ClaimParticipant__c>) DA_Utility.query(queryFields, CLAIM_PARTICIPANT, conditions, 'CreatedDate DESC', null);
     }
 
     public static List<ClaimParticipant__c> getByAccountId(String fields, Id accountId) {
         String queryFields = String.isNotBlank(fields) ? fields : FIELDS;
         String conditions = 'ParticipantAccount__c = \'' + String.escapeSingleQuotes(String.valueOf(accountId)) + '\'';
-        return (List<ClaimParticipant__c>) DM_DataManager.query(queryFields, CLAIM_PARTICIPANT, conditions, 'CreatedDate DESC', null);
+        return (List<ClaimParticipant__c>) DA_Utility.query(queryFields, CLAIM_PARTICIPANT, conditions, 'CreatedDate DESC', null);
     }
 
     public static ClaimParticipant__c getById(String fields, Id recordId) {
         String queryFields = String.isNotBlank(fields) ? fields : FIELDS;
-        return (ClaimParticipant__c) DM_DataManager.getById(queryFields, CLAIM_PARTICIPANT, recordId);
+        return (ClaimParticipant__c) DA_Utility.getById(queryFields, CLAIM_PARTICIPANT, recordId);
     }
 }

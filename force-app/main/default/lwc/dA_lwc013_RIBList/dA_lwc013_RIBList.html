@@ -1,0 +1,98 @@
+<template>
+    <div class="rib-card">
+
+        <!-- HEADER -->
+        <div class="rib-header">
+            <div class="rib-header__left">
+                <div class="rib-header__icon-wrap">
+                    <lightning-icon icon-name="standard:currency" size="small" variant="inverse"></lightning-icon>
+                </div>
+                <div>
+                    <h2 class="rib-header__title">RIB</h2>
+                    <span class="rib-header__subtitle">{totalLabel}</span>
+                </div>
+            </div>
+            <button class="rib-refresh-btn" onclick={handleRefresh} title="Actualiser">
+                <lightning-icon icon-name="utility:refresh" size="xx-small" variant="inverse"></lightning-icon>
+            </button>
+        </div>
+
+        <!-- SPINNER -->
+        <template if:true={isLoading}>
+            <div class="rib-spinner-overlay">
+                <lightning-spinner alternative-text="Chargement..." size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- CONTENU -->
+        <div class="rib-body">
+
+            <!-- TABLE -->
+            <template if:true={hasRecords}>
+                <div class="rib-table-wrap">
+                    <table class="rib-table">
+                        <thead>
+                            <tr>
+                                <th class="rib-th">RIB</th>
+                                <th class="rib-th">Banque</th>
+                                <th class="rib-th">Code Banque</th>
+                                <th class="rib-th">Actif</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={filteredRecords} for:item="rec">
+                                <tr key={rec.id}>
+                                    <td class="rib-td">
+                                        <a class="rib-link" href="javascript:void(0)"
+                                            data-id={rec.id} onclick={navigateToRecord}>
+                                            {rec.rib}
+                                        </a>
+                                    </td>
+                                    <td class="rib-td">{rec.banque}</td>
+                                    <td class="rib-td">{rec.codeBanque}</td>
+                                    <td class="rib-td">
+                                        <span class={rec.actifClass}>{rec.actifLabel}</span>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PAGINATION -->
+                <template if:true={showPagination}>
+                    <div class="rib-pagination">
+                        <button class={prevClass} onclick={prevPage} disabled={isFirstPage}>
+                            <lightning-icon icon-name="utility:chevronleft" size="xx-small"></lightning-icon>
+                            Pr&#233;c.
+                        </button>
+                        <span class="rib-page-info">Page {currentPage} / {totalPages}</span>
+                        <button class={nextClass} onclick={nextPage} disabled={isLastPage}>
+                            Suiv.
+                            <lightning-icon icon-name="utility:chevronright" size="xx-small"></lightning-icon>
+                        </button>
+                    </div>
+                </template>
+            </template>
+
+            <!-- ETAT VIDE -->
+            <template if:false={hasRecords}>
+                <div class="rib-empty">
+                    <div class="rib-empty__icon">
+                        <lightning-icon icon-name="standard:currency" size="large"></lightning-icon>
+                    </div>
+                    <p class="rib-empty__text">Aucun RIB &#224; afficher.</p>
+                </div>
+            </template>
+
+            <!-- ERREUR -->
+            <template if:true={hasError}>
+                <div class="rib-alert rib-alert--error">
+                    <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                    <span>{errorMessage}</span>
+                </div>
+            </template>
+
+        </div>
+    </div>
+</template>
