@@ -113,6 +113,15 @@
                 default="true"
             />
 
+            <!-- Icône -->
+            <property
+                name="iconName"
+                type="String"
+                label="Nom de l'icône (SLDS)"
+                description="Ex: standard:case, standard:account, custom:custom1. Par défaut: standard:list."
+                default="standard:list"
+            />
+
            
  
         </targetConfig>

@@ -42,6 +42,7 @@ export default class DA_lwc001_GenericDataTable extends NavigationMixin(Lightnin
     @api clickableField = '';          // ex: "CaseNumber,Account.Name" (rend les cellules cliquables, séparées par virgule)
     @api statusField = '';             // ex: "Status" — pour les badges colorés
     @api showRecordCount = false;
+    @api iconName = 'standard:list';   // ex: "standard:case", "custom:custom1"
 
     // ─── Runtime state ────────────────────────────────────────────────────────
     @track _records = [];              // tous les enregistrements transformés

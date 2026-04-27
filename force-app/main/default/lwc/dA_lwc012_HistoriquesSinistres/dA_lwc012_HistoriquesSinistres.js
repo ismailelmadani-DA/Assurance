@@ -1,5 +1,6 @@
 import { LightningElement, api, track, wire } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
+import { refreshApex } from '@salesforce/apex';
 import getHistoriques from '@salesforce/apex/DA_HistoriquesSinistresController.getHistoriques';
 
 const PAGE_SIZE = 10;
@@ -15,18 +16,26 @@ export default class DA_lwc012_HistoriquesSinistres extends NavigationMixin(Ligh
     @track errorMessage = '';
     @track currentPage = 1;
 
+    _wiredResult;
+
     @wire(getHistoriques, { accountId: '$recordId' })
-    wiredHistoriques({ data, error }) {
+    wiredHistoriques(result) {
+        this._wiredResult = result;
+        const { data, error } = result;
         this.isLoading = true;
         if (data) {
             this.records = data.map(r => ({
-                ...r,
-                claimUrl: r.claimId ? `/lightning/r/${r.claimId}/view` : '',
-                vehiculeUrl: r.vehiculeId ? `/lightning/r/${r.vehiculeId}/view` : '',
-                hasVehicule: !!r.vehiculeId,
-                hasClaim: !!r.claimId,
-                displayClaimNumber: r.claimNumber || '',
-                stateClass: this._stateClass(r.etat)
+                id: r.Id,
+                claimId: r.Claim__c,
+                claimNumber: r.Claim__r?.Name || '',
+                vehiculeId: r.Vehicule__c,
+                immatriculation: r.Vehicule__r?.RegistrationNumber__c || '',
+                type: r.Roles__c || '',
+                etat: r.StateOfPerson__c || '',
+                hasClaim: !!r.Claim__c,
+                hasVehicule: !!r.Vehicule__c,
+                displayClaimNumber: r.Claim__r?.Name || '',
+                stateClass: this._stateClass(r.StateOfPerson__c)
             }));
             this._applyPage();
             this.hasError = false;
@@ -62,6 +71,11 @@ export default class DA_lwc012_HistoriquesSinistres extends NavigationMixin(Ligh
     get isLastPage() { return this.currentPage === this.totalPages; }
     get prevClass() { return `hs-btn hs-btn--page${this.isFirstPage ? ' hs-btn--disabled' : ''}`; }
     get nextClass() { return `hs-btn hs-btn--page${this.isLastPage ? ' hs-btn--disabled' : ''}`; }
+
+    handleRefresh() {
+        this.isLoading = true;
+        refreshApex(this._wiredResult).finally(() => { this.isLoading = false; });
+    }
 
     prevPage() { if (!this.isFirstPage) { this.currentPage--; this._applyPage(); } }
     nextPage() { if (!this.isLastPage) { this.currentPage++; this._applyPage(); } }
