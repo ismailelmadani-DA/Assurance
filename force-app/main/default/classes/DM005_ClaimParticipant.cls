@@ -23,6 +23,14 @@ public with sharing class DM005_ClaimParticipant {
         return (List<ClaimParticipant__c>) DA_Utility.query(queryFields, CLAIM_PARTICIPANT, conditions, 'CreatedDate DESC', null);
     }
 
+    public static List<ClaimParticipant__c> getByClaimAndRole(String fields, Id claimId, String role) {
+        String queryFields = String.isNotBlank(fields) ? fields : FIELDS;
+        String safeId = String.escapeSingleQuotes(String.valueOf(claimId));
+        String safeRole = String.escapeSingleQuotes(role);
+        String conditions = 'Claim__c = \'' + safeId + '\' AND Roles__c = \'' + safeRole + '\'';
+        return (List<ClaimParticipant__c>) DA_Utility.query(queryFields, CLAIM_PARTICIPANT, conditions, 'CreatedDate DESC', null);
+    }
+
     public static ClaimParticipant__c getById(String fields, Id recordId) {
         String queryFields = String.isNotBlank(fields) ? fields : FIELDS;
         return (ClaimParticipant__c) DA_Utility.getById(queryFields, CLAIM_PARTICIPANT, recordId);

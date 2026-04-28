@@ -24,27 +24,6 @@ public with sharing class DA_AutrePartieAdverseController {
         'ParticipantAccount__r.Prenom__c, ParticipantAccount__r.Civility__c, ' +
         'ParticipantAccount__r.Email__c, ParticipantAccount__r.Phone, ParticipantAccount__r.MoyenNotification__c';
 
-    private static Id resolveClaimId(Id recordId) {
-        if (recordId == null) {
-            return null;
-        }
-        String prefix = String.valueOf(recordId).substring(0, 3);
-        Schema.SObjectType claimType = Claim__c.SObjectType;
-        String claimPrefix = claimType.getDescribe().getKeyPrefix();
-        if (prefix == claimPrefix) {
-            return recordId;
-        }
-        List<SObject> claims = DA_Utility.query(
-            'Id', 'Claim__c',
-            'Case__c = \'' + String.escapeSingleQuotes(String.valueOf(recordId)) + '\'',
-            'CreatedDate DESC', 1
-        );
-        if (!claims.isEmpty()) {
-            return claims[0].Id;
-        }
-        return null;
-    }
-
     private static String friendlyError(Exception e) {
         String msg = e.getMessage();
         if (msg == null) {
@@ -83,16 +62,7 @@ public with sharing class DA_AutrePartieAdverseController {
             throw new AuraHandledException('L\'identifiant du sinistre est requis.');
         }
         try {
-            Id resolvedId = resolveClaimId(claimId);
-            if (resolvedId == null) {
-                throw new AuraHandledException('Aucun sinistre trouvé pour cet enregistrement.');
-            }
-            String safeId = String.escapeSingleQuotes(String.valueOf(resolvedId));
-            return DA_Utility.query(
-                PARTICIPANT_LIST_FIELDS, CLAIM_PARTICIPANT,
-                'Claim__c = \'' + safeId + '\' AND Roles__c = \'' + ROLE_AUTRE_PARTIE + '\'',
-                'CreatedDate DESC', null
-            );
+            return DM005_ClaimParticipant.getByClaimAndRole(PARTICIPANT_LIST_FIELDS, claimId, ROLE_AUTRE_PARTIE);
         } catch (AuraHandledException ae) {
             throw ae;
         } catch (Exception e) {
@@ -172,11 +142,7 @@ public with sharing class DA_AutrePartieAdverseController {
             return false;
         }
         try {
-            Id resolvedId = resolveClaimId(claimId);
-            if (resolvedId == null) {
-                return false;
-            }
-            String safeClaimId = String.escapeSingleQuotes(String.valueOf(resolvedId));
+            String safeClaimId = String.escapeSingleQuotes(String.valueOf(claimId));
             String safeCin = String.escapeSingleQuotes(cin.trim());
             String conditions = 'Claim__c = \'' + safeClaimId + '\' AND Roles__c = \'' + ROLE_AUTRE_PARTIE + '\''
                 + ' AND ParticipantCNI__c = \'' + safeCin + '\'';
@@ -207,13 +173,6 @@ public with sharing class DA_AutrePartieAdverseController {
         }
 
         try {
-            Id resolvedClaimId = resolveClaimId(claimId);
-            if (resolvedClaimId == null) {
-                response.put('success', false);
-                response.put('message', 'Aucun sinistre trouvé pour cet enregistrement.');
-                return response;
-            }
-
             // Validate state transition on update
             if (isUpdateMode && formData.get('participantId') != null) {
                 String newEtat = (String) formData.get('etatPassager');
@@ -239,7 +198,7 @@ public with sharing class DA_AutrePartieAdverseController {
             // Validate dates
             List<SObject> claims = DA_Utility.query(
                 'Id, CreatedDate', 'Claim__c',
-                'Id = \'' + String.escapeSingleQuotes(String.valueOf(resolvedClaimId)) + '\'',
+                'Id = \'' + String.escapeSingleQuotes(String.valueOf(claimId)) + '\'',
                 null, 1
             );
             if (!claims.isEmpty()) {
@@ -273,7 +232,7 @@ public with sharing class DA_AutrePartieAdverseController {
                 participant = new ClaimParticipant__c(Id = (Id) formData.get('participantId'));
             } else {
                 participant = new ClaimParticipant__c();
-                participant.Claim__c = resolvedClaimId;
+                participant.Claim__c = claimId;
                 participant.Roles__c = ROLE_AUTRE_PARTIE;
             }
 
