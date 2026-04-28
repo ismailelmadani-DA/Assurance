@@ -35,4 +35,27 @@ public with sharing class DM005_ClaimParticipant {
         String queryFields = String.isNotBlank(fields) ? fields : FIELDS;
         return (ClaimParticipant__c) DA_Utility.getById(queryFields, CLAIM_PARTICIPANT, recordId);
     }
+
+    public static Boolean existsByClaimRoleAndCIN(Id claimId, String role, String cin, Id excludeId) {
+        String safeClaimId = String.escapeSingleQuotes(String.valueOf(claimId));
+        String safeRole = String.escapeSingleQuotes(role);
+        String safeCin = String.escapeSingleQuotes(cin.trim());
+        String conditions = 'Claim__c = \'' + safeClaimId + '\' AND Roles__c = \'' + safeRole + '\''
+            + ' AND ParticipantCNI__c = \'' + safeCin + '\'';
+        if (excludeId != null) {
+            conditions += ' AND Id != \'' + String.escapeSingleQuotes(String.valueOf(excludeId)) + '\'';
+        }
+        List<SObject> existing = DA_Utility.query('Id', CLAIM_PARTICIPANT, conditions, null, 1);
+        return !existing.isEmpty();
+    }
+
+    public static void deleteById(Id recordId) {
+        DA_Utility.deleteById(CLAIM_PARTICIPANT, recordId);
+    }
+
+    public static Claim__c getClaimById(String fields, Id claimId) {
+        String safeId = String.escapeSingleQuotes(String.valueOf(claimId));
+        List<SObject> results = DA_Utility.query(fields, 'Claim__c', 'Id = \'' + safeId + '\'', null, 1);
+        return results.isEmpty() ? null : (Claim__c) results[0];
+    }
 }

@@ -1,6 +1,5 @@
 public with sharing class DA_AutrePartieAdverseController {
 
-    private static final String CLAIM_PARTICIPANT = 'ClaimParticipant__c';
     private static final String ROLE_AUTRE_PARTIE = 'Autres partie';
 
     private static final String PARTICIPANT_LIST_FIELDS =
@@ -76,9 +75,7 @@ public with sharing class DA_AutrePartieAdverseController {
             throw new AuraHandledException('L\'identifiant du participant est requis.');
         }
         try {
-            ClaimParticipant__c p = (ClaimParticipant__c) DA_Utility.getById(
-                PARTICIPANT_DETAIL_FIELDS, CLAIM_PARTICIPANT, participantId
-            );
+            ClaimParticipant__c p = DM005_ClaimParticipant.getById(PARTICIPANT_DETAIL_FIELDS, participantId);
             if (p == null) {
                 throw new AuraHandledException('Participant introuvable.');
             }
@@ -142,15 +139,7 @@ public with sharing class DA_AutrePartieAdverseController {
             return false;
         }
         try {
-            String safeClaimId = String.escapeSingleQuotes(String.valueOf(claimId));
-            String safeCin = String.escapeSingleQuotes(cin.trim());
-            String conditions = 'Claim__c = \'' + safeClaimId + '\' AND Roles__c = \'' + ROLE_AUTRE_PARTIE + '\''
-                + ' AND ParticipantCNI__c = \'' + safeCin + '\'';
-            if (excludeId != null) {
-                conditions += ' AND Id != \'' + String.escapeSingleQuotes(String.valueOf(excludeId)) + '\'';
-            }
-            List<SObject> existing = DA_Utility.query('Id', CLAIM_PARTICIPANT, conditions, null, 1);
-            return !existing.isEmpty();
+            return DM005_ClaimParticipant.existsByClaimRoleAndCIN(claimId, ROLE_AUTRE_PARTIE, cin, excludeId);
         } catch (Exception e) {
             return false;
         }
@@ -176,8 +165,8 @@ public with sharing class DA_AutrePartieAdverseController {
             // Validate state transition on update
             if (isUpdateMode && formData.get('participantId') != null) {
                 String newEtat = (String) formData.get('etatPassager');
-                ClaimParticipant__c existing = (ClaimParticipant__c) DA_Utility.getById(
-                    'Id, StateOfPerson__c', CLAIM_PARTICIPANT, (Id) formData.get('participantId')
+                ClaimParticipant__c existing = DM005_ClaimParticipant.getById(
+                    'Id, StateOfPerson__c', (Id) formData.get('participantId')
                 );
                 if (existing != null && String.isNotBlank(existing.StateOfPerson__c) && String.isNotBlank(newEtat)) {
                     String oldEtat = existing.StateOfPerson__c;
@@ -196,14 +185,10 @@ public with sharing class DA_AutrePartieAdverseController {
             }
 
             // Validate dates
-            List<SObject> claims = DA_Utility.query(
-                'Id, CreatedDate', 'Claim__c',
-                'Id = \'' + String.escapeSingleQuotes(String.valueOf(claimId)) + '\'',
-                null, 1
-            );
-            if (!claims.isEmpty()) {
-                Date sinistreDate = claims[0].getPopulatedFieldsAsMap().containsKey('CreatedDate')
-                    ? ((Datetime) claims[0].get('CreatedDate')).date()
+            Claim__c claim = DM005_ClaimParticipant.getClaimById('Id, CreatedDate', claimId);
+            if (claim != null) {
+                Date sinistreDate = claim.CreatedDate != null
+                    ? claim.CreatedDate.date()
                     : Date.today();
 
                 String dateNaissStr = (String) formData.get('dateNaissance');
@@ -312,7 +297,7 @@ public with sharing class DA_AutrePartieAdverseController {
             return response;
         }
         try {
-            DA_Utility.deleteById(CLAIM_PARTICIPANT, participantId);
+            DM005_ClaimParticipant.deleteById(participantId);
             response.put('success', true);
             response.put('message', 'Autre partie adverse supprimée avec succès.');
             return response;
