@@ -1,10 +1,11 @@
 import { LightningElement, api, track, wire } from 'lwc';
+import { NavigationMixin } from 'lightning/navigation';
 import getPassengers from '@salesforce/apex/PassagerController.getPassengers';
 import { refreshApex } from '@salesforce/apex';
 
 const PAGE_SIZE = 10;
 
-export default class DA_lwc007_listesPassagerAssure extends LightningElement {
+export default class DA_lwc007_listesPassagerAssure extends NavigationMixin(LightningElement) {
     @api recordId;
 
     @track records = [];
@@ -63,7 +64,17 @@ export default class DA_lwc007_listesPassagerAssure extends LightningElement {
         }
     }
 
-    // ✅ VERSION FINALE
+    handleNavigateToPassenger(event) {
+        const recordId = event.currentTarget.dataset.id;
+        this[NavigationMixin.Navigate]({
+            type: 'standard__recordPage',
+            attributes: {
+                recordId: recordId,
+                actionName: 'view'
+            }
+        });
+    }
+
     _enrichRecord(r) {
         const stateClass = {
             'Blessé': 'pm-state pm-state--blesse',
@@ -76,7 +87,8 @@ export default class DA_lwc007_listesPassagerAssure extends LightningElement {
         return {
             ...r,
             stateClass,
-            displayName
+            displayName,
+            recordUrl: '/' + r.Id
         };
     }
 

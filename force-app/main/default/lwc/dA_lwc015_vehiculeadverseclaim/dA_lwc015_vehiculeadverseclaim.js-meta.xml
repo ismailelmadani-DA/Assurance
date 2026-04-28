@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>66.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <!-- C'est ce qui permet de le voir sur la page de détail d'un record (Sinistre) -->
+        <target>lightning__RecordPage</target>
+        <!-- Optionnel : permet de le mettre sur une page d'application -->
+        <target>lightning__AppPage</target>
+        <!-- Optionnel : permet de le mettre sur la page d'accueil -->
+        <target>lightning__HomePage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__RecordPage">
+            <!-- Cela permet de configurer la propriété 'isReadonly' directement depuis l'interface Salesforce -->
+            <property name="isReadonly" type="Boolean" default="false" label="Mode lecture seule" />
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

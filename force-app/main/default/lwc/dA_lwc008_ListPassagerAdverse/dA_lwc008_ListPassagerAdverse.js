@@ -1,10 +1,10 @@
 import { LightningElement, api, track } from 'lwc';
-// ✅ CORRECT
+import { NavigationMixin } from 'lightning/navigation'; // ← 1. AJOUTER cet import
 import getPassagersAdverses from '@salesforce/apex/DA_LWC008_ListPassagerAdverseController.getPassagersAdverses';
 
 const PAGE_SIZE = 10;
 
-export default class DA_lwc008_ListPassagerAdverse extends LightningElement {
+export default class DA_lwc008_ListPassagerAdverse extends NavigationMixin(LightningElement) { // ← 2. MODIFIER cette ligne
 
     @api recordId;
     @api isReadonly = false;
@@ -35,18 +35,31 @@ export default class DA_lwc008_ListPassagerAdverse extends LightningElement {
         }
     }
 
-    _enrichRecord(r) {
-        const stateClass = {
-            'Blessé':  'pm-state pm-state--blesse',
-            'Décédé':  'pm-state pm-state--deces',
-            'Indemne': 'pm-state pm-state--indemne',
-        }[r.StateOfPerson__c] || 'pm-state pm-state--default';
+   _enrichRecord(r) {
+    const stateClass = {
+        'Blessé':  'pm-state pm-state--blesse',
+        'Décédé':  'pm-state pm-state--deces',
+        'Indemne': 'pm-state pm-state--indemne',
+    }[r.StateOfPerson__c] || 'pm-state pm-state--default';
 
-        return {
-            ...r,
-            stateClass,
-            RegistrationNumber__c: r.Vehicule__r?.RegistrationNumber__c || '—'
-        };
+    return {
+        ...r,
+        stateClass,
+        fullName: r.Name || '—',  // ✅ Name = vrai nom saisi
+        RegistrationNumber__c: r.Vehicule__r?.RegistrationNumber__c || '—'
+    };
+}
+
+    // ← 4. AJOUTER cette méthode
+    handleNameClick(event) {
+        const recordId = event.currentTarget.dataset.id;
+        this[NavigationMixin.Navigate]({
+            type: 'standard__recordPage',
+            attributes: {
+                recordId,
+                actionName: 'view'
+            }
+        });
     }
 
     _applyFilter() {

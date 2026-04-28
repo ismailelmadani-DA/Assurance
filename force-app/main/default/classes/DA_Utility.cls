@@ -113,6 +113,21 @@ public with sharing class DA_Utility {
         return record;
     }
 
+    public static SObject updateByRecordType(String sObjectName, String developerName, Id recordId, Map<String, Object> fieldValues) {
+        Id rtId = getRecordTypeId(sObjectName, developerName);
+        SObject record = Schema.getGlobalDescribe().get(sObjectName).newSObject(recordId);
+        if (rtId != null) {
+            record.put('RecordTypeId', rtId);
+        }
+        if (fieldValues != null) {
+            for (String fieldName : fieldValues.keySet()) {
+                record.put(fieldName, fieldValues.get(fieldName));
+            }
+        }
+        update record;
+        return record;
+    }
+
     public static Id getRecordTypeId(String objectName, String developerName) {
         try {
             if(String.isNotBlank(objectName) && String.isNotBlank(developerName)){
@@ -125,4 +140,15 @@ public with sharing class DA_Utility {
             return null;
         }
     }
+       /**
+     * @description      :   Récupère les informations de l’utilisateur courant (profil, habilitations, pays, responsable)
+     * @method Name      :   getCurrentUserInfo
+     * @Author           :   D&A Technologies
+     * @date             :   2026-02-07
+     * @return           :   User
+     * -------------------------------------------------------------------------------------------------
+     **/
+   // public static User getCurrentUserInfo(){
+       // return [SELECT Id, Name, Email, Profile.Name FROM User WHERE Id = :UserInfo.getUserId() limit 1];
+   // }
 }

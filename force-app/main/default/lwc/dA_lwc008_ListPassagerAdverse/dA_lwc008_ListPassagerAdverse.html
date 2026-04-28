@@ -67,7 +67,9 @@
                                         </template>
                                     </td>
                                     <td class="pm-td">{rec.Civilite__c}</td>
-                                    <td class="pm-td pm-td--name">{rec.Name}</td>
+                                    <td class="pm-td pm-td--name">
+    <a class="pm-link" data-id={rec.Id} onclick={handleNameClick}>{rec.fullName}</a>
+</td>
                                     <td class="pm-td pm-td--mono">{rec.CIN__c}</td>
                                     <td class="pm-td">{rec.RegistrationNumber__c}</td>
                                     <td class="pm-td">{rec.Pays__c}</td>

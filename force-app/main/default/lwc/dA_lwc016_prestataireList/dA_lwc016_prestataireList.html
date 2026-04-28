@@ -1,0 +1,458 @@
+<template>
+    <div class="pm-main-container">
+
+        <!-- ═══ HERO HEADER ═══ -->
+        <div class="pm-hero">
+            <div class="pm-hero__top">
+                <div class="pm-hero__title-block">
+                    <div class="pm-hero__icon-wrap">
+                        <lightning-icon icon-name="utility:people" size="small" variant="inverse"></lightning-icon>
+                    </div>
+                    <div>
+                        <h1 class="pm-hero__title">Réseau Prestataires</h1>
+                        <p class="pm-hero__subtitle">Gérez et paramétrez les prestataires de votre réseau</p>
+                    </div>
+                </div>
+                <button class="pm-btn pm-btn--add" onclick={handleAjouter}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px; margin-right:5px;">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Nouveau prestataire
+                </button>
+            </div>
+
+            <div class="pm-stats-separator"></div>
+
+            <div class="pm-stats-grid">
+                <div class="pm-stat-item pm-stat-item--total">
+                    <span class="pm-stat-item__label">Total</span>
+                    <span class="pm-stat-item__num">{totalCount}</span>
+                </div>
+                <div class="pm-stat-item">
+                    <span class="pm-stat-item__label">Médecins</span>
+                    <span class="pm-stat-item__num">{medecinCount}</span>
+                </div>
+                <div class="pm-stat-item">
+                    <span class="pm-stat-item__label">Garagistes</span>
+                    <span class="pm-stat-item__num">{garagisteCount}</span>
+                </div>
+                <div class="pm-stat-item">
+                    <span class="pm-stat-item__label">Experts</span>
+                    <span class="pm-stat-item__num">{expertCount}</span>
+                </div>
+                <div class="pm-stat-item">
+                    <span class="pm-stat-item__label">Avocats</span>
+                    <span class="pm-stat-item__num">{avocatCount}</span>
+                </div>
+                <div class="pm-stat-item">
+                    <span class="pm-stat-item__label">Cliniques</span>
+                    <span class="pm-stat-item__num">{cliniqueCount}</span>
+                </div>
+                <div class="pm-stat-item">
+                    <span class="pm-stat-item__label">Hôpitaux</span>
+                    <span class="pm-stat-item__num">{hopitalCount}</span>
+                </div>
+                <div class="pm-stat-item">
+                    <span class="pm-stat-item__label">Centres Radio</span>
+                    <span class="pm-stat-item__num">{centreRadioCount}</span>
+                </div>
+                <div class="pm-stat-item">
+                    <span class="pm-stat-item__label">Pharmacies</span>
+                    <span class="pm-stat-item__num">{pharmacieCount}</span>
+                </div>
+                <div class="pm-stat-item">
+                    <span class="pm-stat-item__label">Enquêteurs</span>
+                    <span class="pm-stat-item__num">{enqueteurCount}</span>
+                </div>
+            </div>
+        </div>
+        <!-- fin pm-hero -->
+
+        <!-- ═══ MAIN CARD ═══ -->
+        <div class="pm-card">
+
+            <!-- Toolbar -->
+            <div class="pm-toolbar">
+                <div class="pm-toolbar__left">
+                    <span class="pm-toolbar__title">Liste des prestataires</span>
+                </div>
+                <div class="pm-toolbar__right">
+                    <div class="pm-search-wrap">
+                        <svg class="pm-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <input
+                            type="search"
+                            placeholder="Rechercher par nom, code, type, téléphone, ville..."
+                            class="pm-search-input"
+                            oninput={handleSearch}
+                        />
+                    </div>
+
+                    <div class="pm-select-wrap" onclick={toggleDropdown}>
+                        <span class="pm-select-value">{selectedTypeLabel}</span>
+                        <svg class="pm-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m6 9 6 6 6-6"/>
+                        </svg>
+                        <template if:true={dropdownOpen}>
+                            <div class="pm-dropdown">
+                                <template for:each={typeOptions} for:item="opt">
+                                    <div key={opt.value}
+                                         class={opt.optionClass}
+                                         data-value={opt.value}
+                                         onclick={handleTypeFilter}>
+                                        {opt.label}
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            <!-- fin toolbar -->
+
+            <!-- Table -->
+            <div class="pm-body">
+                <div class="pm-table-wrap">
+                    <table class="pm-table">
+                        <thead>
+                            <tr>
+                                <th class="pm-th">Nom du prestataire</th>
+                                <th class="pm-th">Code</th>
+                                <th class="pm-th">Type</th>
+                                <th class="pm-th">Téléphone</th>
+                                <th class="pm-th">Ville</th>
+                                <th class="pm-th" style="text-align:center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={filteredPrestataires} for:item="row">
+                                <tr key={row.Id}>
+                                    <td class="pm-td">
+                                        <div style="display:flex; align-items:center; gap:10px;">
+                                            <div class={row.avatarClass}>{row.initials}</div>
+                                            <a class="pm-link" href="#" data-id={row.Id} onclick={handleNavigateToPrestataire}>
+                                                <b>{row.Name}</b>
+                                            </a>
+                                        </div>
+                                    </td>
+                                    <td class="pm-td" style="font-family:monospace">{row.Code}</td>
+                                    <td class="pm-td">
+                                        <span class={row.badgeClass}>{row.Type}</span>
+                                    </td>
+                                    <td class="pm-td">{row.Phone}</td>
+                                    <td class="pm-td">{row.Ville}</td>
+                                    <td class="pm-td" style="text-align:center">
+                                        <button class="pm-action-btn pm-action-btn--edit" 
+        onclick={handleRowAction} 
+        data-id={row.Id} 
+        title="Modifier">
+    <lightning-icon icon-name="utility:edit" size="xx-small"></lightning-icon>
+</button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Etat vide — DANS pm-body -->
+                <template if:false={hasRows}>
+                    <div class="pm-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="pm-empty-icon">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        <p>Aucun prestataire trouvé</p>
+                    </div>
+                </template>
+
+            </div>
+            <!-- fin pm-body -->
+
+            <!-- Pagination — DANS pm-card -->
+           <!-- Pagination -->
+<div class="pm-pagination">
+    <!-- Rows per page -->
+    <div class="pm-pagination__left">
+        
+        <div class="pm-select-wrap pm-select-wrap--small" onclick={togglePageSizeDropdown}>
+            <span class="pm-select-value">{pageSize}</span>
+            <svg class="pm-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m6 9 6 6 6-6"/>
+            </svg>
+            <template if:true={pageSizeDropdownOpen}>
+                <div class="pm-dropdown pm-dropdown--small">
+                    <template for:each={pageSizeOptions} for:item="opt">
+                        <div key={opt.value}
+                             class={opt.optionClass}
+                             data-value={opt.value}
+                             onclick={handlePageSizeChange}>
+                            {opt.label}
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+        <span class="pm-page-info-rows">{rowsInfo}</span>
+    </div>
+
+    <!-- Numéros de pages -->
+    <div class="pm-pagination__right">
+        <!-- « première page -->
+        <button class="pm-btn pm-btn--page" onclick={firstPage} disabled={isFirstPage} title="Première page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pm-btn-icon">
+                <path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/>
+            </svg>
+        </button>
+        <!-- < page précédente -->
+        <button class="pm-btn pm-btn--page" onclick={prevPage} disabled={isFirstPage} title="Page précédente">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pm-btn-icon">
+                <path d="m15 18-6-6 6-6"/>
+            </svg>
+        </button>
+
+        <!-- Numéros -->
+        <template for:each={pageNumbers} for:item="pg">
+            <template if:true={pg.isEllipsis}>
+                <span key={pg.key} class="pm-page-ellipsis">…</span>
+            </template>
+            <template if:false={pg.isEllipsis}>
+                <button key={pg.key}
+                        class={pg.btnClass}
+                        data-page={pg.page}
+                        onclick={goToPage}>
+                    {pg.label}
+                </button>
+            </template>
+        </template>
+
+        <!-- > page suivante -->
+        <button class="pm-btn pm-btn--page" onclick={nextPage} disabled={isLastPage} title="Page suivante">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pm-btn-icon">
+                <path d="m9 18 6-6-6-6"/>
+            </svg>
+        </button>
+        <!-- » dernière page -->
+        <button class="pm-btn pm-btn--page" onclick={lastPage} disabled={isLastPage} title="Dernière page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pm-btn-icon">
+                <path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/>
+            </svg>
+        </button>
+    </div>
+</div>
+            <!-- fin pagination -->
+
+        </div>
+        <!-- fin pm-card -->
+
+    </div>
+    <!-- fin pm-main-container -->
+
+    <!-- ═══ MODALE FORMULAIRE ═══ -->
+    <template if:true={showFormModal}>
+        <div class="pm-modal-overlay" onclick={handleOverlayClick}>
+            <section class="pm-modal" onclick={stopPropagation}>
+
+                <header class="pm-modal__header">
+                    <div class="pm-modal__header-inner">
+                        <div class="pm-modal__icon">
+                            <lightning-icon icon-name="utility:people" size="small" variant="inverse"></lightning-icon>
+                        </div>
+                        <h2 class="pm-modal__title">{modalTitle}</h2>
+                    </div>
+                    <button class="pm-modal__close" onclick={closeModal} title="Fermer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="pm-close-icon">
+                            <path d="M18 6 6 18M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </header>
+
+                <!-- STEPPER -->
+                <div class="pm-stepper">
+                    <div class="pm-stepper__track">
+                        <div class={step1Class}>
+                            <div class="pm-step__circle">
+                                <template if:true={isStep2}>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="width:12px;height:12px;">
+                                        <path d="M20 6 9 17l-5-5"/>
+                                    </svg>
+                                </template>
+                                <template if:false={isStep2}>1</template>
+                            </div>
+                            <span class="pm-step__label">Type de prestataire</span>
+                        </div>
+                        <div class={lineClass}></div>
+                        <div class={step2Class}>
+                            <div class="pm-step__circle">2</div>
+                            <span class="pm-step__label">Informations</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Body modale -->
+                <div class="pm-modal__body">
+
+                    <!-- Étape 1 -->
+                    <template if:true={isStep1}>
+                        <div class="pm-section">
+                            <div class="pm-section__title">
+                                <span class="pm-section__num">01</span>
+                                Type de prestataire
+                            </div>
+                            <div class="pm-radio-list">
+                                <template for:each={typeOptionsForForm} for:item="opt">
+                                    <label key={opt.value} class="pm-radio-item">
+                                        <input
+                                            type="radio"
+                                            name="typePrestataire"
+                                            value={opt.value}
+                                            checked={opt.checked}
+                                            data-value={opt.value}
+                                            onclick={handleTypeRadioClick}
+                                            class="pm-radio-input"
+                                        />
+                                        <span class="pm-radio-label">{opt.label}</span>
+                                    </label>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Étape 2 -->
+                    <template if:true={isStep2}>
+                        <div class="pm-section">
+                            <div class="pm-section__title">
+                                <span class="pm-section__num">01</span>
+                                Informations personnelles
+                            </div>
+                            <div class="pm-grid">
+                                <div class="pm-field">
+                                    <lightning-input label="Nom complet" name="name" value={form.name} onchange={handleFieldChange} required></lightning-input>
+                                </div>
+                                <div class="pm-field">
+                                    <lightning-input label="Code" name="code" value={form.code} disabled></lightning-input>
+                                </div>
+                                <div class="pm-field">
+                                    <lightning-input type="tel" label="Téléphone" name="phone" value={form.phone} maxlength="20" onchange={handleFieldChange}></lightning-input>
+                                </div>
+                                <div class="pm-field">
+                                    <lightning-input type="email" label="Email" name="email" value={form.email} maxlength="255" onchange={handleFieldChange}></lightning-input>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pm-section">
+                            <div class="pm-section__title">
+                                <span class="pm-section__num">02</span>
+                                Informations bancaires
+                            </div>
+                            <div class="pm-grid">
+                                <div class="pm-field">
+                                    <lightning-combobox label="Banque" name="banque" value={form.banque} placeholder="— Sélectionner une banque —" options={banqueOptions} onchange={handleBanqueChange}></lightning-combobox>
+                                </div>
+                                <div class="pm-field">
+                                    <lightning-input label="Code banque" name="codeBanque" value={form.codeBanque} disabled></lightning-input>
+                                </div>
+                                <div class="pm-field pm-field--full">
+                                    <lightning-input label="RIB" name="rib" value={form.rib} onchange={handleFieldChange} maxlength="24" placeholder="24 caractères maximum"></lightning-input>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pm-section">
+                            <div class="pm-section__title">
+                                <span class="pm-section__num">03</span>
+                                Adresse
+                            </div>
+                            <div class="pm-grid">
+                                <div class="pm-field">
+                                    <lightning-combobox label="Pays" name="pays" value={form.pays} placeholder="— Sélectionner un pays —" options={paysOptions} onchange={handleFieldChange}></lightning-combobox>
+                                </div>
+                                <div class="pm-field">
+                                    <lightning-combobox label="Ville" name="ville" value={form.ville} placeholder="— Sélectionner une ville —" options={villeOptions} onchange={handleFieldChange} disabled={isVilleDisabled}></lightning-combobox>
+                                </div>
+                                <div class="pm-field pm-field--full">
+                                    <lightning-input label="Adresse" name="adresse" value={form.adresse} onchange={handleFieldChange} placeholder="Numéro, rue, quartier..."></lightning-input>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                </div>
+                <!-- fin pm-modal__body -->
+
+                <footer class="pm-modal__footer">
+                    <template if:true={isStep1}>
+                        <button class="pm-btn pm-btn--cancel" onclick={closeModal}>Annuler</button>
+                        <button class="pm-btn pm-btn--save" onclick={handleNextStep} disabled={isNextDisabled}>Suivant</button>
+                    </template>
+                    <template if:true={isStep2}>
+                        <button class="pm-btn pm-btn--cancel" onclick={handlePrevStep}>Retour</button>
+                        <button class="pm-btn pm-btn--save" onclick={handleSave} disabled={isSaving}>
+                            <template if:true={isSaving}>
+                                <lightning-spinner alternative-text="Chargement" size="x-small" variant="inverse"></lightning-spinner>
+                            </template>
+                            {saveLabel}
+                        </button>
+                    </template>
+                </footer>
+
+            </section>
+        </div>
+    </template>
+    <!-- fin modale -->
+    <!-- ═══ MODALE SUCCÈS ═══ -->
+<template if:true={showSuccessModal}>
+    <div class="pm-modal-overlay" onclick={closeSuccessModal}>
+        <section class="pm-success-modal" onclick={stopPropagation}>
+
+            
+
+            <!-- Icône animée -->
+            <div class="pm-success-icon-wrap">
+                <svg class="pm-success-circle" viewBox="0 0 52 52">
+                    <circle class="pm-success-circle__bg" cx="26" cy="26" r="24"/>
+                    <path class="pm-success-circle__check" d="M14 27l8 8 16-16"/>
+                </svg>
+            </div>
+
+            <!-- Titre -->
+            <h2 class="pm-success-modal__title">{successModalTitle}</h2>
+
+
+            <!-- Infos résumé -->
+           <div class="pm-success-chips">
+    <div class="pm-success-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;">
+            <path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 3H8v4h8V3z"/>
+        </svg>
+        {successType}
+    </div>
+    <div class="pm-success-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/>
+        </svg>
+        {successCode}
+    </div>
+</div>
+
+            <!-- Boutons -->
+            <div class="pm-success-modal__actions">
+                <button class="pm-btn pm-btn--cancel" onclick={closeSuccessModal}>
+                    Fermer
+                </button>
+                <button class="pm-btn pm-btn--save" onclick={handleNavigateToSuccess}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" >
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                    Consulter le prestataire
+                </button>
+            </div>
+
+        </section>
+    </div>
+</template>
+<!-- fin modale succès -->
+
+</template>

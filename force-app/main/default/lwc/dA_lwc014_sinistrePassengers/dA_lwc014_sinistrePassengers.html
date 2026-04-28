@@ -1,0 +1,368 @@
+<template>
+    <div class="pm-card">
+        <!-- Header -->
+        <div class="pm-header">
+            <div class="pm-header__left">
+                <div class="pm-header__icon-wrap">
+                    <lightning-icon icon-name="standard:people" size="small"></lightning-icon>
+                </div>
+                <div>
+                    <h2 class="pm-header__title">{cardTitle}</h2>
+                    <span class="pm-header__subtitle">Sinistre · Participants</span>
+                </div>
+            </div>
+            <div class="pm-header__actions">
+                <button class="pm-btn pm-btn--add" onclick={openAddModal}>
+                    <lightning-icon icon-name="utility:add" size="xx-small"></lightning-icon>
+                    Ajouter Participant
+                </button>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="pm-body">
+            <template if:true={isLoading}>
+                <div class="pm-spinner-overlay">
+                    <lightning-spinner alternative-text="Chargement..." size="medium"></lightning-spinner>
+                </div>
+            </template>
+
+            <template if:false={isEmpty}>
+                <div class="pm-table-wrap">
+                    <table class="pm-table">
+                        <thead>
+                            <tr>
+                                <th class="pm-th">Nom et Prénom</th>
+                                <th class="pm-th">Rôle</th>
+                                <th class="pm-th">État</th>
+                                <th class="pm-th pm-th--center">Conducteur</th>
+                                <th class="pm-th">IPP (%)</th>
+                                <th class="pm-th">ITT (j)</th>
+                                <th class="pm-th pm-th--center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={passengers} for:item="p">
+                                <tr key={p.Id}>
+                                    <td class="pm-td pm-td--name">{p.displayName}</td>
+                                    <td class="pm-td">
+                                        <span class={p.roleBadgeClass}>{p.Roles__c}</span>
+                                    </td>
+                                    <td class="pm-td">
+                                        <span class={p.stateBadgeClass}>{p.StateOfPerson__c}</span>
+                                    </td>
+                                    <td class="pm-td pm-td--center">
+                                        <template if:true={p.isDriver__c}>
+                                            <span class="pm-badge pm-badge--driver">✓</span>
+                                        </template>
+                                        <template if:false={p.isDriver__c}>
+                                            <span class="pm-badge pm-badge--no">—</span>
+                                        </template>
+                                    </td>
+                                    <td class="pm-td pm-td--mono">{p.IPP__c}%</td>
+                                    <td class="pm-td pm-td--mono">{p.ITT__c}</td>
+                                    <td class="pm-td pm-td--actions">
+                                        <div class="pm-action-group">
+                                            <button class="pm-action-btn" data-id={p.Id} onclick={openEditModal} title="Modifier">
+                                                <lightning-icon icon-name="utility:edit" size="xx-small"></lightning-icon>
+                                            </button>
+                                            <button class="pm-action-btn" data-id={p.Id} onclick={openDeleteModal} title="Supprimer">
+                                                <lightning-icon icon-name="utility:delete" size="xx-small"></lightning-icon>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+
+            <template if:true={isEmpty}>
+                <div class="pm-empty">
+                    <div class="pm-empty__icon">
+                        <lightning-icon icon-name="standard:people" size="large"></lightning-icon>
+                    </div>
+                    <p class="pm-empty__text">Aucun participant enregistré pour ce sinistre.</p>
+                    <button class="pm-btn pm-btn--outlined" onclick={openAddModal}>
+                        + Ajouter le premier participant
+                    </button>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Modal Ajout/Édition -->
+    <template if:true={showFormModal}>
+        <div class="pm-modal-overlay" onclick={handleOverlayClick}>
+            <div class="pm-modal" onclick={stopPropagation}>
+                <div class="pm-modal__header">
+                    <div class="pm-modal__header-inner">
+                        <lightning-icon icon-name="utility:people" size="small"></lightning-icon>
+                        <h3 class="pm-modal__title">{modalTitle}</h3>
+                    </div>
+                    <button class="pm-modal__close" onclick={closeFormModal}>✕</button>
+                </div>
+
+                <div class="pm-modal__body">
+                    <template if:true={formError}>
+                        <div class="pm-alert pm-alert--error">
+                            <lightning-icon icon-name="utility:error" size="xx-small"></lightning-icon>
+                            {formError}
+                        </div>
+                    </template>
+
+                    <!-- Section 1 : Identité -->
+                    <div class="pm-section">
+                        <div class="pm-section__title">
+                            <span class="pm-section__num">1</span>
+                            Identité du participant
+                        </div>
+                        <div class="pm-grid">
+                            <div class="pm-field">
+                                <lightning-input
+                                    label="Civilité"
+                                    value={form._civilite}
+                                    onchange={handleFieldChange}
+                                    data-field="_civilite">
+                                </lightning-input>
+                            </div>
+                            <div class="pm-field">
+                                <lightning-input
+                                    label="Prénom *"
+                                    value={form._prenom}
+                                    onchange={handleFieldChange}
+                                    data-field="_prenom">
+                                </lightning-input>
+                            </div>
+                            <div class="pm-field">
+                                <lightning-input
+                                    label="Nom *"
+                                    value={form._nom}
+                                    onchange={handleFieldChange}
+                                    data-field="_nom">
+                                </lightning-input>
+                                <template if:true={errors._nom}>
+                                    <span class="pm-error">{errors._nom}</span>
+                                </template>
+                            </div>
+                            <div class="pm-field">
+                                <lightning-combobox
+                                    label="Sexe"
+                                    value={form.Sexe__c}
+                                    options={sexeOptions}
+                                    onchange={handleFieldChange}
+                                    data-field="Sexe__c">
+                                </lightning-combobox>
+                            </div>
+                            <div class="pm-field">
+                                <lightning-input
+                                    type="date"
+                                    label="Date de Naissance"
+                                    value={form.BirthDay__c}
+                                    onchange={handleFieldChange}
+                                    data-field="BirthDay__c">
+                                </lightning-input>
+                            </div>
+                            <div class="pm-field">
+                                <lightning-combobox
+                                    label="Situation familiale"
+                                    value={form.MaritalStatus__c}
+                                    options={maritalOptions}
+                                    onchange={handleFieldChange}
+                                    data-field="MaritalStatus__c">
+                                </lightning-combobox>
+                            </div>
+                            <div class="pm-field pm-field--full">
+                                <lightning-input
+                                    label="Adresse"
+                                    value={form.Adresse__c}
+                                    onchange={handleFieldChange}
+                                    data-field="Adresse__c">
+                                </lightning-input>
+                            </div>
+                            <div class="pm-field">
+                                <lightning-combobox
+                                    label="Pays"
+                                    value={form.Pays__c}
+                                    options={paysOptions}
+                                    onchange={handleFieldChange}
+                                    data-field="Pays__c">
+                                </lightning-combobox>
+                            </div>
+                            <div class="pm-field">
+                                <lightning-combobox
+                                    label="Ville"
+                                    value={form.Ville__c}
+                                    options={villeOptions}
+                                    onchange={handleFieldChange}
+                                    data-field="Ville__c">
+                                </lightning-combobox>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2 : Rôle et état -->
+                    <div class="pm-section">
+                        <div class="pm-section__title">
+                            <span class="pm-section__num">2</span>
+                            Rôle et état
+                        </div>
+                        <div class="pm-grid">
+                            <div class="pm-field">
+                                <lightning-combobox
+                                    label="Type de contact"
+                                    value={form.TypeContact__c}
+                                    options={typeContactOptions}
+                                    onchange={handleFieldChange}
+                                    data-field="TypeContact__c">
+                                </lightning-combobox>
+                            </div>
+                            <div class="pm-field">
+                                <lightning-combobox
+                                    label="Rôle *"
+                                    value={form.Roles__c}
+                                    options={rolesOptions}
+                                    onchange={handleFieldChange}
+                                    data-field="Roles__c">
+                                </lightning-combobox>
+                                <template if:true={errors.Roles__c}>
+                                    <span class="pm-error">{errors.Roles__c}</span>
+                                </template>
+                            </div>
+                            <div class="pm-field">
+                                <lightning-combobox
+                                    label="État du participant *"
+                                    value={form.StateOfPerson__c}
+                                    options={stateOptions}
+                                    onchange={handleFieldChange}
+                                    data-field="StateOfPerson__c">
+                                </lightning-combobox>
+                                <template if:true={errors.StateOfPerson__c}>
+                                    <span class="pm-error">{errors.StateOfPerson__c}</span>
+                                </template>
+                            </div>
+                            <div class="pm-field pm-field--full">
+                                <div class="pm-toggle-row">
+                                    <span class="pm-toggle-label">
+                                        <lightning-icon icon-name="utility:car" size="xx-small"></lightning-icon>
+                                        Participant est le Conducteur
+                                    </span>
+                                    <lightning-input
+                                        type="toggle"
+                                        checked={form.isDriver__c}
+                                        onchange={handleToggleChange}
+                                        data-field="isDriver__c"
+                                        message-toggle-active="Oui"
+                                        message-toggle-inactive="Non">
+                                    </lightning-input>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3 : Blessé -->
+                    <template if:true={isBlesse}>
+                        <div class="pm-section">
+                            <div class="pm-section__title">
+                                <span class="pm-section__num">3</span>
+                                Détails blessure
+                            </div>
+                            <div class="pm-grid">
+                                <div class="pm-field">
+                                    <lightning-input
+                                        type="number"
+                                        label="IPP (%)"
+                                        value={form.IPP__c}
+                                        min="0" max="100" step="0.01"
+                                        onchange={handleFieldChange}
+                                        data-field="IPP__c">
+                                    </lightning-input>
+                                </div>
+                                <div class="pm-field">
+                                    <lightning-input
+                                        type="number"
+                                        label="ITT (jours)"
+                                        value={form.ITT__c}
+                                        min="0" step="0.5"
+                                        onchange={handleFieldChange}
+                                        data-field="ITT__c">
+                                    </lightning-input>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Section 3 : Décédé -->
+                    <template if:true={isDeces}>
+                        <div class="pm-section">
+                            <div class="pm-section__title">
+                                <span class="pm-section__num">3</span>
+                                Détails décès
+                            </div>
+                            <div class="pm-grid">
+                                <div class="pm-field">
+                                    <lightning-input
+                                        type="date"
+                                        label="Date de décès"
+                                        value={form.DateDeces__c}
+                                        onchange={handleFieldChange}
+                                        data-field="DateDeces__c">
+                                    </lightning-input>
+                                </div>
+                                <div class="pm-field">
+                                    <lightning-input
+                                        type="number"
+                                        label="Revenu annuel"
+                                        value={form.RevenuAnnuel__c}
+                                        min="0"
+                                        onchange={handleFieldChange}
+                                        data-field="RevenuAnnuel__c">
+                                    </lightning-input>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="pm-modal__footer">
+                    <button class="pm-btn pm-btn--cancel" onclick={closeFormModal}>
+                        Annuler
+                    </button>
+                    <button class="pm-btn pm-btn--save" onclick={savePassenger} disabled={isSaving}>
+                        <template if:true={isSaving}>
+                            <lightning-spinner size="x-small"></lightning-spinner>
+                        </template>
+                        <template if:false={isSaving}>
+                            <lightning-icon icon-name="utility:check" size="xx-small"></lightning-icon>
+                        </template>
+                        Confirmer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Modal Suppression -->
+    <template if:true={showDeleteModal}>
+        <div class="pm-modal-overlay">
+            <div class="pm-modal pm-modal--small">
+                <div class="pm-modal__header pm-modal__header--danger">
+                    <div class="pm-modal__header-inner">
+                        <lightning-icon icon-name="utility:warning" size="small"></lightning-icon>
+                        <h3 class="pm-modal__title">Confirmer la suppression</h3>
+                    </div>
+                    <button class="pm-modal__close" onclick={closeDeleteModal}>✕</button>
+                </div>
+                <div class="pm-modal__body pm-modal__body--confirm">
+                    Êtes-vous sûr de vouloir supprimer ce participant ?
+                    <div class="pm-confirm__note">Cette action est irréversible.</div>
+                </div>
+                <div class="pm-modal__footer">
+                    <button class="pm-btn pm-btn--cancel" onclick={closeDeleteModal}>Annuler</button>
+                    <button class="pm-btn pm-btn--danger" onclick={confirmDelete}>Supprimer</button>
+                </div>
+            </div>
+        </div>
+    </template>
+</template>

@@ -16,7 +16,6 @@
             </div>
 
             <div class="pm-header__actions">
-                <!-- FIX : bouton natif à la place de lightning-button-icon -->
                 <button class="pm-refresh-btn" onclick={handleRefresh} title="Actualiser">
                     <lightning-icon icon-name="utility:refresh" size="xx-small"></lightning-icon>
                 </button>
@@ -54,11 +53,17 @@
                                             </span>
                                         </template>
                                         <template if:false={rec.isDriver__c}>
-                            <span class="pm-driver-dash">—</span>
+                                            <span class="pm-driver-dash">—</span>
                                         </template>
                                     </td>
                                     <td class="pm-td">{rec.Civilite__c}</td>
-                                    <td class="pm-td pm-td--name">{rec.Name}</td>
+                                    <td class="pm-td pm-td--name">
+                                        <a class="pm-name-link"
+                                           data-id={rec.Id}
+                                           onclick={handleNavigateToPassenger}>
+                                            {rec.Name}
+                                        </a>
+                                    </td>
                                     <td class="pm-td pm-td--mono">{rec.CIN__c}</td>
                                     <td class="pm-td">{rec.Pays__c}</td>
                                     <td class="pm-td">{rec.Ville__c}</td>
@@ -91,7 +96,7 @@
                     <div class="pm-empty__icon">
                         <lightning-icon icon-name="standard:person_account" size="large"></lightning-icon>
                     </div>
-                    <p class="pm-empty__text">Aucun passager assuré enregistré pour cette déclaration.</p>
+                    <p class="pm-empty__text">Il n'y a actuellement aucun passager à afficher.</p>
                 </div>
             </template>
 

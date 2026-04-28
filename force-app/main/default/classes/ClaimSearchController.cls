@@ -84,44 +84,77 @@ public with sharing class ClaimSearchController {
     public static Map<String, String> createCase(String payload) {
         try {
             Map<String, Object> data = (Map<String, Object>) JSON.deserializeUntyped(payload);
-            
-            // --- 1. CRÉATION DU CASE ---
+            Id policyId = (Id)data.get('policyId');
+            Boolean insuredIsContact = false;
+            if (data.get('insuredIsContact') != null) {
+                insuredIsContact = (Boolean)data.get('insuredIsContact');
+            }
             Case newCase = new Case();
+            newCase.Police__c = policyId;
+            newCase.Vehicule__c = (Id)data.get('vehicleId');
+            
             newCase.CountryOfOccurrence__c = (String)data.get('country');
             newCase.CityOfOccurrence__c = (String)data.get('city');
-            newCase.Description = 'Adresse: ' + (String)data.get('address') + '\nCommentaire: ' + (String)data.get('commentaire');
+            newCase.AddressOfOccurrence__c = (String)data.get('address');
+            newCase.Commentaire__c = (String)data.get('commentaire');
             
-            if (String.isNotBlank((String)data.get('dateDepot'))) {
-                newCase.DateOfDeclarationSubmission__c = Date.valueOf((String)data.get('dateDepot'));
+            if (data.get('dateSurvenance') != null && String.isNotBlank((String)data.get('dateSurvenance'))) {
+                newCase.DateOfOccurrence__c = Date.valueOf((String)data.get('dateSurvenance'));
             }
             
             newCase.Claimant__c = (String)data.get('declarant');
+            
             newCase.IncidentReport__c = (String)data.get('pvConstat');
-            newCase.Commentaire__c = (String)data.get('commentaire');
             
-            if (data.get('policyId') != null) newCase.Police__c = (Id)data.get('policyId');
-            if (data.get('vehicleId') != null) newCase.Vehicule__c = (Id)data.get('vehicleId');
-            
-            newCase.SuppliedName = (String)data.get('nomContact');
-            newCase.SuppliedPhone = (String)data.get('telContact');
-            newCase.SuppliedEmail = (String)data.get('mailContact');
+            if (data.get('dateDepot') != null && String.isNotBlank((String)data.get('dateDepot'))) {
+                newCase.DateOfDeclarationSubmission__c = Date.valueOf((String)data.get('dateDepot'));
+            }
+
+            Id finalAccountId;
+
+            if (insuredIsContact) {
+
+                InsurancePolicy__c policy = [SELECT AccountName__c FROM InsurancePolicy__c WHERE Id = :policyId LIMIT 1];
+                finalAccountId = policy.AccountName__c;
+
+                if (finalAccountId != null) {
+                    Account accUpdate = new Account(Id = finalAccountId);
+                    accUpdate.Phone = (String)data.get('telContact');
+                    accUpdate.Email__c = (String)data.get('mailContact');
+                    accUpdate.MoyenNotification__c = (String)data.get('moyenNotification'); 
+                    update accUpdate;
+                }
+            } else {
+                Account newAcc = new Account();
+                newAcc.Name = (String)data.get('nomContact'); 
+                newAcc.Nom__c = (String)data.get('nomContact');
+                newAcc.Phone = (String)data.get('telContact');
+                newAcc.Email__c = (String)data.get('mailContact');
+                newAcc.MoyenNotification__c = (String)data.get('moyenNotification'); 
+                
+                insert newAcc;
+                finalAccountId = newAcc.Id;
+            }
+
+            newCase.AccountId = finalAccountId; 
+
             newCase.Status = 'New';
-            newCase.Origin = 'Gestionnaire'; 
+            newCase.Origin = 'Gestionnaire';
             newCase.DateOfDeclarationCreation__c = Date.today();
 
             insert newCase;
 
-
-            // --- 3. RETOUR DES IDS ---
             Case insertedCase = [SELECT Id, CaseNumber FROM Case WHERE Id = :newCase.Id LIMIT 1];
+            
             return new Map<String, String>{
                 'id' => insertedCase.Id,
                 'caseNumber' => insertedCase.CaseNumber
             };
+
         } catch (Exception e) {
-            throw new AuraHandledException('Erreur lors de la création initiale : ' + e.getMessage());
+            throw new AuraHandledException('Erreur Apex : ' + e.getMessage());
         }
-}
+    }
 
     /**
      * Récupération des infos de l'assuré (Étape 7)
@@ -194,7 +227,7 @@ public with sharing class ClaimSearchController {
                 newP.Case__c = caseId;
                 
                 // --- MAPPING DES DONNÉES ---
-                newP.Name__c = (String)p.get('Name__c');
+                newP.Name = (String)p.get('Name');
                 newP.CIN__c = (String)p.get('CIN__c');
                 newP.Civilite__c = (String)p.get('Civilite__c');
                 
@@ -329,15 +362,28 @@ public with sharing class ClaimSearchController {
                 throw new AuraHandledException('Données manquantes pour la sauvegarde du véhicule adverse.');
             }
 
+            // =========================================================
+            // GESTION DU COMPTE (Tiers Générique)
+            // =========================================================
+            Case currentCase = [SELECT Id, AccountId FROM Case WHERE Id = :caseId LIMIT 1];
+            Id accountIdToUse = currentCase.AccountId;
+            
+            if (accountIdToUse == null) {
+                Account defaultAcc = new Account(Name = 'Dossier Sans Compte - Tiers Générique');
+                insert defaultAcc;
+                accountIdToUse = defaultAcc.Id;
+                currentCase.AccountId = accountIdToUse;
+                update currentCase;
+            }
+
             // Désérialisation du JSON
             List<Object> vehiclesList = (List<Object>) JSON.deserializeUntyped(adverseDataJson);
-            
-            // Listes pour les insertions finales
             List<VehicleCaseAssignment__c> assignmentsToInsert = new List<VehicleCaseAssignment__c>();
             List<Passager__c> passagersToInsert = new List<Passager__c>();
             
             String etatVehiculePourCase = null; 
 
+            // BOUCLE PRINCIPALE SUR LES VÉHICULES
             for (Object obj : vehiclesList) {
                 Map<String, Object> v = (Map<String, Object>) obj;
                 
@@ -346,7 +392,6 @@ public with sharing class ClaimSearchController {
                 // =========================================================
                 Id currentVehiculeId = (String)v.get('Vehicule__c');
                 
-                // Si le véhicule n'existe pas, on le crée IMMÉDIATEMENT pour avoir son ID
                 if (String.isBlank(currentVehiculeId)) {
                     Vehicule__c newCar = new Vehicule__c();
                     newCar.RegistrationNumber__c = (String)v.get('RegistrationNumber__c');
@@ -359,8 +404,8 @@ public with sharing class ClaimSearchController {
                         newCar.DateOfFirstRegistration__c = Date.valueOf((String)v.get('DateMiseEnCirculation__c'));
                     }
                     
-                    insert newCar; // Insertion !
-                    currentVehiculeId = newCar.Id; // On récupère l'ID du véhicule tout neuf
+                    insert newCar; 
+                    currentVehiculeId = newCar.Id; 
                 }
 
                 // =========================================================
@@ -368,7 +413,7 @@ public with sharing class ClaimSearchController {
                 // =========================================================
                 VehicleCaseAssignment__c newAssignment = new VehicleCaseAssignment__c();
                 newAssignment.Case__c = caseId;
-                newAssignment.Vehicule__c = currentVehiculeId; // Lien avec le véhicule
+                newAssignment.Vehicule__c = currentVehiculeId; 
                 
                 if (v.get('Adversaire_Assure__c') != null) {
                     newAssignment.AdversaireAssure__c = Boolean.valueOf((String)v.get('Adversaire_Assure__c'));
@@ -398,15 +443,16 @@ public with sharing class ClaimSearchController {
                         newPass.Case__c = caseId; 
                         newPass.Roles__c = 'Passager adverse'; 
                         newPass.Vehicule__c = currentVehiculeId; 
+                        newPass.Compte__c = accountIdToUse; // <-- Correction appliquée ici
                         
-                        // --- CHAMPS DU PASSAGER ---
-                        newPass.Name__c = (String)pMap.get('Name__c'); 
+                        // J'ai mis pMap.get('Name__c') car c'est la clé envoyée par votre LWC
+                        newPass.Name = (String)pMap.get('Name__c'); 
+                        
                         newPass.Civilite__c = (String)pMap.get('Civilite__c');
                         newPass.CIN__c = (String)pMap.get('CIN__c');
                         newPass.Pays__c = (String)pMap.get('Pays__c');
                         newPass.Adresse__c = (String)pMap.get('Adresse__c');
                         
-                        // Gestion de la date de naissance
                         if (pMap.get('BirthDay__c') != null && String.isNotBlank((String)pMap.get('BirthDay__c'))) {
                             newPass.BirthDay__c = Date.valueOf((String)pMap.get('BirthDay__c'));
                         }
@@ -418,9 +464,11 @@ public with sharing class ClaimSearchController {
                         passagersToInsert.add(newPass);
                     }
                 }
-            }
+            } // <-- C'est souvent cette accolade de fermeture de boucle qui se perd !
 
-            // Insertion globale finale (beaucoup plus propre et optimisé)
+            // =========================================================
+            // INSERTIONS FINALES EN BASE DE DONNÉES
+            // =========================================================
             if (!assignmentsToInsert.isEmpty()) {
                 insert assignmentsToInsert;
             }
@@ -445,7 +493,7 @@ public with sharing class ClaimSearchController {
             }
 
             // 1. GESTION DU COMPTE (Fallback pour éviter l'erreur REQUIRED_FIELD_MISSING)
-            Case currentCase = [SELECT Id, AccountId FROM Case WHERE Id = :caseId LIMIT 1];
+            Case currentCase = [SELECT Id, AccountId, Vehicule__c FROM Case WHERE Id = :caseId LIMIT 1];
             Id accountIdToUse = currentCase.AccountId;
 
             if (accountIdToUse == null) {
@@ -479,12 +527,11 @@ public with sharing class ClaimSearchController {
                 newP.Compte__c = accountIdToUse; // Le client ou le compte générique
                 newP.Case__c = caseId;           // L'événement global
                 
-                    
+                newP.Vehicule__c = currentCase.Vehicule__c;   
 
                 // --- NOMS ---
                 String fullName = (String)p.get('Nom__c') + ' ' + (String)p.get('Prenom__c');
-                newP.Name = (String)p.get('Nom__c'); 
-                newP.Name__c = fullName;             
+                newP.Name = fullName;             
 
                 // --- INFORMATIONS PERSONNELLES ---
                 newP.Civilite__c = (String)p.get('Civilite__c');
@@ -597,19 +644,18 @@ public with sharing class ClaimSearchController {
             
             if (!assignments.isEmpty()) {
                 for (VehicleCaseAssignment__c vca : assignments) {
-                    // On attache simplement l'ID du nouveau Sinistre à l'assignation existante
                     vca.Claim__c = newClaim.Id; 
                 }
-                update assignments; // On met à jour, on n'insère pas !
+                update assignments; 
             }
 
             // ==========================================
             // 4. "finnalement on change le status de case a en cours de traitement"
             // ==========================================
             currentCase.Status = 'En cours ';
+            currentCase.Claim__c = newClaim.Id;
             update currentCase;
 
-            // On renvoie l'ID du Claim pour que le LWC puisse rediriger l'utilisateur vers la page du sinistre
             return newClaim.Id;
 
         } catch (Exception e) {

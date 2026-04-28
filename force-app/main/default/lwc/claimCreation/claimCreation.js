@@ -440,13 +440,17 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
                     ...this.caseData,
                     policyId: this.selectedPolicyId,
                     vehicleId: this.selectedPolicyRecord.vehicleId,
-                    dateSurvenance: this.dateSurvenance
+                    dateSurvenance: this.dateSurvenance,
+                    insuredIsContact: this.insuredIsContact
                 };
 
                 const result = await createCase({ payload: JSON.stringify(payload) });
+                console.log('🔍 RETOUR APEX BRUT :', JSON.stringify(result));
 
                 this.createdCaseId = result.id;
                 this.createdCaseNumber = result.caseNumber;
+                console.log('📌 NUMÉRO ENREGISTRÉ DANS JS :', this.createdCaseNumber);
+                
                 this.caseAlreadyCreated = true; // ✅ On marque le Case comme créé
 
                 this.showToast('Succès', 'Déclaration initialisée', 'success');
