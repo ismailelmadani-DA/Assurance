@@ -1,0 +1,14 @@
+<template>
+    <div class="fsd-container">
+        <template if:true={hasFlags}>
+            <div class="fsd-flags">
+                <template for:each={flagBadges} for:item="badge">
+                    <span key={badge.value} class={badge.class}>{badge.label}</span>
+                </template>
+            </div>
+        </template>
+        <template if:false={hasFlags}>
+            <span class="fsd-empty">Aucun flag défini.</span>
+        </template>
+    </div>
+</template>

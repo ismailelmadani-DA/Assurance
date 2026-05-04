@@ -1,22 +1,8 @@
 <template>
-    <div class="fs-card">
-        <div class="fs-row">
-            <div class="fs-row__flags">
-                <template if:true={hasFlags}>
-                    <template for:each={flagBadges} for:item="badge">
-                        <span key={badge.value} class={badge.class}>{badge.label}</span>
-                    </template>
-                </template>
-                <template if:false={hasFlags}>
-                    <span class="fs-empty">Aucun flag défini.</span>
-                </template>
-            </div>
-            <button class="fs-btn fs-btn--add" onclick={handleOpenModal}>
-                <lightning-icon icon-name="utility:flag" size="xx-small"></lightning-icon>
-                Flagger Sinistre
-            </button>
-        </div>
-    </div>
+    <button class="fs-btn fs-btn--add" onclick={handleOpenModal}>
+        <lightning-icon icon-name="utility:flag" size="xx-small"></lightning-icon>
+        Flagger Sinistre
+    </button>
 
     <!-- Modal -->
     <template if:true={isModalOpen}>
@@ -40,7 +26,7 @@
                         </div>
                         <div class="fs-section__content">
                             <template for:each={flagOptions} for:item="opt">
-                                <div key={opt.value} class="fs-checkbox-item">
+                                <div key={opt.value} class="fs-checkbox-item" data-flag={opt.value} onclick={handleDisabledClick}>
                                     <lightning-input
                                         type="checkbox"
                                         label={opt.label}

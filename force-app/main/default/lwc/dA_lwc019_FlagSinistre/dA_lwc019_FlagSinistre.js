@@ -5,13 +5,6 @@ import saveFlags from '@salesforce/apex/DA_FlagSinistreController.saveFlags';
 
 const FLAG_LIST = ['Sensible', 'Majeur', 'Grave', 'Frauduleux', 'Douteux'];
 
-const FLAG_STYLES = {
-    Sensible: 'fs-flag--sensible',
-    Majeur: 'fs-flag--majeur',
-    Grave: 'fs-flag--grave',
-    Frauduleux: 'fs-flag--frauduleux',
-    Douteux: 'fs-flag--douteux'
-};
 
 export default class DA_lwc019_FlagSinistre extends LightningElement {
     @api recordId;
@@ -41,33 +34,8 @@ export default class DA_lwc019_FlagSinistre extends LightningElement {
         }
     }
 
-    get hasFlags() {
-        return (this.currentFlags && this.currentFlags.length > 0) || this.hasPendingRequests;
-    }
-
     get hasPendingRequests() {
         return this.pendingRequests && this.pendingRequests.length > 0;
-    }
-
-    get flagBadges() {
-        const pendingFlags = this.pendingRequests.map(r => r.flag);
-        const badges = this.currentFlags.map(flag => ({
-            value: flag,
-            label: flag,
-            class: 'fs-flag ' + (FLAG_STYLES[flag] || '')
-        }));
-
-        for (const pFlag of pendingFlags) {
-            if (!this.currentFlags.includes(pFlag)) {
-                badges.push({
-                    value: pFlag + '-pending',
-                    label: pFlag + ' - En attente',
-                    class: 'fs-flag fs-flag--pending'
-                });
-            }
-        }
-
-        return badges;
     }
 
     get flagOptions() {
@@ -81,9 +49,23 @@ export default class DA_lwc019_FlagSinistre extends LightningElement {
             let pendingLabel = '';
             const isRestricted = RESTRICTED.includes(flag);
 
-            // Mutual exclusion for non-restricted flags only
-            if (flag === 'Frauduleux' && hasDouteux && !isRestricted) disabled = true;
-            if (flag === 'Douteux' && hasFrauduleux && !isRestricted) disabled = true;
+            let disabledReason = '';
+            if (isRestricted && !this.isPrivileged) {
+                const otherFlag = flag === 'Frauduleux' ? 'Douteux' : 'Frauduleux';
+                if (pendingFlags.includes(flag)) {
+                    disabled = true;
+                    disabledReason = 'Une demande est déjà en attente de validation pour le flag "' + flag + '".';
+                } else if (pendingFlags.includes(otherFlag)) {
+                    disabled = true;
+                    disabledReason = 'Vous ne pouvez pas sélectionner ce flag tant que le flag "' + otherFlag + '" est en attente de validation.';
+                } else if (flag === 'Frauduleux' && hasDouteux) {
+                    disabled = true;
+                    disabledReason = 'Les flags "Frauduleux" et "Douteux" ne peuvent pas être sélectionnés en même temps.';
+                } else if (flag === 'Douteux' && hasFrauduleux) {
+                    disabled = true;
+                    disabledReason = 'Les flags "Frauduleux" et "Douteux" ne peuvent pas être sélectionnés en même temps.';
+                }
+            }
 
             if (pendingFlags.includes(flag)) {
                 pendingLabel = 'En attente';
@@ -94,6 +76,7 @@ export default class DA_lwc019_FlagSinistre extends LightningElement {
                 label: flag,
                 checked: this.selectedFlags.includes(flag),
                 disabled,
+                disabledReason,
                 pendingLabel
             };
         });
@@ -109,6 +92,14 @@ export default class DA_lwc019_FlagSinistre extends LightningElement {
         this.isModalOpen = false;
     }
 
+    handleDisabledClick(event) {
+        const flag = event.currentTarget.dataset.flag;
+        const opt = this.flagOptions.find(o => o.value === flag);
+        if (opt && opt.disabled && opt.disabledReason) {
+            this.showToast('Action non disponible', opt.disabledReason, 'warning');
+        }
+    }
+
     handleFlagChange(event) {
         const flag = event.target.dataset.flag;
         const isChecked = event.target.checked;
@@ -116,35 +107,11 @@ export default class DA_lwc019_FlagSinistre extends LightningElement {
         const isRestricted = RESTRICTED.includes(flag);
         const pendingFlags = this.pendingRequests.map(r => r.flag);
 
-        if (isRestricted && !this.isPrivileged) {
+        if (isRestricted && !this.isPrivileged && isChecked) {
             const otherFlag = flag === 'Frauduleux' ? 'Douteux' : 'Frauduleux';
-
-            if (isChecked) {
-                // Cannot select if the other is pending
-                if (pendingFlags.includes(otherFlag)) {
-                    event.target.checked = false;
-                    this.showToast('Action non autorisée', 'Vous ne pouvez pas sélectionner ce flag tant que le flag "' + otherFlag + '" n\'a pas été validé.', 'warning');
-                    return;
-                }
-                // Cannot select if deselecting the other in the same action
-                if (this.currentFlags.includes(otherFlag) && !this.selectedFlags.includes(otherFlag)) {
-                    event.target.checked = false;
-                    this.showToast('Action non autorisée', 'Vous ne pouvez pas désélectionner "' + otherFlag + '" et sélectionner "' + flag + '" en même temps. Attendez la validation de la suppression.', 'warning');
-                    return;
-                }
-                // Cannot select if already pending
-                if (pendingFlags.includes(flag)) {
-                    event.target.checked = false;
-                    this.showToast('Action non autorisée', 'Une demande est déjà en attente de validation pour ce flag.', 'warning');
-                    return;
-                }
-            } else {
-                // Deselecting: cannot deselect if selecting the other in the same action
-                if (!this.currentFlags.includes(otherFlag) && this.selectedFlags.includes(otherFlag)) {
-                    event.target.checked = true;
-                    this.showToast('Action non autorisée', 'Vous ne pouvez pas désélectionner "' + flag + '" et sélectionner "' + otherFlag + '" en même temps. Attendez la validation de la suppression.', 'warning');
-                    return;
-                }
+            if (pendingFlags.includes(flag) || pendingFlags.includes(otherFlag) || this.selectedFlags.includes(otherFlag)) {
+                event.target.checked = false;
+                return;
             }
         }
 

@@ -49,37 +49,6 @@
 }
 
 /* ════════════════════════════════════════
-   CARD
-════════════════════════════════════════ */
-.fs-card {
-    background: var(--white);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border);
-    padding: 1rem 1.4rem;
-}
-
-/* ════════════════════════════════════════
-   INLINE ROW
-════════════════════════════════════════ */
-.fs-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: .75rem;
-    flex-wrap: wrap;
-}
-
-.fs-row__flags {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: .45rem;
-    flex: 1;
-    min-width: 0;
-}
-
-/* ════════════════════════════════════════
    BUTTONS
 ════════════════════════════════════════ */
 .fs-btn {
@@ -145,103 +114,6 @@
     cursor: not-allowed;
     pointer-events: none;
     transform: none !important;
-}
-
-/* ════════════════════════════════════════
-   FLAG BADGES
-════════════════════════════════════════ */
-.fs-flag {
-    display: inline-flex;
-    align-items: center;
-    gap: .3rem;
-    padding: .28rem .7rem;
-    border-radius: var(--radius-pill);
-    font-size: .7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    white-space: nowrap;
-}
-
-.fs-flag::before {
-    content: '';
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.fs-flag--sensible {
-    background: #fef9e7;
-    color: #b7950b;
-    border: 1px solid rgba(183, 149, 11, .25);
-}
-
-.fs-flag--sensible::before {
-    background: #f4c542;
-}
-
-.fs-flag--majeur {
-    background: var(--fs-orange-bg);
-    color: var(--fs-orange);
-    border: 1px solid rgba(211, 84, 0, .2);
-}
-
-.fs-flag--majeur::before {
-    background: #ff8c00;
-}
-
-.fs-flag--grave {
-    background: var(--fs-red-bg);
-    color: var(--fs-red);
-    border: 1px solid rgba(192, 57, 43, .2);
-}
-
-.fs-flag--grave::before {
-    background: #e74c3c;
-}
-
-.fs-flag--frauduleux {
-    background: #f4ecf7;
-    color: #8e44ad;
-    border: 1px solid rgba(142, 68, 173, .2);
-}
-
-.fs-flag--frauduleux::before {
-    background: #8e44ad;
-}
-
-.fs-flag--douteux {
-    background: #ebedef;
-    color: #2c3e50;
-    border: 1px solid rgba(44, 62, 80, .2);
-}
-
-.fs-flag--douteux::before {
-    background: #2c3e50;
-}
-
-.fs-flag--pending {
-    background: var(--bg-light);
-    color: var(--text-muted);
-    border: 1px dashed var(--border-strong);
-    font-style: italic;
-    font-weight: 600;
-}
-
-.fs-flag--pending::before {
-    background: var(--text-muted);
-    animation: fs-pulse 1.5s ease-in-out infinite;
-}
-
-/* ════════════════════════════════════════
-   EMPTY STATE
-════════════════════════════════════════ */
-.fs-empty {
-    color: var(--text-muted);
-    font-size: .83rem;
-    font-style: italic;
 }
 
 /* ════════════════════════════════════════
@@ -502,11 +374,6 @@
    RESPONSIVE
 ════════════════════════════════════════ */
 @media (max-width: 640px) {
-    .fs-row {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
     .fs-btn--add {
         justify-content: center;
     }

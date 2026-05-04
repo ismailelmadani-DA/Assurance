@@ -1,0 +1,133 @@
+:host {
+    --wafa-green: #006233;
+    --wafa-dark-green: #004824;
+    --wafa-light-green: #e6f2ec;
+
+    --text-main: #1a1a1a;
+    --text-muted: #9a9a9a;
+    --bg-light: #F8F9FA;
+    --white: #FFFFFF;
+    --border: #e2e8e4;
+    --border-strong: #c5d5cc;
+
+    --fs-red: #c0392b;
+    --fs-red-bg: #fdf0ef;
+    --fs-orange: #d35400;
+    --fs-orange-bg: #fef5ec;
+
+    --radius: 12px;
+    --radius-pill: 999px;
+
+    font-family: 'DM Sans', 'Salesforce Sans', Arial, sans-serif;
+    color: var(--text-main);
+}
+
+.fsd-container {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .45rem;
+    min-width: 0;
+}
+
+/* ════════════════════════════════════════
+   FLAG BADGES
+════════════════════════════════════════ */
+.fsd-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .28rem .7rem;
+    border-radius: var(--radius-pill);
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    white-space: nowrap;
+}
+
+.fsd-flag::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.fsd-flag--sensible {
+    background: #fef9e7;
+    color: #b7950b;
+    border: 1px solid rgba(183, 149, 11, .25);
+}
+
+.fsd-flag--sensible::before {
+    background: #f4c542;
+}
+
+.fsd-flag--majeur {
+    background: var(--fs-orange-bg);
+    color: var(--fs-orange);
+    border: 1px solid rgba(211, 84, 0, .2);
+}
+
+.fsd-flag--majeur::before {
+    background: #ff8c00;
+}
+
+.fsd-flag--grave {
+    background: var(--fs-red-bg);
+    color: var(--fs-red);
+    border: 1px solid rgba(192, 57, 43, .2);
+}
+
+.fsd-flag--grave::before {
+    background: #e74c3c;
+}
+
+.fsd-flag--frauduleux {
+    background: #f4ecf7;
+    color: #8e44ad;
+    border: 1px solid rgba(142, 68, 173, .2);
+}
+
+.fsd-flag--frauduleux::before {
+    background: #8e44ad;
+}
+
+.fsd-flag--douteux {
+    background: #ebedef;
+    color: #2c3e50;
+    border: 1px solid rgba(44, 62, 80, .2);
+}
+
+.fsd-flag--douteux::before {
+    background: #2c3e50;
+}
+
+.fsd-flag--pending {
+    background: var(--bg-light);
+    color: var(--text-muted);
+    border: 1px dashed var(--border-strong);
+    font-style: italic;
+    font-weight: 600;
+}
+
+.fsd-flag--pending::before {
+    background: var(--text-muted);
+    animation: fsd-pulse 1.5s ease-in-out infinite;
+}
+
+/* ════════════════════════════════════════
+   EMPTY STATE
+════════════════════════════════════════ */
+.fsd-empty {
+    color: var(--text-muted);
+    font-size: .83rem;
+    font-style: italic;
+}
+
+@keyframes fsd-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .3; }
+}
