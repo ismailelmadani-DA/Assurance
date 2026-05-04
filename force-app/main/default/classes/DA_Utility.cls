@@ -1,15 +1,5 @@
 public with sharing class DA_Utility {
-    /**
-     *description      :   Récupère les informations de l’utilisateur courant (profil, habilitations, pays, responsable)
-     * @method Name      :   getCurrentUserInfo
-     * @Author           :   D&A Technologies
-     * @date             :   2026-02-07
-     * @return           :   User
-     * -------------------------------------------------------------------------------------------------
-    **/ 
-    //public static User getCurrentUserInfo(){
-       // return [SELECT Id, Name, ManagerId, Manager.Name, Manager.Profile.Name, Email, ProfileId, Profile.Name FROM User WHERE Id = :UserInfo.getUserId() limit 1];
-    //}
+
     /*
      * Method for building Queries this one for standard queries
      */
@@ -148,7 +138,7 @@ public with sharing class DA_Utility {
      * @return           :   User
      * -------------------------------------------------------------------------------------------------
      **/
-   // public static User getCurrentUserInfo(){
-       // return [SELECT Id, Name, Email, Profile.Name FROM User WHERE Id = :UserInfo.getUserId() limit 1];
-   // }
+    public static User getCurrentUserInfo(){
+        return [SELECT Id, Name, Email, Profile.Name FROM User WHERE Id = :UserInfo.getUserId() limit 1]; 
+    }
 }

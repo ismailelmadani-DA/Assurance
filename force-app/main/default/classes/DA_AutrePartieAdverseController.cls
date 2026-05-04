@@ -185,7 +185,7 @@ public with sharing class DA_AutrePartieAdverseController {
             }
 
             // Validate dates
-            Claim__c claim = DM005_ClaimParticipant.getClaimById('Id, CreatedDate', claimId);
+            Claim__c claim = DM006_Claim.getById('Id, CreatedDate', claimId);
             if (claim != null) {
                 Date sinistreDate = claim.CreatedDate != null
                     ? claim.CreatedDate.date()

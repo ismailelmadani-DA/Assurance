@@ -1,0 +1,84 @@
+<template>
+    <div class="fs-card">
+        <div class="fs-row">
+            <div class="fs-row__flags">
+                <template if:true={hasFlags}>
+                    <template for:each={flagBadges} for:item="badge">
+                        <span key={badge.value} class={badge.class}>{badge.label}</span>
+                    </template>
+                </template>
+                <template if:false={hasFlags}>
+                    <span class="fs-empty">Aucun flag défini.</span>
+                </template>
+            </div>
+            <button class="fs-btn fs-btn--add" onclick={handleOpenModal}>
+                <lightning-icon icon-name="utility:flag" size="xx-small"></lightning-icon>
+                Flagger Sinistre
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <template if:true={isModalOpen}>
+        <div class="fs-modal-overlay">
+            <div class="fs-modal">
+                <div class="fs-modal__header">
+                    <div class="fs-modal__header-inner">
+                        <lightning-icon icon-name="utility:flag" size="small"></lightning-icon>
+                        <h2 class="fs-modal__title">Flagger le Sinistre</h2>
+                    </div>
+                    <button class="fs-modal__close" onclick={handleCloseModal}>
+                        <lightning-icon icon-name="utility:close" size="xx-small" variant="inverse"></lightning-icon>
+                    </button>
+                </div>
+                <div class="fs-modal__body">
+                    <!-- Flags section -->
+                    <div class="fs-section">
+                        <div class="fs-section__title">
+                            <span class="fs-section__num">1</span>
+                            Sélectionnez les flags
+                        </div>
+                        <div class="fs-section__content">
+                            <template for:each={flagOptions} for:item="opt">
+                                <div key={opt.value} class="fs-checkbox-item">
+                                    <lightning-input
+                                        type="checkbox"
+                                        label={opt.label}
+                                        checked={opt.checked}
+                                        disabled={opt.disabled}
+                                        data-flag={opt.value}
+                                        onchange={handleFlagChange}>
+                                    </lightning-input>
+                                    <template if:true={opt.pendingLabel}>
+                                        <span class="fs-pending-tag">{opt.pendingLabel}</span>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Comment section -->
+                    <div class="fs-section">
+                        <div class="fs-section__title">
+                            <span class="fs-section__num">2</span>
+                            Commentaire
+                        </div>
+                        <div class="fs-section__content">
+                            <lightning-textarea
+                                label="Commentaire"
+                                value={commentaire}
+                                onchange={handleCommentChange}
+                                required
+                                placeholder="Saisissez un commentaire...">
+                            </lightning-textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="fs-modal__footer">
+                    <button class="fs-btn fs-btn--cancel" onclick={handleCloseModal}>Annuler</button>
+                    <button class="fs-btn fs-btn--save" onclick={handleConfirm} disabled={isSaving}>Confirmer</button>
+                </div>
+            </div>
+        </div>
+    </template>
+</template>
