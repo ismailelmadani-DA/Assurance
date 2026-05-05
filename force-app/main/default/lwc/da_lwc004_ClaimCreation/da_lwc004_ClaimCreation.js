@@ -5,7 +5,7 @@ import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
 // Import des objets et champs pour Picklists dynamiques (Étape 4)
 import CASE_OBJECT from '@salesforce/schema/Case';
 import ACCOUNT_OBJECT from '@salesforce/schema/Account';
-import COUNTRY_FIELD from '@salesforce/schema/Case.CountryOfOccurrence__c';
+//import COUNTRY_FIELD from '@salesforce/schema/Case.CountryOfOccurrence__c';
 import CITY_FIELD from '@salesforce/schema/Case.CityOfOccurrence__c';
 import CLAIMANT_FIELD from '@salesforce/schema/Case.Claimant__c';
 import PV_FIELD from '@salesforce/schema/Case.IncidentReport__c';
@@ -13,7 +13,6 @@ import NOTIF_FIELD from '@salesforce/schema/Account.MoyenNotification__c';
 
 // Apex
 import searchPolicies from '@salesforce/apex/ClaimSearchController.searchPolicies';
-import createClaimCase from '@salesforce/apex/ClaimSearchController.createClaimCase';
 import getPicklistOptions from '@salesforce/apex/ClaimSearchController.getTypeDocumentsByReportoire';
 import saveDocumentLocally from '@salesforce/apex/ClaimSearchController.saveDocumentLocally';
 

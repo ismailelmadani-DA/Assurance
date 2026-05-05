@@ -1,7 +1,11 @@
 <template>
     <!-- URL Field -->
     <template if:true={isUrl}>
-        <a href="javascript:void(0);" onclick={handleClick} class="cell-link">
+        <a 
+            href="javascript:void(0);" 
+            onclick={handleClick} 
+            class="cell-link"
+            style="color:#006233 !important; font-weight:700 !important; text-decoration:none !important;">
             {displayValue}
         </a>
     </template>
@@ -57,7 +61,7 @@
         </div>
     </template>
 
-    <!-- Text Area Field - Enhanced with expand/collapse -->
+    <!-- Text Area Field -->
     <template if:true={isTextArea}>
         <div class="textarea-container">
             <div class="textarea-content">{fieldValue}</div>

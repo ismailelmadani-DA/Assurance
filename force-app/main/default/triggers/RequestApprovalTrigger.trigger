@@ -16,6 +16,7 @@ trigger RequestApprovalTrigger on RequestApproval__c (after insert, after update
                 && (ra.Status__c == 'Approuvée' || ra.Status__c == 'Rejetée');
             if (justDecided && ra.TypeApprobation__c == 'Flag du sinistre') {
                 RequestApprovalService.applyDecision(ra);
+                FlagSinistreNotifier.sendDecisionNotification(ra);
             }
         }
     }

@@ -139,6 +139,6 @@ public with sharing class DA_Utility {
      * -------------------------------------------------------------------------------------------------
      **/
     public static User getCurrentUserInfo(){
-        return [SELECT Id, Name, Email, Profile.Name FROM User WHERE Id = :UserInfo.getUserId() limit 1]; 
+        return [SELECT Id, Name, Email, ManagerId, Profile.Name FROM User WHERE Id = :UserInfo.getUserId() limit 1];
     }
 }

@@ -1,8 +1,5 @@
 public with sharing class ClaimSearchController {
-    
-    /**
-     * Recherche les polices d'assurance selon plusieurs critères
-     */
+   
     @AuraEnabled(cacheable=true)
     public static List<Map<String, Object>> searchPolicies(
         String policyNumber, 
@@ -77,9 +74,7 @@ public with sharing class ClaimSearchController {
         return formatted;
     }
 
-    /**
-     * Crée l'enregistrement de déclaration (Case)
-     */
+    
     @AuraEnabled
     public static Map<String, String> createCase(String payload) {
         try {
@@ -101,7 +96,7 @@ public with sharing class ClaimSearchController {
             if (data.get('dateSurvenance') != null && String.isNotBlank((String)data.get('dateSurvenance'))) {
                 newCase.DateOfOccurrence__c = Date.valueOf((String)data.get('dateSurvenance'));
             }
-            
+
             newCase.Claimant__c = (String)data.get('declarant');
             
             newCase.IncidentReport__c = (String)data.get('pvConstat');
@@ -138,9 +133,11 @@ public with sharing class ClaimSearchController {
 
             newCase.AccountId = finalAccountId; 
 
-            newCase.Status = 'New';
+            newCase.Status = 'En cours';
             newCase.Origin = 'Gestionnaire';
             newCase.DateOfDeclarationCreation__c = Date.today();
+            Id declarationRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName().get('Declaration').getRecordTypeId();
+            newCase.RecordTypeId = declarationRecordTypeId;
 
             insert newCase;
 
@@ -156,9 +153,7 @@ public with sharing class ClaimSearchController {
         }
     }
 
-    /**
-     * Récupération des infos de l'assuré (Étape 7)
-     */
+   
     @AuraEnabled(cacheable=true)
     public static Account getInsuredDetails(Id policyId) {
         try {
@@ -174,9 +169,7 @@ public with sharing class ClaimSearchController {
         }
     }
 
-    /**
-     * Récupération dynamique des Picklists (Étape 7 & 8)
-     */
+    
     @AuraEnabled(cacheable=true)
     public static List<Map<String, String>> getPicklistValues(String objectName, String fieldName) {
         List<Map<String, String>> options = new List<Map<String, String>>();
@@ -194,79 +187,137 @@ public with sharing class ClaimSearchController {
         return options;
     }
 
-    /**
-     * Enregistrement des passagers (Étape 8)
-     */
+   
   
     @AuraEnabled
     public static void savePassengers(Id caseId, String passengersJson) {
         try {
-            // 1. Récupération des infos du dossier pour trouver le compte client
-            List<Case> cases = [SELECT Id, AccountId, Police__r.AccountName__c FROM Case WHERE Id = :caseId LIMIT 1];
-            
+            List<Case> cases = [SELECT Id, Vehicule__c FROM Case WHERE Id = :caseId LIMIT 1];
             if (cases.isEmpty()) {
                 throw new AuraHandledException('Le dossier (Case) est introuvable.');
             }
-            
-            // Détermination du compte parent (souvent obligatoire pour l'objet Passager)
-            Id parentAccountId = cases[0].AccountId != null ? cases[0].AccountId : cases[0].Police__r.AccountName__c;
-            
-            if (parentAccountId == null) {
-                throw new AuraHandledException('Erreur : Aucun compte client n\'est lié à ce dossier.');
-            }
 
             List<Object> passList = (List<Object>) JSON.deserializeUntyped(passengersJson);
-            List<Passager__c> toInsert = new List<Passager__c>();
+            List<Passager__c> toUpsert = new List<Passager__c>();
+
+          
+
+            List<Passager__c> existingPassagers = [SELECT Id, CIN__c, Name FROM Passager__c WHERE Case__c = :caseId AND Roles__c = 'Passager assuré'];
+            Map<String, Id> passagerIdMap = new Map<String, Id>();
+            for(Passager__c ep : existingPassagers) {
+                if (String.isNotBlank(ep.CIN__c)) passagerIdMap.put(ep.CIN__c, ep.Id);
+                else passagerIdMap.put(ep.Name, ep.Id);
+            }
+
+            // =========================================================
+            // ÉTAPE B : GESTION INTELLIGENTE DES COMPTES (Accounts)
+            // =========================================================
+            Set<String> cins = new Set<String>();
+            Set<String> names = new Set<String>();
+            
+            for (Object obj : passList) {
+                Map<String, Object> p = (Map<String, Object>) obj;
+                if (p.get('CIN__c') != null) cins.add((String)p.get('CIN__c'));
+                
+                String fullName = (p.get('Nom__c') != null && p.get('Prenom__c') != null) ? 
+                                  (String)p.get('Nom__c') + ' ' + (String)p.get('Prenom__c') : 
+                                  (String)p.get('Name__c');
+                if(fullName != null) names.add(fullName);
+            }
+
+            List<Account> existingAccounts = [SELECT Id, CIN__c, Name FROM Account WHERE CIN__c IN :cins OR Name IN :names];
+            Map<String, Account> accountMap = new Map<String, Account>();
+            for (Account acc : existingAccounts) {
+                if (String.isNotBlank(acc.CIN__c)) accountMap.put(acc.CIN__c, acc);
+                accountMap.put(acc.Name, acc);
+            }
+
+            List<Account> accountsToInsert = new List<Account>();
+            for (Object obj : passList) {
+                Map<String, Object> p = (Map<String, Object>) obj;
+                String cin = (String)p.get('CIN__c');
+                String fullName = (p.get('Nom__c') != null && p.get('Prenom__c') != null) ? 
+                                  (String)p.get('Nom__c') + ' ' + (String)p.get('Prenom__c') : 
+                                  (String)p.get('Name__c');
+
+                if (String.isNotBlank(cin) && !accountMap.containsKey(cin)) {
+                    Account newAcc = new Account(Name = fullName, CIN__c = cin);
+                    if (p.get('Telephone__c') != null) newAcc.Phone = String.valueOf(p.get('Telephone__c'));
+                    if (p.get('Email__c') != null) newAcc.Email__c = (String)p.get('Email__c');
+                    accountsToInsert.add(newAcc);
+                    accountMap.put(cin, newAcc); 
+                } else if (String.isBlank(cin) && String.isNotBlank(fullName) && !accountMap.containsKey(fullName)) {
+                    Account newAcc = new Account(Name = fullName);
+                    if (p.get('Telephone__c') != null) newAcc.Phone = String.valueOf(p.get('Telephone__c'));
+                    if (p.get('Email__c') != null) newAcc.Email__c = (String)p.get('Email__c');
+                    accountsToInsert.add(newAcc);
+                    accountMap.put(fullName, newAcc);
+                }
+            }
+            if (!accountsToInsert.isEmpty()) {
+                insert accountsToInsert; 
+            }
+
+          
 
             for (Object obj : passList) {
                 Map<String, Object> p = (Map<String, Object>) obj;
                 Passager__c newP = new Passager__c();
                 
-                // --- LIAISONS PIVOTS ---
-                newP.Compte__c = parentAccountId; 
                 newP.Case__c = caseId;
+                newP.Vehicule__c = cases[0].Vehicule__c;
+                newP.Roles__c = 'Passager assuré';
+
+                String fullName = (p.get('Nom__c') != null && p.get('Prenom__c') != null) ? 
+                                  (String)p.get('Nom__c') + ' ' + (String)p.get('Prenom__c') : 
+                                  (String)p.get('Name__c');
+                if (fullName == null && p.get('Name') != null) fullName = (String)p.get('Name');
                 
-                // --- MAPPING DES DONNÉES ---
-                newP.Name = (String)p.get('Name');
+                newP.Name = fullName != null ? fullName : 'Passager Inconnu';
                 newP.CIN__c = (String)p.get('CIN__c');
+
+                if (p.get('Id') != null && String.isNotBlank((String)p.get('Id'))) {
+                    newP.Id = (Id)p.get('Id'); 
+                } else if (String.isNotBlank(newP.CIN__c) && passagerIdMap.containsKey(newP.CIN__c)) {
+                    newP.Id = passagerIdMap.get(newP.CIN__c); 
+                } else if (passagerIdMap.containsKey(newP.Name)) {
+                    newP.Id = passagerIdMap.get(newP.Name); 
+                }
+
+                if (String.isNotBlank(newP.CIN__c) && accountMap.containsKey(newP.CIN__c)) {
+                    newP.Compte__c = accountMap.get(newP.CIN__c).Id;
+                } else if (accountMap.containsKey(newP.Name)) {
+                    newP.Compte__c = accountMap.get(newP.Name).Id;
+                }
+
                 newP.Civilite__c = (String)p.get('Civilite__c');
-                
                 if(p.get('BirthDay__c') != null && String.isNotBlank((String)p.get('BirthDay__c'))) {
                     newP.BirthDay__c = Date.valueOf((String)p.get('BirthDay__c'));
                 }
-                
                 newP.Pays__c = (String)p.get('Pays__c');
                 newP.Ville__c = (String)p.get('Ville__c');
                 newP.Adresse__c = (String)p.get('Adresse__c');
                 newP.StateOfPerson__c = (String)p.get('StateOfPerson__c');
                 newP.MaritalStatus__c = (String)p.get('MaritalStatus__c');
-                newP.Roles__c = 'Passager assuré';
-                // --- NOTIFICATION & ASSURANCE ---
                 newP.MoyenNotification__c = (String)p.get('MoyenNotification__c'); 
 
-                // ==================================================
-                // ---> AJOUT DES NOUVEAUX CHAMPS DE NOTIFICATION <---
-                // ==================================================
-                if (p.get('Telephone__c') != null && String.isNotBlank((String)p.get('Telephone__c'))) {
-                    newP.Telephone__c = (String)p.get('Telephone__c');
-                }
+                if (p.get('Telephone__c') != null) newP.Telephone__c = String.valueOf(p.get('Telephone__c'));
+                else if (p.get('Telephone') != null) newP.Telephone__c = String.valueOf(p.get('Telephone'));
                 
-                if (p.get('Email__c') != null && String.isNotBlank((String)p.get('Email__c'))) {
-                    newP.Email__c = (String)p.get('Email__c');
-                }
-                // ==================================================
+                if (p.get('Email__c') != null) newP.Email__c = (String)p.get('Email__c');
 
                 if (p.get('CompagnieAdverse__c') != null && String.isNotBlank((String)p.get('CompagnieAdverse__c'))) { 
                     newP.Account__c = (Id)p.get('CompagnieAdverse__c'); 
                 }
-                toInsert.add(newP);
+
+                toUpsert.add(newP);
             }
 
-            if (!toInsert.isEmpty()) {
-                insert toInsert;
+            if (!toUpsert.isEmpty()) {
+                upsert toUpsert; 
             }
         } catch (Exception e) {
-            throw new AuraHandledException('Erreur lors de l\'enregistrement des passagers : ' + e.getMessage());
+            throw new AuraHandledException('Erreur passagers : ' + e.getMessage() + ' Ligne: ' + e.getLineNumber());
         }
     }
 
@@ -294,7 +345,6 @@ public with sharing class ClaimSearchController {
             doc.Statut__c = 'Validé';
             insert doc;
             
-            // ... suite du code (Document_Link__c)
             return 'Ok';
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
@@ -308,10 +358,8 @@ public with sharing class ClaimSearchController {
                 throw new AuraHandledException('L\'identifiant de la déclaration (Case) est manquant.');
             }
 
-            // On initialise le Case avec son ID
             Case caseToUpdate = new Case(Id = caseId);
             
-            // On mappe les données vers les champs personnalisés de l'objet CASE
             if (caseData.containsKey('CausesAndCircumstances__c')) {
                 caseToUpdate.CausesAndCircumstances__c = (String)caseData.get('CausesAndCircumstances__c');
             }
@@ -325,7 +373,6 @@ public with sharing class ClaimSearchController {
                 caseToUpdate.OpposingParty__c = (String)caseData.get('OpposingParty__c');
             }
             
-            // Sécurisation pour les Nombres
             if (caseData.get('NumberOfVehiclesInvolved__c') != null) {
                 String val = String.valueOf(caseData.get('NumberOfVehiclesInvolved__c'));
                 if (String.isNotBlank(val)) {
@@ -333,7 +380,6 @@ public with sharing class ClaimSearchController {
                 }
             }
 
-            // Sécurisation pour les Checkbox
             if (caseData.get('AnyDamage__c') != null) {
                 caseToUpdate.AnyDamage__c = Boolean.valueOf(caseData.get('AnyDamage__c'));
             }
@@ -344,17 +390,13 @@ public with sharing class ClaimSearchController {
                 caseToUpdate.PrecisionsDommages__c = (String)caseData.get('PrecisionsDommages__c');
             }
 
-            // Mise à jour immédiate du Case en base de données
             update caseToUpdate;
 
         } catch (Exception e) {
             throw new AuraHandledException('Erreur Apex (Ligne ' + e.getLineNumber() + ') : ' + e.getMessage());
         }
     }
-    /**
- * Enregistre les informations du véhicule adverse (Étape 9)
- * Crée un record dans l'objet VehicleCaseAssignment__c
- */
+  
    @AuraEnabled
     public static void saveAdverseVehicle(Id caseId, String adverseDataJson) {
         try {
@@ -362,9 +404,7 @@ public with sharing class ClaimSearchController {
                 throw new AuraHandledException('Données manquantes pour la sauvegarde du véhicule adverse.');
             }
 
-            // =========================================================
-            // GESTION DU COMPTE (Tiers Générique)
-            // =========================================================
+           
             Case currentCase = [SELECT Id, AccountId FROM Case WHERE Id = :caseId LIMIT 1];
             Id accountIdToUse = currentCase.AccountId;
             
@@ -376,20 +416,16 @@ public with sharing class ClaimSearchController {
                 update currentCase;
             }
 
-            // Désérialisation du JSON
             List<Object> vehiclesList = (List<Object>) JSON.deserializeUntyped(adverseDataJson);
             List<VehicleCaseAssignment__c> assignmentsToInsert = new List<VehicleCaseAssignment__c>();
             List<Passager__c> passagersToInsert = new List<Passager__c>();
             
             String etatVehiculePourCase = null; 
 
-            // BOUCLE PRINCIPALE SUR LES VÉHICULES
             for (Object obj : vehiclesList) {
                 Map<String, Object> v = (Map<String, Object>) obj;
                 
-                // =========================================================
-                // ÉTAPE 1 : RÉCUPÉRATION OU CRÉATION DU VÉHICULE
-                // =========================================================
+                
                 Id currentVehiculeId = (String)v.get('Vehicule__c');
                 
                 if (String.isBlank(currentVehiculeId)) {
@@ -398,7 +434,7 @@ public with sharing class ClaimSearchController {
                     newCar.Brand__c = (String)v.get('Marque__c'); 
                     newCar.TypeVehicule__c = (String)v.get('TypeVehicule__c');
                     newCar.NbDeContratDAssurance__c = (String)v.get('Numéro_de_contrat__c');
-                    newCar.isOpposingCar__c = true; // Véhicule adverse
+                    newCar.isOpposingCar__c = true; 
                     
                     if (v.get('DateMiseEnCirculation__c') != null && String.isNotBlank((String)v.get('DateMiseEnCirculation__c'))) {
                         newCar.DateOfFirstRegistration__c = Date.valueOf((String)v.get('DateMiseEnCirculation__c'));
@@ -408,9 +444,8 @@ public with sharing class ClaimSearchController {
                     currentVehiculeId = newCar.Id; 
                 }
 
-                // =========================================================
-                // ÉTAPE 2 : CRÉATION DE L'ASSIGNATION (Case <-> Véhicule)
-                // =========================================================
+               
+
                 VehicleCaseAssignment__c newAssignment = new VehicleCaseAssignment__c();
                 newAssignment.Case__c = caseId;
                 newAssignment.Vehicule__c = currentVehiculeId; 
@@ -430,9 +465,7 @@ public with sharing class ClaimSearchController {
                 
                 assignmentsToInsert.add(newAssignment);
 
-                // =========================================================
-                // ÉTAPE 3 : CRÉATION DES PASSAGERS (Liés au Véhicule)
-                // =========================================================
+                
                 if (v.get('passengers') != null) {
                     List<Object> passListObj = (List<Object>) v.get('passengers');
                     
@@ -443,9 +476,8 @@ public with sharing class ClaimSearchController {
                         newPass.Case__c = caseId; 
                         newPass.Roles__c = 'Passager adverse'; 
                         newPass.Vehicule__c = currentVehiculeId; 
-                        newPass.Compte__c = accountIdToUse; // <-- Correction appliquée ici
+                        newPass.Compte__c = accountIdToUse; 
                         
-                        // J'ai mis pMap.get('Name__c') car c'est la clé envoyée par votre LWC
                         newPass.Name = (String)pMap.get('Name__c'); 
                         
                         newPass.Civilite__c = (String)pMap.get('Civilite__c');
@@ -461,14 +493,22 @@ public with sharing class ClaimSearchController {
                         newPass.Ville__c = (String)pMap.get('Ville__c');
                         newPass.StateOfPerson__c = (String)pMap.get('StateOfPerson__c');
                         
+                        if (pMap.get('Telephone__c') != null) {
+                            newPass.Telephone__c = String.valueOf(pMap.get('Telephone__c'));
+                        } else if (pMap.get('Telephone') != null) {
+                            newPass.Telephone__c = String.valueOf(pMap.get('Telephone'));
+                        }
+                        
+                        if (pMap.get('Email__c') != null) {
+                            newPass.Email__c = (String)pMap.get('Email__c');
+                        }
+
                         passagersToInsert.add(newPass);
                     }
                 }
-            } // <-- C'est souvent cette accolade de fermeture de boucle qui se perd !
+            } 
 
-            // =========================================================
-            // INSERTIONS FINALES EN BASE DE DONNÉES
-            // =========================================================
+            
             if (!assignmentsToInsert.isEmpty()) {
                 insert assignmentsToInsert;
             }
@@ -487,12 +527,10 @@ public with sharing class ClaimSearchController {
     @AuraEnabled
     public static void saveOtherParties(Id caseId, String partiesJson) {
         try {
-            // Sécurité : On sort tout de suite si aucune donnée n'a été saisie
             if (String.isBlank(partiesJson) || partiesJson == '[]') {
                 return; 
             }
 
-            // 1. GESTION DU COMPTE (Fallback pour éviter l'erreur REQUIRED_FIELD_MISSING)
             Case currentCase = [SELECT Id, AccountId, Vehicule__c FROM Case WHERE Id = :caseId LIMIT 1];
             Id accountIdToUse = currentCase.AccountId;
 
@@ -516,24 +554,19 @@ public with sharing class ClaimSearchController {
                 );
             }
 
-            // 3. Boucle de création des Tiers
             for (Object obj : partyList) {
                 Map<String, Object> p = (Map<String, Object>) obj;
                 Passager__c newP = new Passager__c();
                 
-                // ==========================================
-                // LIAISONS MULTIPLES (Le Tiers est rattaché à tout !)
-                // ==========================================
-                newP.Compte__c = accountIdToUse; // Le client ou le compte générique
-                newP.Case__c = caseId;           // L'événement global
+              
+                newP.Compte__c = accountIdToUse; 
+                newP.Case__c = caseId;           
                 
                 newP.Vehicule__c = currentCase.Vehicule__c;   
 
-                // --- NOMS ---
                 String fullName = (String)p.get('Nom__c') + ' ' + (String)p.get('Prenom__c');
                 newP.Name = fullName;             
 
-                // --- INFORMATIONS PERSONNELLES ---
                 newP.Civilite__c = (String)p.get('Civilite__c');
                 newP.CIN__c = (String)p.get('CIN__c');
                 
@@ -548,8 +581,16 @@ public with sharing class ClaimSearchController {
                 newP.MaritalStatus__c = (String)p.get('MaritalStatus__c');
                 newP.Roles__c = 'Autres partie'; 
 
-                // --- NOTIFICATION & ASSURANCE ---
                 newP.MoyenNotification__c = (String)p.get('MoyenNotification__c');
+                if (p.get('Telephone__c') != null) {
+                    newP.Telephone__c = String.valueOf(p.get('Telephone__c'));
+                } else if (p.get('Telephone') != null) {
+                    newP.Telephone__c = String.valueOf(p.get('Telephone'));
+                }
+                
+                if (p.get('Email__c') != null) {
+                    newP.Email__c = (String)p.get('Email__c');
+                }
                 
                 if (p.get('CompagnieAdverse__c') != null && String.isNotBlank((String)p.get('CompagnieAdverse__c'))) {
                     newP.Account__c = (Id)p.get('CompagnieAdverse__c');
@@ -558,13 +599,11 @@ public with sharing class ClaimSearchController {
                 toInsert.add(newP);
             }
 
-            // 4. Insertion en base de données
             if (!toInsert.isEmpty()) {
                 insert toInsert;
             }
 
         } catch (Exception e) {
-            // Affichage explicite de l'erreur
             String errorMsg = 'Erreur d\'enregistrement : ' + e.getMessage() + ' (Ligne ' + e.getLineNumber() + ')';
             AuraHandledException ex = new AuraHandledException(errorMsg);
             ex.setMessage(errorMsg);
@@ -573,70 +612,65 @@ public with sharing class ClaimSearchController {
     }
     @AuraEnabled
     public static Id finalizeClaimProcess(Id caseId) {
-        // Savepoint : Si une seule étape échoue, on annule TOUT pour ne pas avoir de données à moitié créées
         Savepoint sp = Database.setSavepoint();
         
         try {
-            // --- PRÉPARATION : On récupère toutes les informations stockées sur le Case pendant le parcours
-            Case currentCase = [SELECT Id, Police__c, Vehicule__c, CausesAndCircumstances__c, 
-                                    TriggeringEventOfClaim__c, CausesOfClaim__c, OpposingParty__c, 
-                                    NumberOfVehiclesInvolved__c, AnyDamage__c,
-                                    PointsDeChoc__c, PrecisionsDommages__c // <-- 1. AJOUT DANS LA REQUÊTE
+            
+            Case currentCase = [SELECT Id, Police__c, Vehicule__c, Vehicule__r.RegistrationNumber__c, 
+                                    CausesAndCircumstances__c, TriggeringEventOfClaim__c, CausesOfClaim__c, 
+                                    OpposingParty__c, NumberOfVehiclesInvolved__c, AnyDamage__c,
+                                    PointsDeChoc__c, PrecisionsDommages__c,InsuredIsContact__c,
+                                    AddressOfOccurrence__c ,CountryOfOccurrence__c,IncidentReport__c ,CityOfOccurrence__c 
                                 FROM Case WHERE Id = :caseId LIMIT 1];
 
-            // ==========================================
-            // 1. "on creer le claim puis on affecte le caseId avec toute les autres informations"
-            // ==========================================
+
             Claim__c newClaim = new Claim__c();
-            newClaim.Case__c = caseId; // Lien avec le Case
+            newClaim.Case__c = caseId; 
             newClaim.PolicyNumber__c = currentCase.Police__c;
             newClaim.Vehicule__c = currentCase.Vehicule__c;
             
-            // Transfert des informations du parcours (Circonstances, etc.)
+            newClaim.Status__c = 'En cours de traitement';
+            newClaim.AddressOfOccurrence__c = currentCase.AddressOfOccurrence__c;
+            newClaim.CountryOfOccurrence__c = currentCase.CountryOfOccurrence__c;
+            newClaim.IncidentReport__c = currentCase.IncidentReport__c;
+        
             newClaim.CausesAndCircumstances__c = currentCase.CausesAndCircumstances__c;
             newClaim.TriggeringEventOfClaim__c = currentCase.TriggeringEventOfClaim__c;
             newClaim.CausesOfClaim__c = currentCase.CausesOfClaim__c;
             newClaim.OpposingParty__c = currentCase.OpposingParty__c;
             newClaim.NumberOfVehiclesInvolved__c = currentCase.NumberOfVehiclesInvolved__c;
+            newClaim.IncidentReport__c = currentCase.IncidentReport__c;
+            newClaim.CityOfOccurrence__c = currentCase.CityOfOccurrence__c;
             newClaim.AnyDamage__c = currentCase.AnyDamage__c;
-            
-            // --- 2. AJOUT DE LA COPIE DES NOUVEAUX CHAMPS ICI ---
             newClaim.PointsDeChoc__c = currentCase.PointsDeChoc__c;
             newClaim.PrecisionsDommages__c = currentCase.PrecisionsDommages__c;
-            // ----------------------------------------------------
+            newClaim.InsuredIsContact__c = currentCase.InsuredIsContact__c;
             
             insert newClaim;
-            // Le Claim existe maintenant en base de données !
             
-            // ==========================================
-            // 2. "on creer ClaimParticipant__c et on le lie avec Passager__c ... puis on lie avec claim__c"
-            // ==========================================
+
             List<Passager__c> passagers = [SELECT Id, Roles__c FROM Passager__c WHERE Case__c = :caseId];
             
             if (!passagers.isEmpty()) {
-                // Création des objets de jonction
                 List<ClaimParticipant__c> participantsToInsert = new List<ClaimParticipant__c>();
                 for (Passager__c p : passagers) {
                     ClaimParticipant__c participant = new ClaimParticipant__c();
-                    participant.Claim__c = newClaim.Id;    // Liaison avec le nouveau Claim
-                    participant.Passager__c = p.Id;        // Liaison avec le Passager
-                    participant.Roles__c = p.Roles__c;      // On respecte le rôle
+                    participant.Claim__c = newClaim.Id;    
+                    participant.Passager__c = p.Id;        
+                    participant.Roles__c = p.Roles__c;  
+                    participant.ParticipantAccount__c = p.Compte__c;    
                     participantsToInsert.add(participant);
                 }
                 insert participantsToInsert;
                 
-                // On met également à jour l'objet Passager pour qu'il pointe vers le Claim
                 for(Passager__c p : passagers) { 
                     p.Claim__c = newClaim.Id; 
                 }
                 update passagers;
             }
 
-            // ==========================================
-            // 3. "puis on affecte VehicleCaseAssignment__c a claim"
-            // ==========================================
-            // Les VehicleCaseAssignment__c ont déjà été créés à l'étape 9, on les met juste à jour
-                List<VehicleCaseAssignment__c> assignments = [
+
+            List<VehicleCaseAssignment__c> assignments = [
                 SELECT Id, Claim__c 
                 FROM VehicleCaseAssignment__c 
                 WHERE Case__c = :caseId
@@ -649,9 +683,7 @@ public with sharing class ClaimSearchController {
                 update assignments; 
             }
 
-            // ==========================================
-            // 4. "finnalement on change le status de case a en cours de traitement"
-            // ==========================================
+           
             currentCase.Status = 'En cours ';
             currentCase.Claim__c = newClaim.Id;
             update currentCase;
@@ -659,7 +691,7 @@ public with sharing class ClaimSearchController {
             return newClaim.Id;
 
         } catch (Exception e) {
-            Database.rollback(sp); // En cas d'erreur, on efface les traces de cette tentative
+            Database.rollback(sp); 
             throw new AuraHandledException('Erreur lors de la création du sinistre : ' + e.getMessage() + ' (Ligne ' + e.getLineNumber() + ')');
         }
     }

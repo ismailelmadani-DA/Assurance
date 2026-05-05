@@ -16,7 +16,6 @@ export default class Lwc007_DriverInfo extends LightningElement {
     @api claimSummary;
     @api policyId;
 
-    // Propriété @api pour recevoir les données sauvegardées du parent
     @api
     get savedDriverData() {
         return this._savedDriverData;
@@ -24,7 +23,6 @@ export default class Lwc007_DriverInfo extends LightningElement {
     set savedDriverData(value) {
         if (value && Object.keys(value).length > 0) {
             this._savedDriverData = value;
-            // On recopie les données sauvegardées dans formData
             this.formData = { ...this.formData, ...value };
         }
     }

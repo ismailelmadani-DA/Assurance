@@ -7,49 +7,25 @@ public with sharing class DA_PassagerController {
     @AuraEnabled(cacheable=true)
     public static List<Passager__c> getPassengers(Id caseId) {
         System.debug(CLASS_NAME + ' - Start method getPassengers');
-        try {
             List<Passager__c> result = DA_PassagerAssureService.getPassengers(caseId);
             System.debug(CLASS_NAME + ' - End method getPassengers');
             return result;
-        } catch (AuraHandledException ae) {
-            throw ae;
-        } catch (Exception e) {
-            throw new AuraHandledException('Erreur lors du chargement des passagers assurés.');
-        }
     }
 
     @AuraEnabled(cacheable=true)
     public static List<Passager__c> getPassagersAdverses(Id caseId) {
         System.debug(CLASS_NAME + ' - Start method getPassagersAdverses');
-        try {
-            if (caseId == null) {
-                throw new AuraHandledException('L\'identifiant du dossier est requis.');
-            }
             List<Passager__c> result = DM001_Passager.getPassagersByCaseAndRole(caseId, ROLE_PASSAGER_ADVERSE);
             System.debug(CLASS_NAME + ' - End method getPassagersAdverses');
             return result;
-        } catch (AuraHandledException ae) {
-            throw ae;
-        } catch (Exception e) {
-            throw new AuraHandledException('Erreur lors du chargement des passagers adverses.');
-        }
     }
 
     @AuraEnabled(cacheable=true)
     public static List<Passager__c> getPassagersAutresPartie(Id caseId) {
         System.debug(CLASS_NAME + ' - Start method getPassagersAutresPartie');
-        try {
-            if (caseId == null) {
-                throw new AuraHandledException('L\'identifiant du dossier est requis.');
-            }
             List<Passager__c> result = DM001_Passager.getPassagersByCaseAndRole(caseId, ROLE_AUTRES_PARTIE);
             System.debug(CLASS_NAME + ' - End method getPassagersAutresPartie');
             return result;
-        } catch (AuraHandledException ae) {
-            throw ae;
-        } catch (Exception e) {
-            throw new AuraHandledException('Erreur lors du chargement des passagers autres partie.');
-        }
     }
 
     @AuraEnabled

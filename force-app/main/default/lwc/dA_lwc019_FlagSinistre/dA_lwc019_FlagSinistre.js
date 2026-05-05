@@ -153,7 +153,8 @@ export default class DA_lwc019_FlagSinistre extends LightningElement {
             if (result.success) {
                 this.showToast('Succès', result.message, 'success');
                 this.isModalOpen = false;
-                await this.loadData();
+                // eslint-disable-next-line @lwc/lwc/no-async-operation
+                setTimeout(() => { window.location.reload(); }, 500);
             } else {
                 this.showToast('Erreur', result.message, 'error');
             }

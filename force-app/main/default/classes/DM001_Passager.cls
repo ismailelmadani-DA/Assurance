@@ -8,7 +8,7 @@ public with sharing class DM001_Passager {
 
     // Champs étendus pour les passagers adverses (cas sinistre)
  private static final String PASSENGER_ADVERSE_FIELDS =
-    'Id, Name, Civilite__c, CIN__c, Sexe__c, ' +  // ← Name__c supprimé
+    'Id, Name, Civilite__c, CIN__c, Sexe__c, ' +  
     'Pays__c, Ville__c, StateOfPerson__c, ' +
     'isDriver__c, Passager_mineurisMinorPassenger__c, ' +
     'Vehicule__c, Vehicule__r.RegistrationNumber__c, ' +

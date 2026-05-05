@@ -1,5 +1,5 @@
 import { LightningElement, api, track } from 'lwc';
-import { NavigationMixin } from 'lightning/navigation'; // ← 1. AJOUTER cet import
+import { NavigationMixin } from 'lightning/navigation'; 
 import getPassagersAdverses from '@salesforce/apex/DA_LWC008_ListPassagerAdverseController.getPassagersAdverses';
 
 const PAGE_SIZE = 10;

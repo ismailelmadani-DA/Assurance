@@ -1,0 +1,499 @@
+/* ═══════════════════════════════════════════════════════════
+   DA_lwc021_claimEvenement — Styles
+   ═══════════════════════════════════════════════════════════ */
+
+:host {
+    --wafa-green       : #006233;
+    --wafa-yellow      : #3a9e60;
+    --wafa-dark-green  : #004824;
+    --wafa-light-green : #e6f2ec;
+    --wafa-pale-yellow : #d8f0e3;
+    --text-main        : #1a1a1a;
+    --text-mid         : #444444;
+    --text-light       : #707070;
+    --text-muted       : #9a9a9a;
+    --bg-light         : #F8F9FA;
+    --white            : #FFFFFF;
+    --border           : #e2e8e4;
+    --border-strong    : #c5d5cc;
+    --radius           : 12px;
+    --radius-sm        : 7px;
+    --radius-pill      : 999px;
+    --shadow-sm        : 0 2px 8px rgba(0,98,51,.08), 0 1px 3px rgba(0,0,0,.04);
+    --shadow-md        : 0 6px 20px rgba(0,98,51,.12), 0 2px 6px rgba(0,0,0,.06);
+    --ease             : cubic-bezier(.4,0,.2,1);
+    --dur              : .2s;
+    font-family: 'DM Sans', 'Salesforce Sans', Arial, sans-serif;
+}
+
+/* ════════════════════════════════════════
+   CARTE PRINCIPALE (style fs-card)
+════════════════════════════════════════ */
+.fs-card {
+    background   : var(--white);
+    border-radius: var(--radius);
+    box-shadow   : var(--shadow-sm);
+    border       : 1px solid var(--border);
+    padding      : 1rem 1.4rem;
+}
+
+.fs-row {
+    display        : flex;
+    align-items    : center;
+    justify-content: space-between;
+    gap            : .75rem;
+    flex-wrap      : wrap;
+}
+
+.fs-row__flags {
+    display    : flex;
+    align-items: center;
+    flex-wrap  : wrap;
+    gap        : .45rem;
+    flex       : 1;
+    min-width  : 0;
+}
+
+.fs-empty {
+    color      : var(--text-muted);
+    font-size  : .83rem;
+    font-style : italic;
+}
+
+/* ── Lien événement associé ── */
+.sep-event-link {
+    font-weight    : 600;
+    font-size      : .83rem;
+    color          : var(--text-main);
+    text-decoration: none;
+    transition     : color var(--dur) var(--ease);
+}
+.sep-event-link:hover { color: var(--wafa-green); text-decoration: underline; }
+
+.sep-event-code {
+    color      : var(--text-muted);
+    font-size  : .75rem;
+    font-family: monospace;
+}
+
+/* ── Bouton principal (style fs-btn--add) ── */
+.fs-btn {
+    display        : inline-flex;
+    align-items    : center;
+    gap            : .4rem;
+    padding        : .46rem .95rem;
+    border-radius  : var(--radius-pill);
+    border         : none;
+    font-size      : .78rem;
+    font-weight    : 600;
+    cursor         : pointer;
+    transition     : all var(--dur) var(--ease);
+    white-space    : nowrap;
+    font-family    : inherit;
+    letter-spacing : .01em;
+}
+.fs-btn--add {
+    background : var(--wafa-green);
+    color      : var(--white);
+    box-shadow : 0 3px 10px rgba(0,98,51,.28);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.fs-btn--add:hover {
+    background: var(--wafa-dark-green);
+    box-shadow: 0 5px 16px rgba(0,98,51,.38);
+    transform : translateY(-1px);
+}
+
+/* ════════════════════════════════════════
+   OVERLAY
+════════════════════════════════════════ */
+.sep-overlay {
+    position       : fixed;
+    top            : 0;
+    left           : 0;
+    right          : 0;
+    bottom         : 0;
+    background     : rgba(0,30,15,.6);
+    backdrop-filter: blur(4px);
+    z-index        : 9000;
+    padding        : 1rem;
+    animation      : sepFadeIn .18s var(--ease);
+}
+
+.sep-modal {
+    background    : var(--white);
+    border-radius : var(--radius);
+    box-shadow    : var(--shadow-md);
+    border        : 1px solid var(--border);
+    width         : 580px;
+    max-width     : 95vw;
+    max-height    : 92vh;
+    height        : auto;
+    display       : flex;
+    flex-direction: column;
+    overflow      : hidden;
+    animation     : sepSlideUp .24s cubic-bezier(.34,1.2,.64,1);
+    position      : fixed;
+    top           : 50%;
+    left          : 50%;
+    transform     : translate(-50%, -50%);
+    z-index       : 9001;
+}
+
+
+@keyframes sepFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* ════════════════════════════════════════
+   MODAL
+════════════════════════════════════════ */
+
+
+@keyframes sepSlideUp {
+    from { opacity: 0; transform: translateY(28px) scale(.96); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);   }
+}
+
+/* ─ Header ─ */
+.sep-modal__header {
+    display        : flex;
+    align-items    : center;
+    justify-content: space-between;
+    padding        : 1.1rem 1.4rem;
+    background     : var(--wafa-dark-green);
+    color          : var(--white);
+    flex-shrink    : 0;
+    position       : relative;
+    overflow       : hidden;
+}
+.sep-modal__header::after {
+    content   : '';
+    position  : absolute;
+    bottom    : 0; left: 0; right: 0;
+    height    : 2px;
+    background: linear-gradient(90deg, #3a9e60, transparent);
+}
+.sep-modal__header-inner {
+    display    : flex;
+    align-items: center;
+    gap        : .7rem;
+}
+.sep-modal__icon {
+    background     : #3a9e60;
+    width          : 34px;
+    height         : 34px;
+    border-radius  : 8px;
+    display        : flex;
+    align-items    : center;
+    justify-content: center;
+    flex-shrink    : 0;
+    padding        : 4px;
+    --lwc-colorTextIconDefault: var(--white);
+}
+.sep-modal__title {
+    font-size     : .95rem;
+    font-weight   : 700;
+    color         : var(--white);
+    margin        : 0;
+    letter-spacing: -.01em;
+}
+.sep-modal__subtitle {
+    font-size: .74rem;
+    color    : rgba(255,255,255,.82);
+    margin   : 2px 0 0;
+}
+.sep-modal__close {
+    display        : flex;
+    align-items    : center;
+    justify-content: center;
+    width          : 32px;
+    height         : 32px;
+    border-radius  : 50%;
+    border         : 1px solid rgba(255,255,255,.25);
+    background     : rgba(255,255,255,.1);
+    color          : var(--white);
+    cursor         : pointer;
+    flex-shrink    : 0;
+    transition     : all var(--dur) var(--ease);
+}
+.sep-modal__close:hover {
+    background  : rgba(58,158,96,.25);
+    border-color: #3a9e60;
+    transform   : rotate(90deg);
+}
+
+/* ─ Body ─ */
+.sep-modal__body {
+    padding   : .6rem 1.4rem;
+    overflow-y: auto;
+    flex      : 1;
+    min-height: 0;
+    background: #fafbfa;
+}
+
+.sep-modal__body::-webkit-scrollbar       { width: 5px; }
+.sep-modal__body::-webkit-scrollbar-track { background: transparent; }
+.sep-modal__body::-webkit-scrollbar-thumb { background: var(--wafa-green); border-radius: 3px; }
+
+/* ─ Spinner ─ */
+.sep-loading {
+    display        : flex;
+    flex-direction : column;
+    align-items    : center;
+    justify-content: center;
+    padding        : 2.5rem 1rem;
+    gap            : 12px;
+    color          : var(--text-light);
+    font-size      : 0.83rem;
+}
+
+/* ════════════════════════════════════════
+   LISTE ÉVÉNEMENTS DANS LA POPUP
+════════════════════════════════════════ */
+.sep-event-list {
+    display       : flex;
+    flex-direction: column;
+    gap           : 8px;
+}
+
+.sep-event-row {
+    display      : flex;
+    align-items  : center;
+    gap          : 12px;
+    padding      : 14px 16px;
+    border       : 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor       : pointer;
+    background   : var(--white);
+    transition   : border-color var(--dur) var(--ease),
+                   background   var(--dur) var(--ease),
+                   box-shadow   var(--dur) var(--ease);
+}
+.sep-event-row:hover {
+    border-color: var(--wafa-green);
+    background  : var(--wafa-light-green);
+}
+.sep-event-row--selected {
+    border-color: var(--wafa-green) !important;
+    background  : var(--wafa-light-green) !important;
+    box-shadow  : 0 0 0 3px rgba(0,98,51,.1);
+}
+
+/* ─ Radio ─ */
+.sep-event-row__radio { flex-shrink: 0; }
+.sep-radio {
+    width          : 18px;
+    height         : 18px;
+    border         : 2px solid var(--border-strong);
+    border-radius  : 50%;
+    display        : flex;
+    align-items    : center;
+    justify-content: center;
+    background     : var(--white);
+    flex-shrink    : 0;
+    transition     : border-color var(--dur) var(--ease),
+                     background   var(--dur) var(--ease);
+}
+.sep-radio--checked {
+    border-color: var(--wafa-green);
+    background  : var(--wafa-green);
+}
+.sep-radio__dot {
+    width        : 7px;
+    height       : 7px;
+    background   : var(--white);
+    border-radius: 50%;
+}
+
+/* ─ Contenu ligne ─ */
+.sep-event-row__content {
+    flex       : 1;
+    min-width  : 0;
+    display    : flex;
+    align-items: center;
+    gap        : 10px;
+}
+.sep-event-row__name {
+    font-size    : 0.86rem;
+    font-weight  : 700;
+    color        : var(--text-main);
+    white-space  : nowrap;
+    overflow     : hidden;
+    text-overflow: ellipsis;
+}
+.sep-event-row__code {
+    font-size    : 0.71rem;
+    font-weight  : 500;
+    color        : var(--wafa-dark-green);
+    background   : rgba(0,98,51,.1);
+    border-radius: var(--radius-pill);
+    padding      : 2px 9px;
+    font-family  : monospace;
+    white-space  : nowrap;
+    flex-shrink  : 0;
+}
+
+/* ════════════════════════════════════════
+   ÉTAT VIDE DANS LA POPUP
+════════════════════════════════════════ */
+.sep-empty-popup {
+    display       : flex;
+    flex-direction: column;
+    align-items   : center;
+    text-align    : center;
+    padding       : 1rem 1rem;
+    gap           : 6px;
+}
+
+
+.sep-empty-popup__icon  { width: 40px; height: 40px; color: var(--border-strong); margin-bottom: .5rem; }
+.sep-empty-popup__title { font-size: 0.9rem; font-weight: 700; color: var(--text-mid); margin: 0; }
+.sep-empty-popup__sub   { font-size: 0.77rem; color: var(--text-muted); margin: 0; max-width: 340px; line-height: 1.5; }
+
+/* ════════════════════════════════════════
+   FOOTER MODAL
+════════════════════════════════════════ */
+.sep-modal__footer {
+    display        : flex;
+    justify-content: flex-end;
+    align-items    : center;
+    gap            : .75rem;
+    padding        : 1rem 1.4rem;
+    border-top     : 1px solid var(--border);
+    background     : var(--bg-light);
+    flex-shrink    : 0;
+}
+
+.sep-btn {
+    display        : inline-flex;
+    align-items    : center;
+    justify-content: center;
+    gap            : .4rem;
+    padding        : .46rem 1.1rem;
+    border-radius  : var(--radius-pill);
+    border         : none;
+    font-size      : .78rem;
+    font-weight    : 600;
+    cursor         : pointer;
+    transition     : all var(--dur) var(--ease);
+    white-space    : nowrap;
+    font-family    : inherit;
+    letter-spacing : .01em;
+    min-width      : 140px;
+}
+
+.sep-btn--cancel {
+    background: var(--white); 
+    color: var(--text-mid);
+    border: 1.5px solid var(--border-strong) !important; 
+}
+
+.sep-btn--cancel:hover {
+    background  : var(--wafa-light-green); 
+    border-color: var(--wafa-green) !important;
+    color       : var(--wafa-green);
+}
+
+
+.sep-btn--confirm {
+    background: var(--wafa-green);
+    color     : var(--white);
+    box-shadow: 0 3px 10px rgba(0,98,51,.28);
+}
+.sep-btn--confirm:hover:not(:disabled) {
+    background: var(--wafa-dark-green);
+    box-shadow: 0 5px 16px rgba(0,98,51,.38);
+    transform : translateY(-1px);
+}
+.sep-btn--confirm:disabled {
+    opacity       : .38;
+    cursor        : not-allowed;
+    pointer-events: none;
+    transform     : none;
+}
+
+.sep-btn:focus-visible,
+.sep-modal__close:focus-visible {
+    outline       : 2px solid #3a9e60;
+    outline-offset: 2px;
+}
+
+/* ════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════ */
+@media (max-width: 640px) {
+    .fs-row         { flex-direction: column; align-items: stretch; }
+    .fs-btn--add    { justify-content: center; }
+    .sep-modal      { max-height: 100dvh; border-radius: 0; }
+    .sep-modal__body { padding: 1rem; }
+    .sep-modal__footer { flex-direction: row; }
+    .sep-btn        { flex: 1; min-width: 0; }
+}
+
+/* ════════════════════════════════════════
+   FOOTER MODAL
+════════════════════════════════════════ */
+.sep-modal__footer {
+    display        : flex;
+    /* On utilise center pour que les boutons soient côte à côte */
+    justify-content: flex-end; 
+    align-items    : center;
+    gap            : 1rem; /* Espacement entre les boutons */
+    padding        : 1rem 1.4rem;
+    border-top     : 1px solid var(--border);
+    background     : var(--bg-light);
+    flex-shrink    : 0;
+}
+
+.sep-btn {
+    display        : inline-flex;
+    align-items    : center;
+    justify-content: center;
+    gap            : .4rem;
+    padding        : .46rem 1.1rem;
+    border-radius  : var(--radius-pill);
+    border         : none;
+    font-size      : .78rem;
+    font-weight    : 600;
+    cursor         : pointer;
+    transition     : all var(--dur) var(--ease);
+    white-space    : nowrap;
+    font-family    : inherit;
+    letter-spacing : .01em;
+    
+    /* MODIFICATIONS ICI : */
+    flex: 1;           /* Les boutons vont prendre tout l'espace disponible de manière égale */
+    max-width: 200px;  /* On limite la largeur max pour qu'ils ne soient pas trop géants */
+    min-width: 160px;  /* On s'assure qu'ils sont assez larges pour le texte "Confirmer..." */
+}
+
+/* Optionnel : Pour que le spinner ne décale pas le texte du bouton Confirmer */
+.sep-btn--confirm {
+    position: relative;
+    background: var(--wafa-green);
+    color     : var(--white);
+    box-shadow: 0 3px 10px rgba(0,98,51,.28);
+}
+
+@media (max-width: 640px) {
+    .fs-row         { flex-direction: column; align-items: stretch; }
+    .fs-btn--add    { justify-content: center; }
+    .sep-modal      { max-height: 100dvh; border-radius: 0; width: 100%; }
+    .sep-modal__body { padding: 1rem; }
+    
+    /* On force les boutons à prendre 50% chacun sur mobile ou à s'empiler */
+    .sep-modal__footer { 
+        flex-direction: row; /* Côte à côte */
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+    .sep-btn { 
+        flex: 1; 
+        min-width: 0; /* Permet de réduire sous les 160px si l'écran est très petit */
+        max-width: none;
+        font-size: 0.72rem; /* Légère réduction pour que le texte rentre */
+    }
+}

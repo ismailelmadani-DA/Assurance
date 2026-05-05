@@ -1185,3 +1185,162 @@ lightning-combobox:focus-within { z-index: 10001; }
     flex           : 1;
     justify-content: center;
 }
+
+/* ✅ CSS */
+.pm-hero .pm-btn--add svg {
+    width        : 14px;
+    margin-right : 5px;
+    flex-shrink  : 0;
+}
+
+/* ✅ CSS */
+.pm-td--code  { font-family: monospace; }
+.pm-td--center { text-align: center; }
+
+/* ✅ CSS */
+.pm-btn-icon {
+    width     : 14px;
+    height    : 14px;
+    flex-shrink: 0;
+}
+
+/* ✅ CSS */
+.pm-success-modal__close svg {
+    width : 14px;
+    height: 14px;
+}
+
+.pm-success-modal__actions .pm-btn--save svg {
+    width        : 13px;
+    height       : 13px;
+    margin-right : 4px;
+    flex-shrink  : 0;
+}
+
+/* --- Icône de succès élégante --- */
+.pm-success-icon-wrap {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Le cercle principal rempli */
+.pm-success-circle-fill {
+    width: 60px;
+    height: 60px;
+    background: #1589ee; /* Utilisez votre vert ou ce bleu élégant */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(21, 137, 238, 0.3);
+    z-index: 2;
+}
+
+.pm-success-circle-fill svg {
+    width: 30px;
+    height: 30px;
+}
+
+/* Éléments de décoration (Plus et Points) */
+.pm-deco {
+    position: absolute;
+    color: #1589ee;
+    font-weight: bold;
+    opacity: 0.6;
+}
+
+.pm-deco--plus-1 { top: 10px; right: 10px; font-size: 18px; transform: rotate(15deg); }
+.pm-deco--plus-2 { bottom: 15px; left: 5px; font-size: 14px; transform: rotate(-20deg); }
+.pm-deco--dot-1 { 
+    top: 20px; left: 15px; width: 6px; height: 6px; 
+    background: #1589ee; border-radius: 50%; opacity: 0.4;
+}
+.pm-deco--dot-2 { 
+    bottom: 25px; right: 10px; width: 4px; height: 4px; 
+    background: #1589ee; border-radius: 50%; opacity: 0.4;
+}
+
+/* --- Typographie --- */
+.pm-success-modal__title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #080707;
+    margin-bottom: 8px;
+}
+
+.pm-success-modal__subtitle {
+    font-size: 14px;
+    color: #747474;
+    max-width: 80%;
+    margin: 0 auto 20px;
+    line-height: 1.5;
+}
+
+/* --- Chips de résumé (Code) --- */
+.pm-success-chips {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 25px;
+}
+
+.pm-success-chip {
+    background: #f3f9ff;
+    border: 1px solid #c9e4ff;
+    color: #005fb2;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pm-label {
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--text-mid, #444444);
+    margin-bottom: .2rem;
+    display: block;
+}
+
+.pm-required {
+    color: #c23934;
+    margin-left: .15rem;
+    text-decoration: none;
+    font-style: normal;
+}
+
+.pm-error {
+    color: #c0392b;
+    font-size: .7rem;
+    margin-top: .28rem;
+    padding-left: .15rem;
+    font-weight: 500;
+}
+
+/* Alignement hauteur dans la grille quand labels custom */
+.pm-grid .pm-field {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Le label natif SLDS et le label custom ont la même hauteur */
+.pm-grid .pm-field .pm-label,
+.pm-grid .pm-field .slds-form-element__label {
+    min-height: 1.2rem;
+    margin-bottom: .2rem;
+}
+
+/* Réserve toujours l'espace pour le message d'erreur 
+   même quand il est vide — évite le décalage */
+.pm-field__error-placeholder {
+    min-height: 1rem;
+    font-size: .7rem;
+    margin-top: .28rem;
+    padding-left: .15rem;
+}

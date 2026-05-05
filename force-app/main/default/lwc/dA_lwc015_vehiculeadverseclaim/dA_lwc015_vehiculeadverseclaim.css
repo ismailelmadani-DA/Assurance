@@ -860,14 +860,14 @@
 
 /* ── Modal Body ── */
 .pm-modal__body {
-    overflow-y: auto;   /* On garde le scroll vertical */
-    overflow-x: visible; /* On autorise le débordement horizontal (pour les menus) */
+    overflow-y: auto;
+    overflow-x: visible;
     flex: 1;
     padding: 1.4rem;
     position: relative;
     background: #fafbfa;
-    /* Ajoutez une marge interne en bas pour être sûr que le dernier champ puisse s'ouvrir */
-    padding-bottom: 100px; 
+    /* RÉDUIT ICI : de 100px à 1rem */
+    padding-bottom: 1rem; 
 }
 
 .pm-modal__body::-webkit-scrollbar {
@@ -926,15 +926,16 @@
 ════════════════════════════════════════ */
 /* Modifiez cette partie dans votre CSS */
 .pm-section {
-    margin-bottom: 1.1rem;
+    margin-bottom: 1.75rem; /* Marge standard entre les sections */
     border-radius: var(--radius-sm);
-    /* overflow: hidden;  <-- SUPPRIMEZ OU COMMENTEZ CETTE LIGNE */
-    overflow: visible;    /* <-- AJOUTEZ CELA */
+    overflow: visible;
     border: 1px solid var(--border);
     box-shadow: var(--shadow-xs);
     background: var(--white);
-    position: relative; /* Optionnel : aide au positionnement des enfants */
+    position: relative;
 }
+
+
 
 .pm-section__title {
     display: flex;

@@ -1,11 +1,9 @@
-/* --- TITRE DE LA PAGE --- */
 .main-title {
     color: #00008F; 
     font-size: 1.4rem;
     font-weight: 700;
 }
 
-/* --- BANDEAU RÉCAPITULATIF (HEADER) --- */
 .header-summary-box {
     background-color: #F3F3F3 !important;
     color: #1A0273 !important;
@@ -21,7 +19,6 @@
     margin-left: 5px;
 }
 
-/* --- SECTIONS ET TITRES DE BLOCS --- */
 .section-header {
     background-color: #F3F3F3 !important;
     color: #1A0273 !important;
@@ -34,21 +31,18 @@
     margin-bottom: 10px;
 }
 
-/* --- FORMULAIRE --- */
-/* Style des labels pour correspondre au style mère */
+
 :host {
     --lwc-formLabelFontSize: 0.8rem;
     --lwc-colorTextLabel: #1A0273;
     --lwc-fontWeightLabel: bold;
 }
 
-/* Espacement entre les champs */
 lightning-combobox, 
 lightning-input {
     margin-bottom: 10px;
 }
 
-/* Ajustement de la section */
 .slds-section {
     margin-top: 1.5rem;
 }

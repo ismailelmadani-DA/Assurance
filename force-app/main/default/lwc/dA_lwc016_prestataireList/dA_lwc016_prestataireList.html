@@ -14,7 +14,7 @@
                     </div>
                 </div>
                 <button class="pm-btn pm-btn--add" onclick={handleAjouter}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px; margin-right:5px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <path d="M12 5v14M5 12h14"/>
                     </svg>
                     Nouveau prestataire
@@ -66,7 +66,6 @@
                 </div>
             </div>
         </div>
-        <!-- fin pm-hero -->
 
         <!-- ═══ MAIN CARD ═══ -->
         <div class="pm-card">
@@ -109,7 +108,6 @@
                     </div>
                 </div>
             </div>
-            <!-- fin toolbar -->
 
             <!-- Table -->
             <div class="pm-body">
@@ -143,12 +141,12 @@
                                     <td class="pm-td">{row.Phone}</td>
                                     <td class="pm-td">{row.Ville}</td>
                                     <td class="pm-td" style="text-align:center">
-                                        <button class="pm-action-btn pm-action-btn--edit" 
-        onclick={handleRowAction} 
-        data-id={row.Id} 
-        title="Modifier">
-    <lightning-icon icon-name="utility:edit" size="xx-small"></lightning-icon>
-</button>
+                                        <button class="pm-action-btn pm-action-btn--edit"
+                                                onclick={handleRowAction}
+                                                data-id={row.Id}
+                                                title="Modifier">
+                                            <lightning-icon icon-name="utility:edit" size="xx-small"></lightning-icon>
+                                        </button>
                                     </td>
                                 </tr>
                             </template>
@@ -156,7 +154,6 @@
                     </table>
                 </div>
 
-                <!-- Etat vide — DANS pm-body -->
                 <template if:false={hasRows}>
                     <div class="pm-empty">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="pm-empty-icon">
@@ -166,82 +163,70 @@
                         <p>Aucun prestataire trouvé</p>
                     </div>
                 </template>
-
             </div>
-            <!-- fin pm-body -->
 
-            <!-- Pagination — DANS pm-card -->
-           <!-- Pagination -->
-<div class="pm-pagination">
-    <!-- Rows per page -->
-    <div class="pm-pagination__left">
-        
-        <div class="pm-select-wrap pm-select-wrap--small" onclick={togglePageSizeDropdown}>
-            <span class="pm-select-value">{pageSize}</span>
-            <svg class="pm-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="m6 9 6 6 6-6"/>
-            </svg>
-            <template if:true={pageSizeDropdownOpen}>
-                <div class="pm-dropdown pm-dropdown--small">
-                    <template for:each={pageSizeOptions} for:item="opt">
-                        <div key={opt.value}
-                             class={opt.optionClass}
-                             data-value={opt.value}
-                             onclick={handlePageSizeChange}>
-                            {opt.label}
-                        </div>
-                    </template>
+            <!-- Pagination -->
+            <div class="pm-pagination">
+                <div class="pm-pagination__left">
+                    <div class="pm-select-wrap pm-select-wrap--small" onclick={togglePageSizeDropdown}>
+                        <span class="pm-select-value">{pageSize}</span>
+                        <svg class="pm-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m6 9 6 6 6-6"/>
+                        </svg>
+                        <template if:true={pageSizeDropdownOpen}>
+                            <div class="pm-dropdown pm-dropdown--small">
+                                <template for:each={pageSizeOptions} for:item="opt">
+                                    <div key={opt.value}
+                                         class={opt.optionClass}
+                                         data-value={opt.value}
+                                         onclick={handlePageSizeChange}>
+                                        {opt.label}
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                    <span class="pm-page-info-rows">{rowsInfo}</span>
                 </div>
-            </template>
-        </div>
-        <span class="pm-page-info-rows">{rowsInfo}</span>
-    </div>
 
-    <!-- Numéros de pages -->
-    <div class="pm-pagination__right">
-        <!-- « première page -->
-        <button class="pm-btn pm-btn--page" onclick={firstPage} disabled={isFirstPage} title="Première page">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pm-btn-icon">
-                <path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/>
-            </svg>
-        </button>
-        <!-- < page précédente -->
-        <button class="pm-btn pm-btn--page" onclick={prevPage} disabled={isFirstPage} title="Page précédente">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pm-btn-icon">
-                <path d="m15 18-6-6 6-6"/>
-            </svg>
-        </button>
+                <div class="pm-pagination__right">
+                    <button class="pm-btn pm-btn--page" onclick={firstPage} disabled={isFirstPage} title="Première page">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pm-btn-icon">
+                            <path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/>
+                        </svg>
+                    </button>
+                    <button class="pm-btn pm-btn--page" onclick={prevPage} disabled={isFirstPage} title="Page précédente">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pm-btn-icon">
+                            <path d="m15 18-6-6 6-6"/>
+                        </svg>
+                    </button>
 
-        <!-- Numéros -->
-        <template for:each={pageNumbers} for:item="pg">
-            <template if:true={pg.isEllipsis}>
-                <span key={pg.key} class="pm-page-ellipsis">…</span>
-            </template>
-            <template if:false={pg.isEllipsis}>
-                <button key={pg.key}
-                        class={pg.btnClass}
-                        data-page={pg.page}
-                        onclick={goToPage}>
-                    {pg.label}
-                </button>
-            </template>
-        </template>
+                    <template for:each={pageNumbers} for:item="pg">
+                        <template if:true={pg.isEllipsis}>
+                            <span key={pg.key} class="pm-page-ellipsis">…</span>
+                        </template>
+                        <template if:false={pg.isEllipsis}>
+                            <button key={pg.key}
+                                    class={pg.btnClass}
+                                    data-page={pg.page}
+                                    onclick={goToPage}>
+                                {pg.label}
+                            </button>
+                        </template>
+                    </template>
 
-        <!-- > page suivante -->
-        <button class="pm-btn pm-btn--page" onclick={nextPage} disabled={isLastPage} title="Page suivante">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pm-btn-icon">
-                <path d="m9 18 6-6-6-6"/>
-            </svg>
-        </button>
-        <!-- » dernière page -->
-        <button class="pm-btn pm-btn--page" onclick={lastPage} disabled={isLastPage} title="Dernière page">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pm-btn-icon">
-                <path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/>
-            </svg>
-        </button>
-    </div>
-</div>
-            <!-- fin pagination -->
+                    <button class="pm-btn pm-btn--page" onclick={nextPage} disabled={isLastPage} title="Page suivante">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pm-btn-icon">
+                            <path d="m9 18 6-6-6-6"/>
+                        </svg>
+                    </button>
+                    <button class="pm-btn pm-btn--page" onclick={lastPage} disabled={isLastPage} title="Dernière page">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="pm-btn-icon">
+                            <path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
 
         </div>
         <!-- fin pm-card -->
@@ -327,35 +312,33 @@
                                 Informations personnelles
                             </div>
                             <div class="pm-grid">
-                                <div class="pm-field">
-                                    <lightning-input label="Nom complet" name="name" value={form.name} onchange={handleFieldChange} required></lightning-input>
-                                </div>
-                                <div class="pm-field">
-                                    <lightning-input label="Code" name="code" value={form.code} disabled></lightning-input>
-                                </div>
+                               <!-- APRÈS -->
+<div class="pm-field">
+    <label class="pm-label">
+        <abbr class="pm-required" title="obligatoire">* </abbr>
+        Nom complet
+    </label>
+    <lightning-input name="name" value={form.name}
+        onchange={handleFieldChange} onblur={handleFieldBlur}
+        variant="label-hidden">
+    </lightning-input>
+    <template if:true={errors.name}>
+        <div class="pm-error">{errors.name}</div>
+    </template>
+</div>
+                               <div class="pm-field">
+    <label class="pm-label">Code</label>
+    <lightning-input name="code" value={form.code} 
+        disabled
+        variant="label-hidden">
+    </lightning-input>
+    <div class="pm-field__error-placeholder"></div>
+</div>
                                 <div class="pm-field">
                                     <lightning-input type="tel" label="Téléphone" name="phone" value={form.phone} maxlength="20" onchange={handleFieldChange}></lightning-input>
                                 </div>
                                 <div class="pm-field">
                                     <lightning-input type="email" label="Email" name="email" value={form.email} maxlength="255" onchange={handleFieldChange}></lightning-input>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="pm-section">
-                            <div class="pm-section__title">
-                                <span class="pm-section__num">02</span>
-                                Informations bancaires
-                            </div>
-                            <div class="pm-grid">
-                                <div class="pm-field">
-                                    <lightning-combobox label="Banque" name="banque" value={form.banque} placeholder="— Sélectionner une banque —" options={banqueOptions} onchange={handleBanqueChange}></lightning-combobox>
-                                </div>
-                                <div class="pm-field">
-                                    <lightning-input label="Code banque" name="codeBanque" value={form.codeBanque} disabled></lightning-input>
-                                </div>
-                                <div class="pm-field pm-field--full">
-                                    <lightning-input label="RIB" name="rib" value={form.rib} onchange={handleFieldChange} maxlength="24" placeholder="24 caractères maximum"></lightning-input>
                                 </div>
                             </div>
                         </div>
@@ -377,10 +360,29 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="pm-section">
+                            <div class="pm-section__title">
+                                <span class="pm-section__num">02</span>
+                                Informations bancaires
+                            </div>
+                            <div class="pm-grid">
+                                <div class="pm-field">
+                                    <lightning-combobox label="Banque" name="banque" value={form.banque} placeholder="— Sélectionner une banque —" options={banqueOptions} onchange={handleBanqueChange}></lightning-combobox>
+                                </div>
+                                <div class="pm-field">
+                                    <lightning-input label="Code banque" name="codeBanque" value={form.codeBanque} disabled></lightning-input>
+                                </div>
+                                <div class="pm-field pm-field--full">
+                                    <lightning-input label="RIB" name="rib" value={form.rib} onchange={handleFieldChange}  placeholder="24 caractères maximum"></lightning-input>
+                                </div>
+                            </div>
+                        </div>
+
+                        
                     </template>
 
                 </div>
-                <!-- fin pm-modal__body -->
 
                 <footer class="pm-modal__footer">
                     <template if:true={isStep1}>
@@ -401,58 +403,5 @@
             </section>
         </div>
     </template>
-    <!-- fin modale -->
-    <!-- ═══ MODALE SUCCÈS ═══ -->
-<template if:true={showSuccessModal}>
-    <div class="pm-modal-overlay" onclick={closeSuccessModal}>
-        <section class="pm-success-modal" onclick={stopPropagation}>
-
-            
-
-            <!-- Icône animée -->
-            <div class="pm-success-icon-wrap">
-                <svg class="pm-success-circle" viewBox="0 0 52 52">
-                    <circle class="pm-success-circle__bg" cx="26" cy="26" r="24"/>
-                    <path class="pm-success-circle__check" d="M14 27l8 8 16-16"/>
-                </svg>
-            </div>
-
-            <!-- Titre -->
-            <h2 class="pm-success-modal__title">{successModalTitle}</h2>
-
-
-            <!-- Infos résumé -->
-           <div class="pm-success-chips">
-    <div class="pm-success-chip">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;">
-            <path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 3H8v4h8V3z"/>
-        </svg>
-        {successType}
-    </div>
-    <div class="pm-success-chip">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/>
-        </svg>
-        {successCode}
-    </div>
-</div>
-
-            <!-- Boutons -->
-            <div class="pm-success-modal__actions">
-                <button class="pm-btn pm-btn--cancel" onclick={closeSuccessModal}>
-                    Fermer
-                </button>
-                <button class="pm-btn pm-btn--save" onclick={handleNavigateToSuccess}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" >
-                        <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
-                    Consulter le prestataire
-                </button>
-            </div>
-
-        </section>
-    </div>
-</template>
-<!-- fin modale succès -->
 
 </template>

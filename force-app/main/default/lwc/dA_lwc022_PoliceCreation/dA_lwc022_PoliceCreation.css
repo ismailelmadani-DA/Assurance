@@ -1,0 +1,798 @@
+/* ════════════════════════════════════════
+   WAFA ASSURANCE — policeCreation.css
+   v2 : sidebar centrée, layout large,
+   champs non coupés, stepper checked
+════════════════════════════════════════ */
+
+:host {
+    /* ── Wafa Brand Core ── */
+    --wafa-green:       #006233;
+    --wafa-dark-green:  #004824;
+    --wafa-deep:        #002e18;
+    --wafa-mid-green:   #1d5c3c;
+    --wafa-accent:      #3a9e60;
+    --wafa-light-green: #e8f5ee;
+
+    /* ── Neutrals ── */
+    --text-main:    #1a1a1a;
+    --text-mid:     #4a4a4a;
+    --text-light:   #7a7a7a;
+    --text-muted:   #a0a0a0;
+    --bg-page:      #f0f4f8;
+    --bg-surface:   #ffffff;
+    --white:        #ffffff;
+    --border:       #e2e8f0;
+    --border-strong:#cbd5e1;
+
+    /* ── Semantic ── */
+    --pm-red:       #dc2626;
+    --pm-red-bg:    #fef2f2;
+    --pm-green-ok:  #16a34a;
+    --pm-green-bg:  #f0fdf4;
+    --pm-orange:    #ea580c;
+    --pm-orange-bg: #fff7ed;
+
+    /* ── Elevation ── */
+    --shadow-xs: 0 1px 3px rgba(0,0,0,.06);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,.08);
+    --shadow-md: 0 8px 24px rgba(0,0,0,.12);
+
+    /* ── Shape ── */
+    --radius:      12px;
+    --radius-sm:   8px;
+    --radius-pill: 999px;
+    --ease:        cubic-bezier(.4,0,.2,1);
+    --dur:         .18s;
+
+    font-family: 'DM Sans', 'Salesforce Sans', Arial, sans-serif;
+    color: var(--text-main);
+}
+
+/* ════════════════════════════════════════
+   PAGE SHELL — layout horizontal, hauteur naturelle
+   PAS de height fixe : Salesforce gère le scroll parent
+════════════════════════════════════════ */
+.modal-shell {
+    display: flex;
+    flex-direction: row;
+    min-height: 100%;          /* grandit avec le contenu */
+    width: 100%;
+    min-width: 0;
+    background: var(--bg-page);
+    /* pas d'overflow:hidden → le contenu peut grandir librement */
+}
+
+/* ════════════════════════════════════════
+   SIDEBAR — sticky sur le côté, suit le scroll
+════════════════════════════════════════ */
+.sidebar {
+    width: 280px;
+    min-width: 280px;
+    flex-shrink: 0;
+    background: linear-gradient(175deg, var(--wafa-dark-green) 0%, var(--wafa-deep) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.75rem 1rem 1.5rem;
+    /* sticky : reste visible pendant le scroll du contenu */
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    box-shadow: 4px 0 20px rgba(0,0,0,.18);
+    z-index: 20;
+    box-sizing: border-box;
+    align-self: flex-start;    /* reste en haut sans s'étirer */
+}
+
+/* ── Brand / logo en haut ── */
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    margin-bottom: 2rem;
+    width: 100%;
+    justify-content: center;
+}
+
+.brand-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--wafa-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.brand-name {
+    font-size: .78rem;
+    font-weight: 700;
+    color: rgba(255,255,255,.9);
+    letter-spacing: .01em;
+    white-space: nowrap;
+}
+
+/* ── Label "ÉTAPES" ── */
+.sidebar-label {
+    font-size: .58rem;
+    font-weight: 700;
+    letter-spacing: .18em;
+    color: rgba(255,255,255,.3);
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+    text-align: center;
+    width: 100%;
+}
+
+/* ── Liste des steps ── */
+.steps-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 0;
+    flex: 1;
+}
+
+/* ── Step item — centré dans le sidebar ── */
+.sb-step {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+    padding: .35rem .5rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background var(--dur) var(--ease);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.sb-step:hover  { background: rgba(255,255,255,.08); }
+.sb-step.active { background: rgba(255,255,255,.12); }
+
+/* ── Track vertical : cercle + ligne ── */
+.step-track {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 44px;
+}
+
+/* Cercle numéroté */
+.sb-dot {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.2);
+    background: rgba(255,255,255,.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .85rem;
+    font-weight: 700;
+    color: rgba(255,255,255,.35);
+    transition: all .3s var(--ease);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.sb-dot.active {
+    border-color: #ffffff;
+    background: #ffffff;
+    color: var(--wafa-dark-green);
+    box-shadow: 0 0 0 5px rgba(255,255,255,.1), 0 4px 14px rgba(0,0,0,.3);
+}
+
+.sb-dot.done {
+    border-color: var(--wafa-accent);
+    background: var(--wafa-accent);
+    color: #ffffff;
+}
+
+.check-icon {
+    font-size: .9rem;
+    font-weight: 800;
+}
+
+/* Ligne de connexion */
+.step-line {
+    width: 2px;
+    min-height: 30px;
+    background: rgba(255,255,255,.12);
+    border-radius: 2px;
+    margin: 3px 0;
+    position: relative;
+    overflow: hidden;
+    flex: 1;
+}
+
+.step-line.done::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--wafa-accent);
+    border-radius: 2px;
+}
+
+/* ── Infos du step ── */
+.step-info {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.step-label {
+    font-size: .78rem;
+    font-weight: 500;
+    color: rgba(255,255,255,.4);
+    line-height: 1.35;
+    transition: color .2s;
+    word-break: break-word;
+}
+
+.step-status-active {
+    font-size: .62rem;
+    color: rgba(255,255,255,.55);
+    font-weight: 600;
+    letter-spacing: .03em;
+}
+
+.step-status-done {
+    font-size: .62rem;
+    color: var(--wafa-accent);
+    font-weight: 600;
+    letter-spacing: .03em;
+}
+
+.sb-step.active .step-label { color: #ffffff; font-weight: 700; }
+.sb-step.done   .step-label { color: rgba(255,255,255,.7); }
+
+/* ── Progress en bas du sidebar ── */
+.sidebar-progress {
+    margin-top: auto;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(255,255,255,.1);
+    width: 100%;
+}
+
+.sidebar-progress-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: .4rem;
+}
+
+.sidebar-progress-label {
+    font-size: .55rem;
+    font-weight: 700;
+    color: rgba(255,255,255,.35);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.sidebar-progress-pct {
+    font-size: .7rem;
+    font-weight: 700;
+    color: var(--wafa-accent);
+}
+
+.sidebar-progress-bg {
+    height: 4px;
+    background: rgba(255,255,255,.1);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+}
+
+.sidebar-progress-fill {
+    height: 100%;
+    background: var(--wafa-accent);
+    border-radius: var(--radius-pill);
+    transition: width .5s var(--ease);
+}
+
+/* ════════════════════════════════════════
+   MAIN WRAPPER — grandit avec le contenu
+════════════════════════════════════════ */
+.main-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    /* PAS de overflow:hidden ni height fixe → le contenu s'étend */
+    background: var(--bg-page);
+}
+
+/* ════════════════════════════════════════
+   HEADER — sticky en haut de la zone droite
+════════════════════════════════════════ */
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .85rem 2rem;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+
+.modal-header-left {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    min-width: 0;
+}
+
+.modal-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    background: var(--wafa-light-green);
+    border: 1px solid rgba(0,98,51,.15);
+    flex-shrink: 0;
+    --lwc-colorTextIconDefault: var(--wafa-green);
+}
+
+.modal-title-block { min-width: 0; }
+
+.modal-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+    letter-spacing: -.02em;
+    white-space: nowrap;
+}
+
+.modal-sub {
+    font-size: .7rem;
+    color: var(--text-light);
+    margin: 2px 0 0;
+}
+
+.badge-initiale {
+    display: inline-block;
+    padding: .1rem .5rem;
+    border-radius: var(--radius-pill);
+    background: var(--wafa-light-green);
+    color: var(--wafa-green);
+    font-size: .62rem;
+    font-weight: 700;
+    border: 1px solid rgba(0,98,51,.2);
+    letter-spacing: .04em;
+}
+
+/* ── Barre de progression dans le header ── */
+.header-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 200px;
+    max-width: 260px;
+    flex-shrink: 0;
+}
+
+.header-progress-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .5rem;
+}
+
+.header-progress-pct {
+    font-size: .7rem;
+    font-weight: 700;
+    color: var(--wafa-green);
+    white-space: nowrap;
+}
+
+.header-progress-msg {
+    font-size: .66rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.header-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e6f4ea;
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+}
+
+.header-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--wafa-green), var(--wafa-accent));
+    border-radius: var(--radius-pill);
+    transition: width .4s var(--ease);
+}
+
+/* ════════════════════════════════════════
+   CONTENU — scroll géré par Salesforce, pas ici
+════════════════════════════════════════ */
+.acc-content {
+    padding: 1.5rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: .85rem;
+    min-width: 0;
+    box-sizing: border-box;
+    /* PAS de overflow-y:auto ni height/flex:1 → la page entière scroll */
+}
+
+/* ════════════════════════════════════════
+   ACCORDION ITEMS
+════════════════════════════════════════ */
+.acc-item {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    box-shadow: var(--shadow-xs);
+    overflow: hidden;
+    transition: box-shadow .2s, border-color .2s;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.acc-item.active {
+    border-color: rgba(0,98,51,.25);
+    box-shadow: 0 4px 16px rgba(0,98,51,.08);
+}
+
+.acc-item.done {
+    border-color: rgba(22,163,74,.2);
+    background: #fafffe;
+}
+
+/* Header de section */
+.acc-header {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    background: var(--white);
+    border-bottom: 1px solid transparent;
+    transition: background var(--dur);
+    user-select: none;
+    min-width: 0;
+}
+
+.acc-item.active .acc-header { border-bottom-color: var(--border); background: #f8fafb; }
+.acc-header:hover              { background: #f5f8fa; }
+
+.acc-item.done .acc-header { background: #f7fef9; }
+
+/* Numéro dans l'accordéon */
+.acc-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #edf2f7;
+    color: var(--text-light);
+    font-size: .72rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    transition: all .25s var(--ease);
+}
+
+.acc-num.active {
+    background: var(--wafa-green);
+    color: var(--white);
+    box-shadow: 0 2px 8px rgba(0,98,51,.3);
+}
+
+.acc-num.done {
+    background: var(--pm-green-ok);
+    color: var(--white);
+}
+
+.acc-title {
+    flex: 1;
+    font-size: .875rem;
+    font-weight: 600;
+    color: var(--text-main);
+    letter-spacing: -.01em;
+    min-width: 0;
+}
+
+.badge-done {
+    display: inline-flex;
+    align-items: center;
+    gap: .2rem;
+    padding: .2rem .6rem;
+    border-radius: var(--radius-pill);
+    background: var(--pm-green-bg);
+    color: var(--pm-green-ok);
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    border: 1px solid rgba(22,163,74,.2);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.acc-arrow {
+    font-size: .6rem;
+    color: var(--text-muted);
+    transition: transform .2s;
+    flex-shrink: 0;
+}
+
+.acc-item.active .acc-arrow { transform: rotate(180deg); }
+
+/* Body de section */
+.acc-body {
+    padding: 1.5rem 1.25rem 1.25rem;
+    animation: fade-in .15s ease;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* ════════════════════════════════════════
+   FORM GRID — anti-coupure au zoom
+════════════════════════════════════════ */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));  /* ← minmax(0) empêche le débordement */
+    gap: 1.1rem 1.5rem;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    min-width: 0;            /* ← CLÉ pour éviter la coupure */
+    box-sizing: border-box;
+}
+
+.field.full {
+    grid-column: 1 / -1;
+}
+
+.field-label {
+    font-size: .7rem;
+    font-weight: 700;
+    color: var(--text-mid);
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.req {
+    color: var(--pm-red);
+    margin-left: 2px;
+}
+
+/* Override LWC input width */
+.field lightning-input,
+.field lightning-combobox,
+.field lightning-textarea,
+.field lightning-radio-group {
+    width: 100%;
+    min-width: 0;
+    display: block;
+}
+
+/* ════════════════════════════════════════
+   HINT GARANTIES
+════════════════════════════════════════ */
+.garanties-hint {
+    font-size: .8rem;
+    color: var(--text-light);
+    margin-bottom: 1rem;
+    padding: .65rem 1rem;
+    background: #f0f9ff;
+    border-left: 3px solid var(--wafa-green);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* ════════════════════════════════════════
+   FOOTER DE SECTION
+════════════════════════════════════════ */
+.section-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+/* ════════════════════════════════════════
+   BARRE D'ACTIONS FINALES
+════════════════════════════════════════ */
+.modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .75rem;
+    padding: 1rem 1.5rem;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    margin-top: .5rem;
+    box-shadow: 0 -2px 10px rgba(0,0,0,.05);
+    box-sizing: border-box;
+}
+
+/* ════════════════════════════════════════
+   POPUPS
+════════════════════════════════════════ */
+.popup-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 1rem;
+    animation: fade-in .15s ease;
+}
+
+.popup-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border);
+    max-width: 460px;
+    width: 100%;
+    padding: 2.25rem 2rem 1.75rem;
+    text-align: center;
+    animation: slide-up .2s cubic-bezier(.34,1.2,.64,1);
+}
+
+.popup-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 auto 1.25rem;
+}
+
+.popup-icon.warning {
+    background: var(--pm-orange-bg);
+    color: var(--pm-orange);
+    border: 2px solid rgba(234,88,12,.15);
+}
+
+.popup-icon.danger {
+    background: var(--pm-red-bg);
+    color: var(--pm-red);
+    border: 2px solid rgba(220,38,38,.15);
+}
+
+.popup-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0 0 .75rem;
+    letter-spacing: -.02em;
+}
+
+.popup-msg {
+    font-size: .85rem;
+    color: var(--text-mid);
+    line-height: 1.65;
+    margin: 0 0 1.75rem;
+}
+
+.popup-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+
+/* ════════════════════════════════════════
+   DATATABLE
+════════════════════════════════════════ */
+lightning-datatable {
+    --lwc-colorBorderSeparator: var(--border);
+    --lwc-colorBrand: var(--wafa-green);
+    width: 100%;
+}
+
+/* ════════════════════════════════════════
+   ANIMATIONS
+════════════════════════════════════════ */
+@keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes slide-up {
+    from { opacity: 0; transform: translateY(18px) scale(.97); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);   }
+}
+
+/* ════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════ */
+@media (max-width: 900px) {
+    .sidebar { width: 230px; min-width: 230px; }
+    .acc-content { padding: 1.25rem; }
+    .modal-header { padding: .75rem 1.25rem; }
+}
+
+@media (max-width: 700px) {
+    .modal-shell { flex-direction: column; }
+
+    .sidebar {
+        width: 100%;
+        min-width: 0;
+        height: auto;
+        flex-direction: column;
+        padding: 1rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,.12);
+    }
+
+    .sidebar-brand  { margin-bottom: .75rem; }
+    .sidebar-label  { display: none; }
+    .sidebar-progress { display: none; }
+
+    .steps-list {
+        flex-direction: row;
+        gap: .25rem;
+        overflow-x: auto;
+        padding-bottom: .25rem;
+    }
+
+    .sb-step {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        min-width: 70px;
+        padding: .4rem .5rem;
+    }
+
+    .step-track { flex-direction: row; width: auto; }
+    .step-line  { display: none; }
+    .step-info  { padding-top: .3rem; }
+    .step-label { font-size: .6rem; }
+    .step-status-active,
+    .step-status-done { display: none; }
+    .sb-dot { width: 32px; height: 32px; font-size: .75rem; }
+
+    .form-grid { grid-template-columns: 1fr; }
+    .acc-content { padding: .85rem; }
+}
+
+@media (max-width: 480px) {
+    .modal-header { flex-direction: column; align-items: flex-start; gap: .5rem; }
+    .header-progress { max-width: 100%; width: 100%; }
+    .acc-body { padding: 1rem .85rem; }
+}

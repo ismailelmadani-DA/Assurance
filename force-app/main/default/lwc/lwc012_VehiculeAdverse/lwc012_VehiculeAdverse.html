@@ -57,12 +57,13 @@
                                         <lightning-input label="Nom & Prénom" data-passfield="Name__c" value={passengerData.Name__c} onchange={handlePassInputChange} required></lightning-input>
                                         <lightning-combobox label="Civilité" options={civiliteOptions} data-passfield="Civilite__c" value={passengerData.Civilite__c} onchange={handlePassInputChange}></lightning-combobox>
                                         <lightning-input label="CIN" data-passfield="CIN__c" value={passengerData.CIN__c} onchange={handlePassInputChange} required></lightning-input>
-                                        <lightning-combobox label="Pays" options={paysOptions} data-passfield="Pays__c" value={passengerData.Pays__c} onchange={handlePassInputChange} required></lightning-combobox>
                                         <lightning-textarea label="Adresse" data-passfield="Adresse__c" value={passengerData.Adresse__c} onchange={handlePassInputChange}></lightning-textarea>
                                     </div>
+                                    
                                     <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
                                         <lightning-input type="date" label="Date de naissance" data-passfield="BirthDay__c" value={passengerData.BirthDay__c} onchange={handlePassInputChange} required></lightning-input>
                                         <lightning-combobox label="Situation familiale" options={situationOptions} data-passfield="MaritalStatus__c" value={passengerData.MaritalStatus__c} onchange={handlePassInputChange}></lightning-combobox>
+                                        <lightning-combobox label="Pays" options={paysOptions} data-passfield="Pays__c" value={passengerData.Pays__c} onchange={handlePassInputChange} required></lightning-combobox>
                                         <lightning-combobox label="Ville" options={villeOptions} data-passfield="Ville__c" value={passengerData.Ville__c} onchange={handlePassInputChange} required></lightning-combobox>
                                         <lightning-combobox label="État passager" options={etatPersonneOptions} data-passfield="StateOfPerson__c" value={passengerData.StateOfPerson__c} onchange={handlePassInputChange} required></lightning-combobox>
                                     </div>

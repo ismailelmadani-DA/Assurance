@@ -8,14 +8,12 @@ import PRECISIONS_FIELD from '@salesforce/schema/Claim__c.PrecisionsDommages__c'
 export default class Lwc006_PointChoc extends LightningElement {
     @api recordId;
 
-    // ✅ AJOUT : Propriétés @api pour recevoir les données du parent (mode wizard)
     @api
     get savedPoints() {
         return this._savedPoints;
     }
     set savedPoints(value) {
         this._savedPoints = value;
-        // Restaurer les points dès que la valeur arrive
         if (value) {
             this._scheduleRestore();
         }
@@ -43,7 +41,6 @@ export default class Lwc006_PointChoc extends LightningElement {
         return !!this.recordId;
     }
 
-    // ✅ AJOUT : Restaurer après rendu
     renderedCallback() {
         if (this._restoreScheduled && !this._restored) {
             this._restored = true;
@@ -63,7 +60,6 @@ export default class Lwc006_PointChoc extends LightningElement {
 
         if (!pointsStr) return;
 
-        // Réinitialiser d'abord
         this.parts = [];
 
         const partiesEndommagees = pointsStr.split(';').map(p => p.trim()).filter(p => p !== '');

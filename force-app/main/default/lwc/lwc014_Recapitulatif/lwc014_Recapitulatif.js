@@ -1,7 +1,6 @@
 import { LightningElement, api } from 'lwc';
 
 export default class Lwc014_Recapitulatif extends LightningElement {
-    // Récupération des données depuis le Parent
     @api policy = {};
     @api caseData = {};
     @api caseNumber = '';
@@ -11,7 +10,6 @@ export default class Lwc014_Recapitulatif extends LightningElement {
     @api adverseVehicles = [];
     @api otherParties = [];
 
-    // Getters pour faciliter l'affichage HTML
     get hasAdverseVehicles() {
         return this.adverseVehicles && this.adverseVehicles.length > 0;
     }

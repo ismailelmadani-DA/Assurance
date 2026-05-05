@@ -115,24 +115,13 @@ public static String getCompagnieAdverseRecordTypeId() {
 
     @AuraEnabled(cacheable=false)
     public static List<SObject> getVehiclesAdverses(Id claimId) {
-        if (claimId == null) throw new AuraHandledException('L\'identifiant du sinistre est requis.');
-        try {
-            Id resolvedId = resolveClaimId(claimId);
-            if (resolvedId == null) throw new AuraHandledException('Aucun sinistre trouvé pour cet enregistrement.');
-            return DM002_VehicleCaseAssignment.getVehiclesAdverses(resolvedId);
-        } catch (AuraHandledException ae) { throw ae; }
-          catch (Exception e) { throw new AuraHandledException(e.getMessage()); }
+            return DM002_VehicleCaseAssignment.getVehiclesAdverses(claimId);
     }
 
     @AuraEnabled
     public static Map<String, Object> getVehicleAdverseById(Id assignmentId) {
-        if (assignmentId == null) throw new AuraHandledException('L\'identifiant de l\'affectation est requis.');
-        try {
             Map<String, Object> result = DM002_VehicleCaseAssignment.getVehicleAdverseById(assignmentId);
-            if (result == null) throw new AuraHandledException('Véhicule adverse introuvable.');
             return result;
-        } catch (AuraHandledException ae) { throw ae; }
-          catch (Exception e) { throw new AuraHandledException(e.getMessage()); }
     }
 
     // ── Écriture ─────────────────────────────────────────────────────────────

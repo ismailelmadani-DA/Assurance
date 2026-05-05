@@ -1,4 +1,3 @@
-/* --- BANDEAU RÉCAPITULATIF (HEADER) --- */
 .header-summary-box {
     background-color: #F3F3F3 !important;
     color: #1A0273 !important;
@@ -14,7 +13,6 @@
     margin-left: 5px; 
 }
 
-/* --- TITRES ET CONTENEURS --- */
 .main-title { 
     color: #00008F; 
     font-size: 1.4rem; 
@@ -43,7 +41,6 @@
     width: 100%; 
 }
 
-/* --- SOUS-TITRES (Informations, Conducteur, Passagers) --- */
 .info-group-title {
     font-weight: bold;
     font-size: 0.9rem;
@@ -53,7 +50,6 @@
     padding-left: 12px;
 }
 
-/* --- TEXTE "AUCUN PASSAGER" --- */
 .empty-text {
     color: #706e6b;
     font-size: 0.85rem;
@@ -61,17 +57,16 @@
     margin-left: 12px;
 }
 
-/* --- ALIGNEMENT DES BLOCS D'INFO (Style Image 2) --- */
 .info-block { 
     margin-bottom: 8px; 
     font-size: 0.85rem; 
 }
 
 .info-label { 
-    color: #706e6b; /* Gris clair pour les labels */
+    color: #706e6b; 
     font-weight: bold; 
     display: inline-block; 
-    width: 180px; /* Largeur fixe pour aligner parfaitement les valeurs sur la même ligne */
+    width: 180px; 
 }
 
 .info-value { 
@@ -80,7 +75,6 @@
     display: inline-block; 
 }
 
-/* --- BOUTONS --- */
 .btn-outline { 
     background: white; 
     color: #1A0273; 

@@ -1,0 +1,258 @@
+<template>
+    <div class="gm-main-container">
+        <section class="gm-hero">
+            <div class="gm-hero__top">
+                <div class="gm-hero__title-block">
+                    <div class="gm-hero__icon-wrap">
+                        <lightning-icon icon-name="standard:contract" size="small"></lightning-icon>
+                    </div>
+
+                    <div>
+                        <h1 class="gm-hero__title">Gestion des Garanties</h1>
+                        <p class="gm-hero__subtitle">
+                            Consultez et ajoutez les garanties d’assurance
+                        </p>
+                    </div>
+                </div>
+
+                <button class="gm-btn gm-btn--add" onclick={handleNew}>
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                    Nouvelle Garantie
+                </button>
+            </div>
+
+            <div class="gm-stats-separator"></div>
+
+            <div class="gm-stats-grid">
+                <div class="gm-stat-item gm-stat-item--total">
+                    <div class="gm-stat-item__label">Total garanties</div>
+                    <div class="gm-stat-item__num">{totalGaranties}</div>
+                </div>
+
+                <div class="gm-stat-item">
+                    <div class="gm-stat-item__label">Garanties actives</div>
+                    <div class="gm-stat-item__num">{totalActives}</div>
+                    <span class="gm-stat-item__badge gm-stat-item__badge--green">ON</span>
+                </div>
+
+                <div class="gm-stat-item">
+                    <div class="gm-stat-item__label">Garanties inactives</div>
+                    <div class="gm-stat-item__num">{totalInactives}</div>
+                    <span class="gm-stat-item__badge gm-stat-item__badge--red">OFF</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="gm-card">
+            <div class="gm-toolbar">
+                <div class="gm-toolbar__left">
+                    <h2 class="gm-toolbar__title">Liste des garanties</h2>
+                </div>
+
+                <div class="gm-toolbar__right">
+                    <div class="gm-search-wrap">
+                        <lightning-icon icon-name="utility:search" size="x-small"></lightning-icon>
+                        <input
+                            class="gm-search-input"
+                            type="text"
+                            placeholder="Rechercher par nom, code, type..."
+                            oninput={handleSearch} />
+                    </div>
+
+                    <lightning-combobox
+                        class="gm-filter"
+                        value={selectedType}
+                        options={filterTypeOptions}
+                        onchange={handleTypeFilter}
+                        variant="label-hidden">
+                    </lightning-combobox>
+
+                    <lightning-combobox
+                        class="gm-filter gm-filter--small"
+                        value={selectedStatus}
+                        options={statusOptions}
+                        onchange={handleStatusFilter}
+                        variant="label-hidden">
+                    </lightning-combobox>
+
+                    <button class="gm-refresh-btn" onclick={handleRefresh} title="Rafraîchir">
+                        ↻
+                    </button>
+                </div>
+            </div>
+
+            <template if:true={isLoading}>
+                <div class="gm-loader">
+                    <lightning-spinner alternative-text="Chargement..." size="small"></lightning-spinner>
+                </div>
+            </template>
+
+            <div class="gm-body">
+                <div class="gm-table-wrap">
+                    <table class="gm-table">
+                        <thead>
+                            <tr>
+                                <th class="gm-th gm-th--sortable" data-field="code" onclick={handleSort}>
+                                    Code ↕
+                                </th>
+                                <th class="gm-th gm-th--sortable" data-field="label" onclick={handleSort}>
+                                    Nom de la garantie ↕
+                                </th>
+                                <th class="gm-th gm-th--sortable" data-field="developerName" onclick={handleSort}>
+                                    Developer Name ↕
+                                </th>
+                                <th class="gm-th gm-th--sortable" data-field="type" onclick={handleSort}>
+                                    Type ↕
+                                </th>
+                                <th class="gm-th gm-th--sortable" data-field="isActive" onclick={handleSort}>
+                                    Statut ↕
+                                </th>
+                                <th class="gm-th gm-th--actions">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <template if:true={hasGaranties}>
+                                <template for:each={paginatedGaranties} for:item="g">
+                                    <tr key={g.id}>
+                                        <td class="gm-td gm-td--mono">{g.code}</td>
+
+                                        <td class="gm-td">
+                                            <span class="gm-link">{g.label}</span>
+                                        </td>
+
+                                        <td class="gm-td gm-td--mono">{g.developerName}</td>
+
+                                        <td class="gm-td">
+                                            <span class={g.typeClass}>{g.type}</span>
+                                        </td>
+
+                                        <td class="gm-td">
+                                            <span class={g.activeClass}>{g.activeLabel}</span>
+                                        </td>
+
+                                        <td class="gm-td gm-td--actions">
+                                            <button class="gm-action-btn" data-id={g.id} onclick={handleEdit} title="Modifier">
+                                                <svg viewBox="0 0 24 24">
+                                                    <path
+                                                        d="M3 17.25V21h3.75L19.81 7.94l-3.75-3.75L3 17.25z"
+                                                        fill="currentColor">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </template>
+
+                            <template if:false={hasGaranties}>
+                                <tr>
+                                    <td colspan="6" class="gm-empty">
+                                        Aucune garantie trouvée.
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="gm-pagination">
+                    <div class="gm-pagination__left">
+                        <span>{resultInfo}</span>
+
+                        <lightning-combobox
+                            class="gm-page-size"
+                            value={pageSize}
+                            options={pageSizeOptions}
+                            onchange={handlePageSizeChange}
+                            variant="label-hidden">
+                        </lightning-combobox>
+                    </div>
+
+                    <div class="gm-pagination__right">
+                        <button class="gm-page-btn" onclick={handlePrevious} disabled={disablePrevious}>
+                            Précédent
+                        </button>
+
+                        <span class="gm-page-info">{pageInfo}</span>
+
+                        <button class="gm-page-btn" onclick={handleNext} disabled={disableNext}>
+                            Suivant
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <template if:true={showModal}>
+            <section role="dialog" tabindex="-1" class="gm-modal-overlay" aria-modal="true">
+                <div class="gm-modal">
+                    <header class="gm-modal__header">
+                        <h2 class="gm-modal__title">{modalTitle}</h2>
+                        <button class="gm-modal__close" onclick={handleCancel}>×</button>
+                    </header>
+
+                    <div class="gm-modal__body">
+                        <template if:true={isRC}>
+                            <div class="gm-alert">
+                                ⚠️ Cette garantie est assignée par défaut et est en lecture seule.
+                            </div>
+                        </template>
+
+                        <div class="gm-grid">
+                            <lightning-input
+                                label="Nom de la garantie"
+                                value={currentRecord.label}
+                                onchange={handleLabelChange}
+                                required
+                                disabled={isRC}>
+                            </lightning-input>
+
+                            <lightning-input
+                                label="Code de la garantie"
+                                value={currentRecord.code}
+                                onchange={handleCodeChange}
+                                placeholder="Ex: 016"
+                                pattern="\d{3}"
+                                message-when-pattern-mismatch="Format requis : 3 chiffres"
+                                required
+                                disabled={isRC}>
+                            </lightning-input>
+
+                            <lightning-combobox
+                                label="Type de garantie"
+                                value={currentRecord.type}
+                                options={typeOptions}
+                                onchange={handleTypeChange}
+                                required
+                                disabled={isRC}>
+                            </lightning-combobox>
+
+                            <lightning-input
+                                type="checkbox"
+                                label="Active"
+                                checked={currentRecord.isActive}
+                                onchange={handleActiveChange}
+                                disabled={isRC}>
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <footer class="gm-modal__footer">
+                        <button class="gm-btn gm-btn--cancel" onclick={handleCancel}>
+                            Annuler
+                        </button>
+
+                        <template if:false={isRC}>
+                            <button class="gm-btn gm-btn--save" onclick={handleSave} disabled={isSaving}>
+                                Enregistrer
+                            </button>
+                        </template>
+                    </footer>
+                </div>
+            </section>
+        </template>
+    </div>
+</template>

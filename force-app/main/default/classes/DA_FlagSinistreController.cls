@@ -64,7 +64,7 @@ public with sharing class DA_FlagSinistreController {
         }
 
         try {
-            User currentUser = [SELECT Id, ManagerId FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+            User currentUser = DA_Utility.getCurrentUserInfo();
 
             Claim__c claim = DM006_Claim.getById('Id, Name, Flags__c', claimId);
             if (claim == null) {

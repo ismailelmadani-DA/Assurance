@@ -14,7 +14,6 @@ import ETAT_PERSONNE_FIELD from '@salesforce/schema/Passager__c.StateOfPerson__c
 export default class Lwc012_VehiculeAdverse extends LightningElement {
     @api claimSummary;
 
-    //  Recevoir les données sauvegardées du parent
     @api
     get savedAdverseVehicles() {
         return this._savedAdverseVehicles;
@@ -22,12 +21,10 @@ export default class Lwc012_VehiculeAdverse extends LightningElement {
     set savedAdverseVehicles(value) {
         if (value && value.length > 0) {
             this._savedAdverseVehicles = value;
-            // On restaure les véhicules en s'assurant que isPassengerFormOpen est fermé
             this.adverseVehicles = value.map(v => ({
                 ...v,
                 isPassengerFormOpen: false
             }));
-            // Si des véhicules existent déjà, on cache le formulaire d'ajout
             this.isFormVisible = false;
         }
     }

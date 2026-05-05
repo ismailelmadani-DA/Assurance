@@ -1,0 +1,148 @@
+<template>
+
+   <!-- ═══ CARTE ÉVÉNEMENT (même structure que fs-card) ═══ -->
+<div class="fs-card">
+    <div class="fs-row">
+
+        <!-- Côté gauche : nom + code OU texte vide -->
+        <div class="fs-row__flags">
+            <template if:true={evenementAssocie}>
+                <a class="sep-event-link" href={evenementUrl}
+                   onclick={handleNavigateToEvenement}>
+                    {evenementAssocie.Libelle__c}
+                </a>
+                <span class="sep-event-code">({evenementAssocie.Name})</span>
+            </template>
+            <template if:false={evenementAssocie}>
+                <span class="fs-empty">Aucun événement défini.</span>
+            </template>
+        </div>
+
+        <!-- Côté droit : bouton -->
+        <button class="fs-btn fs-btn--add" onclick={openPopup}>
+            
+            <template if:true={evenementAssocie}>Modifier l'événement</template>
+            <template if:false={evenementAssocie}>Ajouter événement</template>
+        </button>
+
+    </div>
+</div>
+
+    <!-- ═══ POPUP / MODALE ═══ -->
+    <template if:true={showPopup}>
+        <div class="sep-overlay" onclick={handleOverlayClick}>
+            <section class="sep-modal" onclick={stopPropagation}>
+
+                <!-- En-tête -->
+                <header class="sep-modal__header">
+                    <div class="sep-modal__header-inner">
+                        <div class="sep-modal__icon">
+                            <lightning-icon icon-name="utility:event" size="small"
+                                            variant="inverse">
+                            </lightning-icon>
+                        </div>
+                        <div>
+                            <h2 class="sep-modal__title">Associer un événement</h2>
+                            <p class="sep-modal__subtitle">
+                                Événements correspondant à ce sinistre
+                                <template if:true={hasMatchingEvents}>
+                                    &nbsp;·&nbsp;
+                                    <strong>{matchingEvenementsCount}</strong> trouvé(s)
+                                </template>
+                            </p>
+                        </div>
+                    </div>
+                    <button class="sep-modal__close" onclick={closePopup} title="Fermer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2.5" style="width:14px;height:14px;">
+                            <path d="M18 6 6 18M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </header>
+
+                <!-- Corps -->
+                <div class="sep-modal__body">
+
+                    <!-- Spinner chargement -->
+                    <template if:true={isLoading}>
+                        <div class="sep-loading">
+                            <lightning-spinner alternative-text="Chargement"
+                                              size="medium">
+                            </lightning-spinner>
+                            <p>Recherche des événements correspondants...</p>
+                        </div>
+                    </template>
+
+                    <!-- Contenu -->
+                    <template if:false={isLoading}>
+
+                        <!-- Liste événements -->
+                        <template if:true={hasMatchingEvents}>
+                            <div class="sep-event-list">
+                                <template for:each={matchingEvenements} for:item="ev">
+                                    <div key={ev.Id}
+                                         class={ev.rowClass}
+                                         onclick={handleSelectEvent}
+                                         data-id={ev.Id}>
+                                        <!-- Radio -->
+                                        <div class="sep-event-row__radio">
+                                            <div class={ev.radioClass}>
+                                                <template if:true={ev.isSelected}>
+                                                    <div class="sep-radio__dot"></div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <!-- Contenu -->
+                                        <!-- Contenu -->
+<div class="sep-event-row__content">
+    <span class="sep-event-row__name">{ev.Libelle__c}</span>
+    <span class="sep-event-row__code">{ev.Name}</span>
+</div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Aucun événement -->
+                        <template if:false={hasMatchingEvents}>
+                            <div class="sep-empty-popup">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="1.5" class="sep-empty-popup__icon">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="8" x2="12" y2="12"/>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                                <p class="sep-empty__title">Aucun événement correspondant</p>
+                                <p class="sep-empty-popup__sub">
+                                    Aucun événement ne correspond à la date de survenance
+                                    et à la localisation de ce sinistre.
+                                </p>
+                            </div>
+                        </template>
+
+                    </template>
+
+                </div>
+
+                <!-- Pied de page -->
+                <footer class="sep-modal__footer">
+                    <button class="sep-btn sep-btn--cancel" onclick={closePopup}>
+                        Annuler
+                    </button>
+                    <button class="sep-btn sep-btn--confirm"
+                            onclick={handleConfirm}
+                            disabled={isConfirmDisabled}>
+                        <template if:true={isSaving}>
+                            <lightning-spinner alternative-text="Sauvegarde"
+                                              size="x-small" variant="inverse">
+                            </lightning-spinner>
+                        </template>
+                        Confirmer l'association
+                    </button>
+                </footer>
+
+            </section>
+        </div>
+    </template>
+
+</template>

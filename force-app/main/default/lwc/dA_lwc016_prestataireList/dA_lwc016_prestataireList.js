@@ -53,32 +53,34 @@ const EMPTY_FORM = {
     adresse    : ''
 };
 
+// ── Messages d'erreur centralisés ──────────────────────
+const ERROR_MESSAGES = {
+    name : 'Ce champ est obligatoire.',
+};
+
+const EMPTY_ERRORS = () => ({
+    name : '',
+});
+
 export default class DA_lwc016_prestataireList extends NavigationMixin(LightningElement) {
 
-    /* ── Succès modal ── */
-    @track showSuccessModal = false;
-    @track successName      = '';
-    @track successType      = '';
-    @track successCode      = '';
-    @track successId        = null;
-    @track successIsNew     = false;
-
     /* ── Liste / filtres ── */
-    @track searchTerm         = '';
-    @track selectedType       = '';
-    @track currentPage        = 1;
-    @track pageSize           = 10;
+    @track searchTerm           = '';
+    @track selectedType         = '';
+    @track currentPage          = 1;
+    @track pageSize             = 10;
     @track pageSizeDropdownOpen = false;
-    @track showFormModal      = false;
-    @track currentStep        = 1;
-    @track form               = { ...EMPTY_FORM };
-    @track isSaving           = false;
-    @track isLoading          = false;
-    @track editId             = null;
-    @track banqueOptions      = [];
-    @track paysOptions        = [];
-    @track villeOptions       = [];
-    @track dropdownOpen       = false;
+    @track showFormModal        = false;
+    @track currentStep          = 1;
+    @track form                 = { ...EMPTY_FORM };
+    @track errors               = EMPTY_ERRORS();
+    @track isSaving             = false;
+    @track isLoading            = false;
+    @track editId               = null;
+    @track banqueOptions        = [];
+    @track paysOptions          = [];
+    @track villeOptions         = [];
+    @track dropdownOpen         = false;
 
     _wiredResult;
     _allResult;
@@ -100,6 +102,23 @@ export default class DA_lwc016_prestataireList extends NavigationMixin(Lightning
     disconnectedCallback() {
         document.removeEventListener('click', this._closeDropdown);
     }
+
+    renderedCallback() {
+    if (this._styleInjected) return;
+    this._styleInjected = true;
+
+    const style = document.createElement('style');
+    style.textContent = `
+        .slds-listbox.slds-dropdown.slds-dropdown_fluid,
+        .slds-listbox_vertical.slds-dropdown.slds-dropdown_fluid {
+            max-height: 150px !important;
+            height: auto !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+        }
+    `;
+    document.head.appendChild(style);
+}
 
     /* ══════════════════════════════════════
        WIRE
@@ -144,19 +163,6 @@ export default class DA_lwc016_prestataireList extends NavigationMixin(Lightning
     get avocatCount()     { return this.allPrestataires.filter(p => p.Type === 'Avocat').length; }
     get enqueteurCount()  { return this.allPrestataires.filter(p => p.Type === 'Enquêteur').length; }
     get filteredCount()   { return this.prestataires.length; }
-
-    /* ══════════════════════════════════════
-       SUCCÈS MODAL — GETTERS
-    ══════════════════════════════════════ */
-    get successModalTitle() {
-        return this.successIsNew ? 'Prestataire créé !' : 'Prestataire mis à jour !';
-    }
-
-    get successModalSub() {
-        return this.successIsNew
-            ? 'a été enregistré avec succès dans le réseau.'
-            : 'a été mis à jour avec succès.';
-    }
 
     /* ══════════════════════════════════════
        VILLE disabled
@@ -325,6 +331,7 @@ export default class DA_lwc016_prestataireList extends NavigationMixin(Lightning
     ══════════════════════════════════════ */
     handleAjouter() {
         this.editId        = null;
+        this.errors        = EMPTY_ERRORS();
         this.form          = { ...EMPTY_FORM };
         this.villeOptions  = [];
         this.currentStep   = 1;
@@ -354,6 +361,7 @@ export default class DA_lwc016_prestataireList extends NavigationMixin(Lightning
         if (!row) return;
 
         this.editId = id;
+        this.errors = EMPTY_ERRORS();
         this.form   = {
             type       : row.type       || '',
             oldType    : row.type       || '',
@@ -416,9 +424,23 @@ export default class DA_lwc016_prestataireList extends NavigationMixin(Lightning
         const field = event.target.name || event.target.dataset.field;
         const value = event.detail?.value ?? event.target.value;
         this.form = { ...this.form, [field]: value };
+
+        // Efface l'erreur du champ modifié
+        if (this.errors[field] !== undefined) {
+            this.errors = { ...this.errors, [field]: '' };
+        }
+
         if (field === 'pays') {
             this.villeOptions = this._dependentVilleOptions[value] || [];
             this.form = { ...this.form, ville: '' };
+        }
+    }
+
+    handleFieldBlur(event) {
+        const name  = event.target.name;
+        const value = event.target.value;
+        if (ERROR_MESSAGES[name] && !value?.trim()) {
+            this.errors = { ...this.errors, [name]: ERROR_MESSAGES[name] };
         }
     }
 
@@ -437,7 +459,6 @@ export default class DA_lwc016_prestataireList extends NavigationMixin(Lightning
         this.isSaving = true;
         const isNew      = !this.editId;
         const nomPresta  = this.form.name;
-        const typePresta = this.form.type;
         const codePresta = this.form.code;
         const currentId  = this.editId;
 
@@ -462,22 +483,27 @@ export default class DA_lwc016_prestataireList extends NavigationMixin(Lightning
         savePrestataire({ req })
             .then((newId) => {
                 this.closeModal();
-
-                // ✅ Modale succès — création ET modification
-                this.successName      = nomPresta;
-                this.successType      = typePresta;
-                this.successCode      = codePresta;
-                this.successId        = isNew ? newId : currentId;
-                this.successIsNew     = isNew;
-                this.showSuccessModal = true;
-
+                const recordId = isNew ? newId : currentId;
+                const url      = `/lightning/r/Account/${recordId}/view`;
+                this._showToast(
+                    isNew ? 'Prestataire créé !' : 'Prestataire mis à jour !',
+                    '{0} ({1}) a été enregistré avec succès.',
+                    'success',
+                    'sticky',
+                    [{ url, label: nomPresta }, codePresta]
+                );
                 return Promise.all([
                     refreshApex(this._wiredResult),
                     refreshApex(this._allResult)
                 ]);
             })
             .catch(error => {
-                this._showToast('Erreur', error?.body?.message || 'Erreur', 'error');
+                this._showToast(
+                    'Erreur lors de l\'enregistrement',
+                    error?.body?.message || 'Une erreur inattendue s\'est produite.',
+                    'error',
+                    'sticky'
+                );
             })
             .finally(() => {
                 this.isSaving = false;
@@ -485,53 +511,49 @@ export default class DA_lwc016_prestataireList extends NavigationMixin(Lightning
     }
 
     /* ══════════════════════════════════════
-       SUCCÈS MODAL — HANDLERS
-    ══════════════════════════════════════ */
-    closeSuccessModal() {
-        this.showSuccessModal = false;
-        this.successId        = null;
-    }
-
-    handleNavigateToSuccess() {
-        const id = this.successId;
-        this.closeSuccessModal();
-        if (!id) return;
-        this[NavigationMixin.Navigate]({
-            type: 'standard__recordPage',
-            attributes: { recordId: id, objectApiName: 'Account', actionName: 'view' }
-        });
-    }
-
-    /* ══════════════════════════════════════
        VALIDATION ÉTAPE 2
     ══════════════════════════════════════ */
     _validateStep2() {
-        const inputs = this.template.querySelectorAll(
-            'lightning-input[required], lightning-combobox[required]'
-        );
-        let valid = true;
-        inputs.forEach(inp => { if (!inp.reportValidity()) valid = false; });
+        const e = EMPTY_ERRORS();
+        let ok = true;
 
         if (!this.form.name?.trim()) {
-            this._showToast('Validation', 'Le nom est obligatoire.', 'warning');
+            e.name = ERROR_MESSAGES.name;
+            ok = false;
+        }
+
+        this.errors = e;
+
+        if (!ok) {
+            setTimeout(() => {
+                const firstError = this.template.querySelector('.pm-error');
+                if (firstError) {
+                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 50);
             return false;
         }
+
         if (this.form.rib && this.form.rib.length > 24) {
             this._showToast('Validation', 'Le RIB ne peut pas dépasser 24 caractères.', 'warning');
             return false;
         }
-        return valid;
+
+        return true;
     }
 
     /* ══════════════════════════════════════
        UTILITAIRES
     ══════════════════════════════════════ */
-    closeModal()         { this.showFormModal = false; }
+    closeModal() {
+        this.showFormModal = false;
+        this.errors        = EMPTY_ERRORS();
+    }
     handleOverlayClick() { this.closeModal(); }
     stopPropagation(evt) { evt.stopPropagation(); }
 
-    _showToast(title, message, variant) {
-        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+    _showToast(title, message, variant, mode = 'dismissable', messageData = []) {
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant, mode, messageData }));
     }
 
     _enrichRow(p) {

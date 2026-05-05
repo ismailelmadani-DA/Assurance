@@ -291,7 +291,7 @@ Nombre de passagers blessés </label>
 
                             <div class="pm-grid">
 
-                                <div class="pm-field">
+                                <div class="pm-field pm-field--full">
                                     <label class="pm-label">
     <abbr class="pm-required" title="obligatoire">* </abbr> 
 Adversaire assuré </label>
@@ -304,7 +304,7 @@ Adversaire assuré </label>
                                         <div class="pm-error">{errors.adversaireAssure}</div>
                                     </template>
                                 </div>
-
+ 
                                 <div class="pm-field">
     <label class="pm-label">
         <template if:true={isAssuranceRequired}>
@@ -430,6 +430,38 @@ Adversaire assuré </label>
     </lightning-input>
 </div>
 
+<!-- Ligne 5 : Pays | Ville -->
+        <div class="pm-field">
+    <label class="pm-label">Pays</label>
+    <lightning-combobox name="pays"
+        value={form.pays} options={paysOptions}
+        onchange={handleFieldChange}
+        placeholder="Sélectionner un pays"
+        variant="label-hidden">
+    </lightning-combobox>
+</div>
+
+<!-- Ville -->
+<div class="pm-field">
+    <label class="pm-label">Ville</label>
+    <lightning-combobox name="ville"
+        value={form.ville} options={villeOptions}
+        onchange={handleFieldChange}
+        placeholder="Sélectionner une ville"
+        disabled={isVilleDisabled}
+        variant="label-hidden">
+    </lightning-combobox>
+</div>
+        <!-- Ligne 6 : Adresse (pleine largeur) -->
+        <div class="pm-field pm-field--full">
+    <label class="pm-label">Adresse</label>
+    <lightning-input type="text"
+        name="adresse" value={form.adresse}
+        maxlength="255" onchange={handleFieldChange}
+        variant="label-hidden">
+    </lightning-input>
+</div>
+
 
         <!-- Ligne 3 : Moyen de notification (pleine largeur) -->
         <div class="pm-field pm-field--full">
@@ -476,37 +508,8 @@ Adversaire assuré </label>
     </template>
 </div>
 
-        <!-- Ligne 5 : Pays | Ville -->
-        <div class="pm-field">
-    <label class="pm-label">Pays</label>
-    <lightning-combobox name="pays"
-        value={form.pays} options={paysOptions}
-        onchange={handleFieldChange}
-        placeholder="Sélectionner un pays"
-        variant="label-hidden">
-    </lightning-combobox>
-</div>
-
-<!-- Ville -->
-<div class="pm-field">
-    <label class="pm-label">Ville</label>
-    <lightning-combobox name="ville"
-        value={form.ville} options={villeOptions}
-        onchange={handleFieldChange}
-        placeholder="Sélectionner une ville"
-        disabled={isVilleDisabled}
-        variant="label-hidden">
-    </lightning-combobox>
-</div>
-        <!-- Ligne 6 : Adresse (pleine largeur) -->
-        <div class="pm-field pm-field--full">
-    <label class="pm-label">Adresse</label>
-    <lightning-input type="text"
-        name="adresse" value={form.adresse}
-        maxlength="255" onchange={handleFieldChange}
-        variant="label-hidden">
-    </lightning-input>
-</div>
+       
+     
     </div>
 </div>
 

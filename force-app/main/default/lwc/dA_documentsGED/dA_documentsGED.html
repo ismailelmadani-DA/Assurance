@@ -1,0 +1,83 @@
+<template>
+    <div class="app-container slds-theme_default">    
+
+        <!-- Grille Principale Unifiée -->
+        <div class="slds-p-around_medium">
+            <div class="slds-grid slds-wrap slds-gutters">
+                
+                <!-- LIGNE 1 : Header Gestionnaire de documents -->
+                <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                    <div class="slds-box slds-theme_default header-container">
+                        <lightning-icon icon-name="standard:record" size="medium" class="slds-m-right_small"></lightning-icon>
+                        <div class="slds-text-heading_small slds-text-color_default" style="font-weight: 400;">Gestionnaire de documents</div>
+                        <div class="slds-text-body_small slds-text-color_weak slds-m-left_xx-small">0 document(s)</div>
+                    </div>
+                </div>
+
+                <div class="slds-col slds-size_8-of-12">
+                    <div class="slds-box slds-theme_default full-height-box">
+                        
+                        <div class="upload-zone slds-box slds-box_dashed slds-align_absolute-center">
+                            <div class="slds-text-align_center">
+                                <lightning-icon icon-name="utility:upload" size="large"></lightning-icon>
+                                <h2 class="slds-text-heading_small slds-m-top_medium" style="color: #444;">Déposez vos fichiers ici</h2>
+                                <p class="slds-m-bottom_small slds-text-color_weak">ou utilisez le bouton ci-dessous</p>
+                                
+                                <lightning-file-upload
+                                    label="Sélectionner des fichiers"
+                                    name="fileUploader"
+                                    accept={acceptedFormats}
+                                    record-id={recordId}
+                                    onuploadfinished={handleUploadFinished}
+                                    multiple>
+                                </lightning-file-upload>
+                                
+                                <p class="slds-m-top_medium slds-text-color_weak" style="font-size: 0.8rem;">Aucun fichier téléchargé</p>
+                            </div>
+                        </div>
+
+                        <div class="slds-m-top_xx-large slds-text-align_center slds-text-color_weak">
+                            Aucun fichier sélectionné pour la prévisualisation
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="slds-col slds-size_4-of-12">
+                    <div class="slds-box slds-theme_default full-height-box slds-p-around_none">
+                        
+                        <h3 class="slds-section__title slds-theme_shade slds-p-around_small" style="color: #666; border-bottom: 1px solid #dddbda;">
+                            Caractéristiques
+                        </h3>
+                        
+                        <div class="slds-form slds-p-around_medium slds-form_stacked">
+                            
+                            <lightning-combobox name="Directory__c" label="Répertoire" placeholder="Choisir un répertoire" options={repertoireOptions} required></lightning-combobox>
+                            <lightning-combobox name="Type_de_document__c" label="Type de document" placeholder="Choisir un document" options={typeDocOptions} required></lightning-combobox>
+                            <lightning-combobox name="Nature__c" label="Nature de document" placeholder="Choisir une nature" options={natureOptions}></lightning-combobox>
+                            
+                            <lightning-input type="search" name="NumeroDeclaration__c" label="N° Déclaration" placeholder="N° Déclaration"></lightning-input>
+                            <lightning-input type="search" name="Sinistre__c" label="N° Sinistre" placeholder="N° Sinistre"></lightning-input>
+                            <lightning-input type="search" name="Police__c" label="N° Police" placeholder="N° Police" required></lightning-input>
+                            <lightning-input name="RegistrationNumber__c" label="N° Immatriculation"></lightning-input>
+
+                            <!-- Dates et tiers -->
+                            <lightning-input type="date" name="OccurrenceDate__c" label="Date de survenance"></lightning-input>
+                            <lightning-input type="search" name="CompagnieAdverse__c" label="Compagnie Adverse" placeholder="Compagnie Adverse"></lightning-input>
+                            <lightning-input type="date" name="dateOfReceipt__c" label="Date de réception" value={currentDate}></lightning-input>
+                            <lightning-input type="date" name="ScanDate__c" label="Date de numérisation" value={currentDate} disabled></lightning-input>
+
+                            <!-- Émetteur et Validation -->
+                            <lightning-combobox name="Issuer__c" label="Émetteur" placeholder="Sélectionnez un émetteur" options={emetteurOptions} required></lightning-combobox>
+
+                            <div class="slds-m-top_x-large slds-m-bottom_medium slds-align_absolute-center">
+                                <button class="custom-send-button" onclick={handleEnvoyer}>Envoyer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</template>

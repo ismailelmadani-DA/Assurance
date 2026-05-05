@@ -1,0 +1,544 @@
+<template>
+    <div class="modal-shell">
+
+        <!-- ══════════════════════════════════
+             SIDEBAR — full height, étapes centrées
+             ══════════════════════════════════ -->
+        <div class="sidebar">
+            
+
+            <div class="sidebar-label">ÉTAPES</div>
+
+            <div class="steps-list">
+                <template for:each={steps} for:item="step">
+                    <div key={step.id} class={step.cssClass} onclick={handleStepClick} data-index={step.index}>
+                        <div class="step-track">
+                            <div class={step.dotClass}>
+                                <template if:true={step.isDone}>
+                                    <span class="check-icon">✓</span>
+                                </template>
+                                <template if:false={step.isDone}>
+                                    {step.num}
+                                </template>
+                            </div>
+                            <template if:false={step.isLast}>
+                                <div class={step.lineClass}></div>
+                            </template>
+                        </div>
+                        <div class="step-info">
+                            <span class="step-label">{step.label}</span>
+                            <template if:true={step.isDone}>
+                                <span class="step-status-done">Complété</span>
+                            </template>
+                            <template if:false={step.isDone}>
+                                <template if:true={step.isActive}>
+                                    <span class="step-status-active">En cours</span>
+                                </template>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Progress en bas du sidebar -->
+            <div class="sidebar-progress">
+                <div class="sidebar-progress-row">
+                    <span class="sidebar-progress-label">PROGRESSION</span>
+                    <span class="sidebar-progress-pct">{progressPercentage}%</span>
+                </div>
+                <div class="sidebar-progress-bg">
+                    <div class="sidebar-progress-fill" style={progressStyle}></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════
+             MAIN WRAPPER
+             ══════════════════════════════════ -->
+        <div class="main-wrapper">
+
+            <!-- HEADER -->
+            <div class="modal-header">
+                <div class="modal-header-left">
+                    <div class="modal-icon">
+                        <lightning-icon icon-name="utility:shield" size="small"></lightning-icon>
+                    </div>
+                    <div class="modal-title-block">
+                        <h2 class="modal-title">Nouvelle police d'assurance</h2>
+                        
+                    </div>
+                </div>
+                <div class="header-progress">
+                    <div class="header-progress-top">
+                        <span class="header-progress-pct">{progressPercentage}% complété</span>
+                        <span class="header-progress-msg">{motivationMessage}</span>
+                    </div>
+                    <div class="header-progress-bar">
+                        <div class="header-progress-fill" style={progressStyle}></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCROLLABLE CONTENT -->
+            <div class="acc-content">
+
+                <!-- ── SECTION 1 : Informations de la police ── -->
+                <div class={section0Class}>
+                    <div class="acc-header" onclick={handleSectionToggle} data-index="0">
+                        <div class={accNum0}>
+                            <template if:true={sec0Done}>✓</template>
+                            <template if:false={sec0Done}>1</template>
+                        </div>
+                        <span class="acc-title">Informations de la police</span>
+                        <template if:true={sec0Done}>
+                            <span class="badge-done">✓ Complété</span>
+                        </template>
+                        <span class="acc-arrow">{sec0Arrow}</span>
+                    </div>
+                    <template if:true={sec0Open}>
+                        <div class="acc-body">
+                            <div class="form-grid">
+                                <!-- Numéro de police -->
+                                <div class="field">
+                                    <label class="field-label">Numéro de police <span class="req">*</span></label>
+                                    <lightning-input
+                                        type="text"
+                                        name="numeroPolice"
+                                        value={formData.numeroPolice}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        placeholder="Ex: POL-2024-001">
+                                    </lightning-input>
+                                </div>
+
+                                <!-- Catégorie -->
+                                <div class="field">
+                                    <label class="field-label">Catégorie <span class="req">*</span></label>
+                                    <lightning-radio-group
+                                        name="categorie"
+                                        options={categorieOptions}
+                                        value={formData.categorie}
+                                        onchange={handleChange}
+                                        type="radio"
+                                        variant="label-hidden">
+                                    </lightning-radio-group>
+                                </div>
+
+                                <!-- Date d'effet -->
+                                <div class="field">
+                                    <label class="field-label">Date d'effet <span class="req">*</span></label>
+                                    <lightning-input
+                                        type="date"
+                                        name="dateEffet"
+                                        value={formData.dateEffet}
+                                        onchange={handleChange}
+                                        variant="label-hidden">
+                                    </lightning-input>
+                                </div>
+
+                                <!-- Date d'expiration -->
+                                <div class="field">
+                                    <label class="field-label">Date d'expiration <span class="req">*</span></label>
+                                    <lightning-input
+                                        type="date"
+                                        name="dateExpiration"
+                                        value={formData.dateExpiration}
+                                        onchange={handleChange}
+                                        variant="label-hidden">
+                                    </lightning-input>
+                                </div>
+
+                                <!-- Canal de souscription -->
+                                <div class="field">
+                                    <label class="field-label">Canal de souscription</label>
+                                    <lightning-combobox
+                                        name="canal"
+                                        value={formData.canal}
+                                        options={canalOptions}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        placeholder="Sélectionner...">
+                                    </lightning-combobox>
+                                </div>
+
+                                <!-- Situation de la police -->
+                                <div class="field">
+                                    <label class="field-label">Situation de la police</label>
+                                    <lightning-combobox
+                                        name="situationPolice"
+                                        value={formData.situationPolice}
+                                        options={situationPoliceOptions}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        placeholder="Sélectionner...">
+                                    </lightning-combobox>
+                                </div>
+
+                                <!-- Situation de la prime -->
+                                <div class="field">
+                                    <label class="field-label">Situation de la prime</label>
+                                    <lightning-combobox
+                                        name="situationPrime"
+                                        value={formData.situationPrime}
+                                        options={situationPrimeOptions}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        placeholder="Sélectionner...">
+                                    </lightning-combobox>
+                                </div>
+                            </div>
+
+                            <div class="section-footer">
+                                <lightning-button
+                                    label="Valider cette section"
+                                    variant="brand"
+                                    data-index="0"
+                                    onclick={markDone}>
+                                </lightning-button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- ── SECTION 2 : Informations de l'assuré ── -->
+                <div class={section1Class}>
+                    <div class="acc-header" onclick={handleSectionToggle} data-index="1">
+                        <div class={accNum1}>
+                            <template if:true={sec1Done}>✓</template>
+                            <template if:false={sec1Done}>2</template>
+                        </div>
+                        <span class="acc-title">Informations de l'assuré</span>
+                        <template if:true={sec1Done}>
+                            <span class="badge-done">✓ Complété</span>
+                        </template>
+                        <span class="acc-arrow">{sec1Arrow}</span>
+                    </div>
+                    <template if:true={sec1Open}>
+                        <div class="acc-body">
+                            <div class="form-grid">
+                                <!-- Nom complet -->
+                                <div class="field full">
+                                    <label class="field-label">Nom complet <span class="req">*</span></label>
+                                    <lightning-input
+                                        type="text"
+                                        name="nomComplet"
+                                        value={formData.nomComplet}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        placeholder="Prénom et Nom">
+                                    </lightning-input>
+                                </div>
+
+                                <!-- CIN -->
+                                <div class="field">
+                                    <label class="field-label">CIN <span class="req">*</span></label>
+                                    <lightning-input
+                                        type="text"
+                                        name="cin"
+                                        value={formData.cin}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        placeholder="Ex: AB123456">
+                                    </lightning-input>
+                                </div>
+
+                                <!-- Téléphone -->
+                                <div class="field">
+                                    <label class="field-label">Téléphone</label>
+                                    <lightning-input
+                                        type="tel"
+                                        name="telephone"
+                                        value={formData.telephone}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        placeholder="+212 6XX XX XX XX">
+                                    </lightning-input>
+                                </div>
+
+                                <!-- Email -->
+                                <div class="field">
+                                    <label class="field-label">Email</label>
+                                    <lightning-input
+                                        type="email"
+                                        name="email"
+                                        value={formData.email}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        placeholder="exemple@email.com">
+                                    </lightning-input>
+                                </div>
+
+                                <!-- Pays -->
+                                <div class="field">
+                                    <label class="field-label">Pays</label>
+                                    <lightning-input
+                                        type="text"
+                                        name="pays"
+                                        value={formData.pays}
+                                        onchange={handleChange}
+                                        variant="label-hidden">
+                                    </lightning-input>
+                                </div>
+
+                                <!-- Ville -->
+                                <div class="field">
+                                    <label class="field-label">Ville</label>
+                                    <lightning-input
+                                        type="text"
+                                        name="ville"
+                                        value={formData.ville}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        placeholder="Ex: Casablanca">
+                                    </lightning-input>
+                                </div>
+
+                                <!-- Adresse -->
+                                <div class="field full">
+                                    <label class="field-label">Adresse</label>
+                                    <lightning-textarea
+                                        name="adresse"
+                                        value={formData.adresse}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        placeholder="Adresse complète..."
+                                        max-length="500">
+                                    </lightning-textarea>
+                                </div>
+                            </div>
+
+                            <div class="section-footer">
+                                <lightning-button
+                                    label="Valider cette section"
+                                    variant="brand"
+                                    data-index="1"
+                                    onclick={markDone}>
+                                </lightning-button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- ── SECTION 3 : Informations du véhicule ── -->
+                <div class={section2Class}>
+                    <div class="acc-header" onclick={handleSectionToggle} data-index="2">
+                        <div class={accNum2}>
+                            <template if:true={sec2Done}>✓</template>
+                            <template if:false={sec2Done}>3</template>
+                        </div>
+                        <span class="acc-title">Informations du véhicule</span>
+                        <template if:true={sec2Done}>
+                            <span class="badge-done">✓ Complété</span>
+                        </template>
+                        <span class="acc-arrow">{sec2Arrow}</span>
+                    </div>
+                    <template if:true={sec2Open}>
+                        <div class="acc-body">
+                            <div class="form-grid">
+                                <!-- Immatriculation -->
+                                <div class="field">
+                                    <label class="field-label">Numéro d'immatriculation <span class="req">*</span></label>
+                                    <lightning-input
+                                        type="text"
+                                        name="immatriculation"
+                                        value={formData.immatriculation}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        placeholder="Ex: 12345-A-1">
+                                    </lightning-input>
+                                </div>
+
+                                <!-- Type de véhicule -->
+                                <div class="field">
+                                    <label class="field-label">Type du véhicule</label>
+                                    <lightning-combobox
+                                        name="typeVehicule"
+                                        value={formData.typeVehicule}
+                                        options={typeVehiculeOptions}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        placeholder="Sélectionner...">
+                                    </lightning-combobox>
+                                </div>
+
+                                <!-- Marque -->
+                                <div class="field">
+                                    <label class="field-label">Marque</label>
+                                    <lightning-input
+                                        type="text"
+                                        name="marque"
+                                        value={formData.marque}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        placeholder="Ex: Renault">
+                                    </lightning-input>
+                                </div>
+
+                                <!-- Modèle -->
+                                <div class="field">
+                                    <label class="field-label">Modèle</label>
+                                    <lightning-input
+                                        type="text"
+                                        name="modele"
+                                        value={formData.modele}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        placeholder="Ex: Clio">
+                                    </lightning-input>
+                                </div>
+
+                                <!-- Numéro de châssis -->
+                                <div class="field">
+                                    <label class="field-label">Numéro de châssis</label>
+                                    <lightning-input
+                                        type="text"
+                                        name="numeroChassis"
+                                        value={formData.numeroChassis}
+                                        onchange={handleChange}
+                                        variant="label-hidden"
+                                        placeholder="VIN — 17 caractères">
+                                    </lightning-input>
+                                </div>
+
+                                <!-- Numéro d'attestation -->
+                                <div class="field">
+                                    <label class="field-label">Numéro d'attestation</label>
+                                    <lightning-input
+                                        type="text"
+                                        name="numeroAttestation"
+                                        value={formData.numeroAttestation}
+                                        onchange={handleChange}
+                                        variant="label-hidden">
+                                    </lightning-input>
+                                </div>
+
+                                <!-- Date de mise en circulation -->
+                                <div class="field">
+                                    <label class="field-label">Date de mise en circulation</label>
+                                    <lightning-input
+                                        type="date"
+                                        name="dateMiseEnCirculation"
+                                        value={formData.dateMiseEnCirculation}
+                                        onchange={handleChange}
+                                        variant="label-hidden">
+                                    </lightning-input>
+                                </div>
+                            </div>
+
+                            <div class="section-footer">
+                                <lightning-button
+                                    label="Valider cette section"
+                                    variant="brand"
+                                    data-index="2"
+                                    onclick={markDone}>
+                                </lightning-button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- ── SECTION 4 : Choix des garanties ── -->
+                <div class={section3Class}>
+                    <div class="acc-header" onclick={handleSectionToggle} data-index="3">
+                        <div class={accNum3}>
+                            <template if:true={sec3Done}>✓</template>
+                            <template if:false={sec3Done}>4</template>
+                        </div>
+                        <span class="acc-title">Choix des garanties</span>
+                        <template if:true={sec3Done}>
+                            <span class="badge-done">✓ Complété</span>
+                        </template>
+                        <span class="acc-arrow">{sec3Arrow}</span>
+                    </div>
+                    <template if:true={sec3Open}>
+                        <div class="acc-body">
+                            <p class="garanties-hint">Sélectionnez une ou plusieurs garanties à inclure dans la police.</p>
+                            <lightning-datatable
+                                key-field="id"
+                                data={garanties}
+                                columns={garantiesColumns}
+                                onrowselection={handleGarantieSelection}
+                                selected-rows={selectedGaranties}>
+                            </lightning-datatable>
+
+                            <div class="section-footer">
+                                <lightning-button
+                                    label="Valider cette section"
+                                    variant="brand"
+                                    data-index="3"
+                                    onclick={markDone}>
+                                </lightning-button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- BARRE D'ACTIONS FINALES -->
+                <div class="modal-actions">
+                    <lightning-button
+                        label="Annuler"
+                        onclick={handleCancel}
+                        class="slds-m-right_small">
+                    </lightning-button>
+                    <lightning-button
+                        label="Confirmer la police"
+                        variant="brand"
+                        onclick={handleConfirm}>
+                    </lightning-button>
+                </div>
+
+            </div><!-- /acc-content -->
+        </div><!-- /main-wrapper -->
+    </div><!-- /modal-shell -->
+
+    <!-- ══ POPUP : CIN déjà existant ══ -->
+    <template if:true={showCinPopup}>
+        <div class="popup-backdrop">
+            <div class="popup-card">
+                <div class="popup-icon warning">⚠</div>
+                <h3 class="popup-title">Assuré déjà existant</h3>
+                <p class="popup-msg">
+                    Cet assuré est déjà affecté à une autre police d'assurance.
+                    Êtes-vous sûr de vouloir créer cette police ?
+                </p>
+                <div class="popup-actions">
+                    <lightning-button label="Annuler" onclick={closeCinPopup}></lightning-button>
+                    <lightning-button label="Oui, continuer" variant="brand" onclick={confirmCin}></lightning-button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- ══ POPUP : Véhicule bloqué (police active) ══ -->
+    <template if:true={showVehiculeBlockPopup}>
+        <div class="popup-backdrop">
+            <div class="popup-card">
+                <div class="popup-icon danger">✕</div>
+                <h3 class="popup-title">Véhicule non disponible</h3>
+                <p class="popup-msg">
+                    Ce véhicule est déjà assigné à une police active et ne pourra être réaffecté.
+                    Veuillez vérifier les informations avant de créer la police.
+                </p>
+                <div class="popup-actions">
+                    <lightning-button label="Fermer" variant="brand" onclick={closeVehiculeBlockPopup}></lightning-button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- ══ POPUP : Véhicule existant (police résiliée/suspendue) ══ -->
+    <template if:true={showVehiculeWarnPopup}>
+        <div class="popup-backdrop">
+            <div class="popup-card">
+                <div class="popup-icon warning">⚠</div>
+                <h3 class="popup-title">Véhicule déjà assigné</h3>
+                <p class="popup-msg">{vehiculeWarnMessage}</p>
+                <div class="popup-actions">
+                    <lightning-button label="Annuler" onclick={closeVehiculeWarnPopup}></lightning-button>
+                    <lightning-button label="Oui, créer la police" variant="brand" onclick={confirmVehicule}></lightning-button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+</template>

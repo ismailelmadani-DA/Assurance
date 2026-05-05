@@ -90,7 +90,6 @@ export default class Lwc013_DommagesAutresParties extends LightningElement {
         const keyToEdit = event.currentTarget.dataset.key;
         this.currentPartyKeyForEdit = keyToEdit;
 
-        // On cherche la personne dans la liste
         const party = this.otherParties.find(p => p.key.toString() === keyToEdit.toString());
         
         if (party) {
@@ -147,7 +146,7 @@ export default class Lwc013_DommagesAutresParties extends LightningElement {
         this.otherParties = this.otherParties.filter(p => p.key.toString() !== keyToDelete.toString());
         
         if (this.otherParties.length === 0) {
-            this.isFormVisible = true; // Réaffiche le formulaire si la liste est vide
+            this.isFormVisible = true; 
         }
         
         this.notifyParent();
@@ -163,7 +162,7 @@ export default class Lwc013_DommagesAutresParties extends LightningElement {
     }
 
     resetForm() {
-        this.currentPartyKeyForEdit = null; // On nettoie le mode édition
+        this.currentPartyKeyForEdit = null; 
         this.formData = { 
             OpposingParty__c: '', Nom__c: '', Prenom__c: '', Civilite__c: '', 
             Pays__c: 'Sénégal', Ville__c: '', Adresse__c: '', BirthDay__c: null, 

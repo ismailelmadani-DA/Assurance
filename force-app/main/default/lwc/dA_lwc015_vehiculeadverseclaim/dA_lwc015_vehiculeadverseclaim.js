@@ -188,6 +188,30 @@ export default class DA_lwc015_Vehiculeadverseclaim extends NavigationMixin(Ligh
         this._loadCompagnieAdverseRtId();
     }
 
+    disconnectedCallback() {
+    if (this._observer) this._observer.disconnect();
+}
+
+renderedCallback() {
+    if (this._styleInjected) return;
+    this._styleInjected = true;
+
+    const style = document.createElement('style');
+    style.textContent = `
+        .slds-listbox.slds-dropdown.slds-dropdown_fluid,
+        .slds-listbox_vertical.slds-dropdown.slds-dropdown_fluid {
+            max-height: 240px !important;
+            height: auto !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+        }
+    `;
+    document.head.appendChild(style);
+
+    
+}
+
+
     async _loadCompagnieAdverseRtId() {
         try {
             this._compagnieAdverseRtId = await getCompagnieAdverseRecordTypeId();

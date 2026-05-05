@@ -5,7 +5,6 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 export default class Lwc011_PassagersAssure extends LightningElement {
     @api claimSummary;
 
-    // Recevoir les données sauvegardées du parent
     @api
     get savedPassengers() {
         return this._savedPassengers;

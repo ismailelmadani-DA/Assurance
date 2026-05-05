@@ -1,0 +1,152 @@
+<template>
+    <div class="hs-card">
+
+        <!-- HEADER -->
+        <div class="hs-header">
+            <div class="hs-header__left">
+                <div class="hs-header__icon-wrap">
+                    <lightning-icon icon-name="standard:case" size="small" variant="inverse"></lightning-icon>
+                </div>
+                <div>
+                    <h2 class="hs-header__title">Historique des sinistres</h2>
+                    <span class="hs-header__subtitle">{totalLabel}</span>
+                </div>
+            </div>
+            <button class="hs-refresh-btn" onclick={handleRefresh} title="Actualiser">
+                <lightning-icon icon-name="utility:refresh" size="xx-small" variant="inverse"></lightning-icon>
+            </button>
+        </div>
+
+        <!-- SPINNER -->
+        <template if:true={isLoading}>
+            <div class="hs-spinner-overlay">
+                <lightning-spinner alternative-text="Chargement..." size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- CONTENU -->
+        <div class="hs-body">
+
+            <!-- TABLE -->
+            <template if:true={hasRecords}>
+                <div class="hs-table-wrap">
+                    <table class="hs-table">
+                        <thead>
+                            <tr>
+                                <th class="hs-th">N&#176; Sinistre</th>
+                                <th class="hs-th">N&#176; Immatriculation</th>
+                                <th class="hs-th">Date de survenance</th>
+                                <th class="hs-th">Lieu de survenance</th>
+                                <th class="hs-th">Statut</th>
+                                <th class="hs-th">Cr&#233;&#233; par</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={filteredRecords} for:item="rec">
+                                <tr key={rec.id}>
+                                    <!-- N° Sinistre -->
+                                    <td class="hs-td">
+                                        <a class="hs-link" href="javascript:void(0)"
+                                            data-id={rec.id} onclick={navigateToRecord}>
+                                            {rec.claimNumber}
+                                        </a>
+                                    </td>
+
+                                    <!-- N° Immatriculation -->
+                                    <td class="hs-td">
+                                        <template if:true={rec.hasVehicule}>
+                                            <a class="hs-link" href="javascript:void(0)"
+                                                data-id={rec.vehiculeId} onclick={navigateToRecord}>
+                                                {rec.immatriculation}
+                                            </a>
+                                        </template>
+                                        <template if:false={rec.hasVehicule}>
+                                            <span class="hs-muted">{rec.immatriculation}</span>
+                                        </template>
+                                    </td>
+
+                                    <!-- Date de survenance -->
+                                    <td class="hs-td">
+                                        <template if:true={rec.hasDate}>
+                                            <lightning-formatted-date-time
+                                                value={rec.dateSurvenance}
+                                                year="numeric" month="2-digit" day="2-digit">
+                                            </lightning-formatted-date-time>
+                                        </template>
+                                        <template if:false={rec.hasDate}>
+                                            <span class="hs-muted">&#8212;</span>
+                                        </template>
+                                    </td>
+
+                                    <!-- Lieu de survenance -->
+                                    <td class="hs-td">
+                                        <template if:true={rec.hasLieu}>
+                                            {rec.lieuSurvenance}
+                                        </template>
+                                        <template if:false={rec.hasLieu}>
+                                            <span class="hs-muted">&#8212;</span>
+                                        </template>
+                                    </td>
+
+                                    <!-- Statut -->
+                                    <td class="hs-td">
+                                        <span class={rec.statutClass}>{rec.statut}</span>
+                                    </td>
+
+                                    <!-- Créé par -->
+                                    <td class="hs-td">
+                                        <template if:true={rec.hasCreator}>
+                                            <a class="hs-link" href="javascript:void(0)"
+                                                data-id={rec.createdById} onclick={navigateToRecord}>
+                                                {rec.createdByName}
+                                            </a>
+                                        </template>
+                                        <template if:false={rec.hasCreator}>
+                                            <span class="hs-muted">&#8212;</span>
+                                        </template>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- PAGINATION -->
+                <template if:true={showPagination}>
+                    <div class="hs-pagination">
+                        <button class={prevClass} onclick={prevPage} disabled={isFirstPage}>
+                            <lightning-icon icon-name="utility:chevronleft" size="xx-small"></lightning-icon>
+                            Pr&#233;c.
+                        </button>
+                        <span class="hs-page-info">Page {currentPage} / {totalPages}</span>
+                        <button class={nextClass} onclick={nextPage} disabled={isLastPage}>
+                            Suiv.
+                            <lightning-icon icon-name="utility:chevronright" size="xx-small"></lightning-icon>
+                        </button>
+                    </div>
+                </template>
+            </template>
+
+            <!-- ETAT VIDE -->
+            <template if:false={hasRecords}>
+                <template if:false={hasError}>
+                    <div class="hs-empty">
+                        <div class="hs-empty__icon">
+                            <lightning-icon icon-name="standard:case" size="large"></lightning-icon>
+                        </div>
+                        <p class="hs-empty__text">Aucun sinistre n'a &#233;t&#233; cr&#233;&#233; pour cette police.</p>
+                    </div>
+                </template>
+            </template>
+
+            <!-- ERREUR -->
+            <template if:true={hasError}>
+                <div class="hs-alert hs-alert--error">
+                    <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                    <span>{errorMessage}</span>
+                </div>
+            </template>
+
+        </div>
+    </div>
+</template>

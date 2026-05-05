@@ -37,10 +37,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
     messageObligatoire = false;
     @api errorMessage = 'Prière d\'indexer le(s) document(s).';
 
-    // =========================================================
-    // ✅ CORRECTION 1 : Variables trackées pour l'étape 1
-    // Sans ça, les champs perdent leur valeur quand on revient
-    // =========================================================
+   
     @track step1Data = {
         police: '',
         immat: '',
@@ -49,10 +46,6 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
         critere: ''
     };
 
-    // =========================================================
-    // ✅ CORRECTION 4 : Flag pour éviter de recréer un Case 
-    // si on revient à l'étape 4 après l'avoir déjà créé
-    // =========================================================
     @track caseAlreadyCreated = false;
 
     // Date du jour dynamique
@@ -211,9 +204,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
         };
     }
 
-    // =========================================================
-    // ✅ CORRECTION 1 : Handler pour sauvegarder les champs étape 1
-    // =========================================================
+  
     handleStep1Change(event) {
         const fieldId = event.target.dataset.id;
         this.step1Data = { ...this.step1Data, [fieldId]: event.target.value };
@@ -242,15 +233,11 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
         this.selectedPolicyId = undefined;
     }
 
-    // =========================================================
-    // ✅ CORRECTION 2 : handleRowClick mémorise la sélection dans les données
-    // Ainsi, quand on revient à l'étape 2, la ligne reste cochée
-    // =========================================================
+    
     handleRowClick(event) {
         const policyId = event.currentTarget.dataset.id;
         this.selectedPolicyId = policyId;
 
-        // On enrichit chaque ligne avec isSelected et rowClass
         this.searchResults = this.searchResults.map(p => ({
             ...p,
             isSelected: p.Id === policyId,
@@ -367,7 +354,6 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
                     .reduce((v, i) => { i.reportValidity(); return v && i.checkValidity(); }, true);
                 if (!allValid) { this.isLoading = false; return; }
 
-                // ✅ On lit depuis step1Data au lieu du DOM
                 const params = {
                     policyNumber: this.step1Data.police || null,
                     registrationNumber: this.isOuiSelected
@@ -386,7 +372,6 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
                         return dSurv >= dEf && dSurv <= dEx;
                     });
                     if (validPols.length > 0) {
-                        // ✅ On initialise rowClass et isSelected pour chaque résultat
                         this.searchResults = validPols.map(p => ({
                             ...p,
                             isSelected: false,
@@ -450,8 +435,8 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
                 this.createdCaseId = result.id;
                 this.createdCaseNumber = result.caseNumber;
                 console.log('📌 NUMÉRO ENREGISTRÉ DANS JS :', this.createdCaseNumber);
-                
-                this.caseAlreadyCreated = true; // ✅ On marque le Case comme créé
+
+                this.caseAlreadyCreated = true; 
 
                 this.showToast('Succès', 'Déclaration initialisée', 'success');
                 this.currentStep = 5;
@@ -598,10 +583,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
         }
     }
 
-    // =========================================================
-    // ✅ BOUTON PRÉCÉDENT : simple, pas de logique destructive
-    // Les données sont dans les @track, elles survivent au retour
-    // =========================================================
+    
     handlePrecedent() {
         if (this.currentStep > 1) {
             this.currentStep -= 1;

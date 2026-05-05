@@ -1,15 +1,35 @@
-.cell-link {
-    color: #0070d2;
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.2s ease-in-out;
+:host {
+    --link-green: #006233;
+    --link-green-dark: #004824;
 }
 
-.cell-link:hover {
-    color: #005fb2;
-    text-decoration: underline;
+/* LIENS */
+.cell-link,
+.cell-link:visited {
+    color: var(--link-green) !important;
+    text-decoration: none !important;
+    font-weight: 700 !important;
+    cursor: pointer;
 }
 
+.cell-link:hover,
+.cell-link:focus,
+.cell-link:active {
+    color: var(--link-green-dark) !important;
+    text-decoration: underline !important;
+}
+
+/* Fallback global */
+a,
+a:visited {
+    color: var(--link-green) !important;
+}
+
+a:hover {
+    color: var(--link-green-dark) !important;
+}
+
+/* BOOLEAN */
 .boolean-container {
     display: flex;
     justify-content: center;
@@ -37,39 +57,26 @@
     color: #c23934;
 }
 
+/* CURRENCY */
 .currency-container {
     display: flex;
-    /* justify-content: flex-end; */
     align-items: center;
     gap: 0.25rem;
 }
 
-.currency-symbol {
-    opacity: 0.7;
-}
-
-.currency-value {
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-}
-
+/* NUMBER */
 .number-container {
     text-align: right;
-    font-variant-numeric: tabular-nums;
 }
 
+/* HTML FORMULA */
 .html-formula-container {
     display: flex;
     align-items: center;
 }
 
-.html-formula-container img {
-    max-height: 25px;
-    vertical-align: middle;
-}
+/* TEXT FORMULA */
 .text-formula-container {
-    font-family: 'Salesforce Sans', Arial, sans-serif;
     font-size: 0.8125rem;
     color: #3e3e3c;
-    white-space: pre-line; /* Preserves line breaks in text */
 }

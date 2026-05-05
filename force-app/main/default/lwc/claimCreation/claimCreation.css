@@ -12,7 +12,7 @@
 }
 
 .main-title {
-    color: #00008F; /* Bleu profond professionnel */
+    color: #00008F; 
     font-size: 1.4rem;
     font-weight: 700;
 }
@@ -244,7 +244,7 @@ lightning-textarea {
 
 .btn-delete {
     background-color: #FFFFFF;
-    color: #BA0517; /* Rouge Salesforce */
+    color: #BA0517; 
     border: 1px solid #BA0517;
 }
 

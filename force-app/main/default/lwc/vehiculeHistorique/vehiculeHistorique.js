@@ -33,7 +33,6 @@ export default class VehicleHistory extends NavigationMixin(LightningElement) {
             console.log('[VehicleHistory] data reçue :', JSON.stringify(data));
             this._allVehicles = data.map(v => ({
                 ...v,
-                // Clé unique pour le for:each : vehicleId + claimId
                 uniqueKey      : (v.vehicleId || '') + '_' + (v.claimId || ''),
                 isDriver       : v.isDriver === true,
                 roleBadgeClass : ROLE_BADGE_MAP[v.role] || 'pm-badge pm-badge--other'

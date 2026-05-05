@@ -1,0 +1,668 @@
+<template>
+    <div class="ev-main-container">
+
+        <!-- ═══ HERO HEADER ═══ -->
+        <div class="ev-hero">
+            <div class="ev-hero__top">
+                <div class="ev-hero__title-block">
+                    <div class="ev-hero__icon-wrap">
+                        <lightning-icon icon-name="utility:event" size="small" variant="inverse"></lightning-icon>
+                    </div>
+                    <div>
+                        <h1 class="ev-hero__title">Gestion des Événements</h1>
+                        <p class="ev-hero__subtitle">Consultez et Ajoutez les événements de votre portefeuille</p>
+                    </div>
+                </div>
+                <template if:true={canCreate}>
+                    <button class="pm-btn pm-btn--add" onclick={handleAjouter}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                        Nouveau événement
+                    </button>
+                </template>
+            </div>
+
+            <div class="ev-stats-separator"></div>
+
+            <div class="ev-stats-grid">
+                <div class="ev-stat-item ev-stat-item--total">
+                    <span class="ev-stat-item__label">Total événements</span>
+                    <span class="ev-stat-item__num">{totalCount}</span>
+                     <!--<span class="ev-stat-item__badge ev-stat-item__badge--green">+5 ce mois</span> -->
+                </div>
+                <div class="ev-stat-item">
+                    <span class="ev-stat-item__label">Catastrophes naturelles</span>
+                    <span class="ev-stat-item__num">{catNatCount}</span>
+                    <span class="ev-stat-item__badge ev-stat-item__badge--blue">{catNatPct}%</span>
+                </div>
+                <div class="ev-stat-item">
+                    <span class="ev-stat-item__label">Catastrophes non naturelles</span>
+                    <span class="ev-stat-item__num">{catNonNatCount}</span>
+                    <span class="ev-stat-item__badge ev-stat-item__badge--red">{catNonNatPct}%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══ MAIN CARD ═══ -->
+        <div class="ev-card">
+
+            <!-- TOOLBAR -->
+            <div class="ev-toolbar">
+                <div class="ev-toolbar__left">
+                    <span class="ev-toolbar__title">Liste des événements</span>
+                </div>
+                <div class="ev-toolbar__right">
+
+                    <!-- Recherche -->
+                    <div class="ev-search-wrap">
+                        <svg class="ev-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <input
+                            type="search"
+                            placeholder="Rechercher par libellé, code, type, ville..."
+                            class="ev-search-input"
+                            oninput={handleSearch}
+                        />
+                    </div>
+
+                    <!-- Filtre catégorie -->
+                    <div class="ev-select-wrap" onclick={toggleDropdown}>
+                        <span class="ev-select-value">{selectedCatLabel}</span>
+                        <svg class="ev-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m6 9 6 6 6-6"/>
+                        </svg>
+                        <template if:true={dropdownOpen}>
+                            <div class="ev-dropdown">
+                                <template for:each={catOptions} for:item="opt">
+                                    <div key={opt.value} class={opt.optionClass} data-value={opt.value} onclick={handleCatFilter}>
+                                        {opt.label}
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Filtre période -->
+                    <div class="ev-period-wrap">
+                        <div class="ev-select-wrap ev-select-wrap--period" onclick={togglePeriodDropdown}>
+                            <svg class="ev-period-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            <span class="ev-select-value">{selectedPeriodLabel}</span>
+                            <!-- Croix si filtre actif, flèche sinon -->
+                            <template if:true={hasPeriodFilter}>
+                                <button class="ev-period-clear-inline" onclick={handleResetPeriod} title="Effacer le filtre">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:10px;height:10px;">
+                                        <path d="M18 6 6 18M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </template>
+                            <template if:false={hasPeriodFilter}>
+                                <svg class="ev-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="m6 9 6 6 6-6"/>
+                                </svg>
+                            </template>
+
+                            <template if:true={periodDropdownOpen}>
+                                <div class="ev-period-dropdown" onclick={stopPropagation}>
+
+                                    <!-- RACCOURCIS -->
+                                    <div class="ev-period-shortcuts">
+                                        <span class="ev-period-shortcuts__label">Raccourcis</span>
+                                        <template for:each={periodOptions} for:item="opt">
+                                            <div key={opt.value} class={opt.optionClass} data-value={opt.value} onclick={handlePeriodFilter}>
+                                                <template if:true={opt.isAllPeriods}>
+                                                    <svg class="ev-period-option__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/>
+                                                    </svg>
+                                                </template>
+                                                <template if:true={opt.isDay}>
+                                                    <svg class="ev-period-option__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/>
+                                                    </svg>
+                                                </template>
+                                                <template if:true={opt.isWeek}>
+                                                    <svg class="ev-period-option__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                                        <line x1="16" y1="2" x2="16" y2="6"/>
+                                                        <line x1="8" y1="2" x2="8" y2="6"/>
+                                                        <line x1="3" y1="10" x2="21" y2="10"/>
+                                                    </svg>
+                                                </template>
+                                                <template if:true={opt.isMonth}>
+                                                    <svg class="ev-period-option__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                                        <line x1="16" y1="2" x2="16" y2="6"/>
+                                                        <line x1="8" y1="2" x2="8" y2="6"/>
+                                                        <line x1="3" y1="10" x2="21" y2="10"/>
+                                                    </svg>
+                                                </template>
+                                                <template if:true={opt.isYear}>
+                                                    <svg class="ev-period-option__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                                                    </svg>
+                                                </template>
+                                                <template if:true={opt.isCustom}>
+                                                    <svg class="ev-period-option__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                                        <line x1="16" y1="2" x2="16" y2="6"/>
+                                                        <line x1="8" y1="2" x2="8" y2="6"/>
+                                                        <line x1="3" y1="10" x2="21" y2="10"/>
+                                                        <line x1="8" y1="15" x2="16" y2="15"/>
+                                                    </svg>
+                                                </template>
+                                                {opt.label}
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <!-- INPUTS DU/AU -->
+                                    <template if:true={showDateRange}>
+                                        <div class="ev-period-range">
+                                            <div class="ev-period-range__row">
+                                                <div class="ev-period-range__field">
+                                                    <span class="ev-period-range__label">DU</span>
+                                                    <lightning-input
+                                                        type="date"
+                                                        label=""
+                                                        value={customDateFrom}
+                                                        onchange={handleCustomDateFrom}
+                                                        variant="label-hidden"
+                                                        class="ev-period-range__lwc-input">
+                                                    </lightning-input>
+                                                </div>
+                                                <span class="ev-period-range__arrow">→</span>
+                                                <div class="ev-period-range__field">
+                                                    <span class="ev-period-range__label">AU</span>
+                                                    <lightning-input
+                                                        type="date"
+                                                        label=""
+                                                        value={customDateTo}
+                                                        onchange={handleCustomDateTo}
+                                                        variant="label-hidden"
+                                                        class="ev-period-range__lwc-input">
+                                                    </lightning-input>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="ev-period-footer">
+                                            <button class="ev-period-btn ev-period-btn--cancel" onclick={handleResetPeriod}>Annuler</button>
+                                            <button class="ev-period-btn ev-period-btn--apply" onclick={handleApplyCustomPeriod}>Appliquer</button>
+                                        </div>
+                                    </template>
+
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Toggle vue -->
+                    <div class="ev-view-toggle">
+                        <button class={btnListClass} onclick={switchToList} title="Vue tableau">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;">
+                                <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+                                <line x1="8" y1="18" x2="21" y2="18"/>
+                                <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/>
+                                <line x1="3" y1="18" x2="3.01" y2="18"/>
+                            </svg>
+                        </button>
+                        <button class={btnCardClass} onclick={switchToCards} title="Vue cartes">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;">
+                                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                                <rect x="3" y="14" width="7" height="7" rx="1"/>
+                                <rect x="14" y="14" width="7" height="7" rx="1"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CORPS -->
+            <div class="ev-body">
+
+                <!-- VUE TABLEAU -->
+                <template if:true={isListView}>
+                    <div class="ev-table-wrap">
+                        <table class="ev-table">
+                            <thead>
+                                <tr>
+                                    <th class="ev-th">Libellé de l'événement</th>
+
+                                    <th class={thCodeClass} data-field="Code" onclick={handleSort}>
+                                        <div class="ev-th-inner">
+                                            Code
+                                            <svg class="ev-sort-svg" viewBox="0 0 10 14" fill="none" stroke="currentColor">
+                                                <path class="ev-sort-up"   d="M5 1L1 5h8L5 1z"/>
+                                                <path class="ev-sort-down" d="M5 13l4-4H1l4 4z"/>
+                                            </svg>
+                                        </div>
+                                    </th>
+
+                                    <th class="ev-th">Catégorie</th>
+
+                                    <th class={thTypeClass} data-field="Type" onclick={handleSort}>
+                                        <div class="ev-th-inner">
+                                            Type
+                                            <svg class="ev-sort-svg" viewBox="0 0 10 14" fill="none" stroke="currentColor">
+                                                <path class="ev-sort-up"   d="M5 1L1 5h8L5 1z"/>
+                                                <path class="ev-sort-down" d="M5 13l4-4H1l4 4z"/>
+                                            </svg>
+                                        </div>
+                                    </th>
+
+                                    <th class={thDateDebClass} data-field="DateDebut" onclick={handleSort}>
+                                        <div class="ev-th-inner">
+                                            Date début
+                                            <svg class="ev-sort-svg" viewBox="0 0 10 14" fill="none" stroke="currentColor">
+                                                <path class="ev-sort-up"   d="M5 1L1 5h8L5 1z"/>
+                                                <path class="ev-sort-down" d="M5 13l4-4H1l4 4z"/>
+                                            </svg>
+                                        </div>
+                                    </th>
+
+                                    <th class={thDateFinClass} data-field="DateFin" onclick={handleSort}>
+                                        <div class="ev-th-inner">
+                                            Date fin
+                                            <svg class="ev-sort-svg" viewBox="0 0 10 14" fill="none" stroke="currentColor">
+                                                <path class="ev-sort-up"   d="M5 1L1 5h8L5 1z"/>
+                                                <path class="ev-sort-down" d="M5 13l4-4H1l4 4z"/>
+                                            </svg>
+                                        </div>
+                                    </th>
+
+                                    <th class={thVilleClass} data-field="Ville" onclick={handleSort}>
+                                        <div class="ev-th-inner">
+                                            Ville
+                                            <svg class="ev-sort-svg" viewBox="0 0 10 14" fill="none" stroke="currentColor">
+                                                <path class="ev-sort-up"   d="M5 1L1 5h8L5 1z"/>
+                                                <path class="ev-sort-down" d="M5 13l4-4H1l4 4z"/>
+                                            </svg>
+                                        </div>
+                                    </th>
+
+                                    <!-- ═══ DATE CRÉATION — maintenant triable ═══ -->
+                                    <th class={thDateCreationClass} data-field="DateCreation" onclick={handleSort}>
+                                        <div class="ev-th-inner">
+                                            Date création
+                                            <svg class="ev-sort-svg" viewBox="0 0 10 14" fill="none" stroke="currentColor">
+                                                <path class="ev-sort-up"   d="M5 1L1 5h8L5 1z"/>
+                                                <path class="ev-sort-down" d="M5 13l4-4H1l4 4z"/>
+                                            </svg>
+                                        </div>
+                                    </th>
+
+                                    <th class={thCreatedClass} data-field="CreatedByName" onclick={handleSort}>
+                                        <div class="ev-th-inner">
+                                            Créé par
+                                            <svg class="ev-sort-svg" viewBox="0 0 10 14" fill="none" stroke="currentColor">
+                                                <path class="ev-sort-up"   d="M5 1L1 5h8L5 1z"/>
+                                                <path class="ev-sort-down" d="M5 13l4-4H1l4 4z"/>
+                                            </svg>
+                                        </div>
+                                    </th>
+
+                                    <template if:true={canCreate}>
+                                        <th class="ev-th" style="text-align:center">Actions</th>
+                                    </template>
+                                </tr>
+                            </thead>
+                            <template if:true={hasRows}>
+                                <tbody>
+                                    <template for:each={paginatedEvenements} for:item="row">
+                                        <tr key={row.Id}>
+                                            <td class="ev-td">
+                                                <a class="ev-link" href="#" data-id={row.Id} onclick={handleNavigateToEvenement}>
+                                                    <b>{row.Libelle}</b>
+                                                </a>
+                                            </td>
+                                            <td class="ev-td ev-td--mono">{row.Code}</td>
+                                            <td class="ev-td"><span class={row.catBadgeClass}>{row.Categorie}</span></td>
+                                            <td class="ev-td"><span class="ev-type-text">{row.Type}</span></td>
+                                            <td class="ev-td">{row.DateDebut}</td>
+                                            <td class="ev-td">{row.DateFin}</td>
+                                            <td class="ev-td">{row.Ville}</td>
+                                            <td class="ev-td">{row.DateCreation}</td>
+                                            <td class="ev-td">
+                                                <div class="ev-creator-cell">
+                                                    <div class={row.avatarClass}>{row.initials}</div>
+                                                    <a class="ev-link" href="#" data-id={row.CreatedById} onclick={handleNavigateToUser}>{row.CreatedByName}</a>
+                                                </div>
+                                            </td>
+                                            <template if:true={canCreate}>
+                                                <td class="ev-td" style="text-align:center">
+                                                    <button class="ev-action-btn ev-action-btn--edit" onclick={handleRowAction} data-id={row.Id} title="Modifier">
+                                                        <lightning-icon icon-name="utility:edit" size="xx-small"></lightning-icon>
+                                                    </button>
+                                                </td>
+                                            </template>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </template>
+                        </table>
+                    </div>
+                    <template if:false={hasRows}>
+                        <div class="ev-empty">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="ev-empty-icon">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                            </svg>
+                            <p>Aucun événement trouvé</p>
+                        </div>
+                    </template>
+                </template>
+
+                <!-- VUE CARTES -->
+                <template if:true={isCardView}>
+                    <template if:true={hasRows}>
+                        <div class="ev-cards-grid">
+                            <template for:each={paginatedEvenements} for:item="row">
+                                <div key={row.Id} class="ev-event-card">
+                                    <div class="ev-event-card__top">
+                                        <span class={row.typePillClass}>{row.Type}</span>
+                                        <span class={row.catBadgeClass}>{row.catShortLabel}</span>
+                                    </div>
+                                    <div class="ev-event-card__title-block">
+                                        <a class="ev-event-card__title" href="#" data-id={row.Id} onclick={handleNavigateToEvenement}>
+                                            {row.Libelle}
+                                        </a>
+                                    </div>
+                                    <div class="ev-event-card__divider"></div>
+                                    <div class="ev-event-card__body">
+                                        <div class="ev-event-card__row">
+                                            <svg class="ev-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                                                <circle cx="12" cy="10" r="3"/>
+                                            </svg>
+                                            <span>{row.Ville}, Maroc</span>
+                                        </div>
+                                        <div class="ev-event-card__row">
+                                            <svg class="ev-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                                <line x1="3" y1="10" x2="21" y2="10"/>
+                                            </svg>
+                                            <span>{row.DateDebut} — {row.DateFin}</span>
+                                        </div>
+                                        <div class="ev-event-card__row">
+                                            <svg class="ev-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                                                <circle cx="12" cy="7" r="4"/>
+                                            </svg>
+                                            <span>Créé par <strong>{row.CreatedByName}</strong></span>
+                                        </div>
+                                    </div>
+                                    <div class="ev-event-card__footer">
+                                        <span class="ev-event-card__code-footer">{row.Code}</span>
+                                        <template if:true={canCreate}>
+                                            <button class="ev-action-btn ev-action-btn--edit" onclick={handleRowAction} data-id={row.Id} title="Modifier">
+                                                <lightning-icon icon-name="utility:edit" size="xx-small"></lightning-icon>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                    <template if:false={hasRows}>
+                        <div class="ev-empty ev-empty--cards">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="ev-empty-icon">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                            </svg>
+                            <p>Aucun événement trouvé</p>
+                        </div>
+                    </template>
+                </template>
+
+            </div>
+
+            <!-- PAGINATION -->
+            <div class="ev-pagination">
+                <div class="ev-pagination__left">
+                    <div class="ev-select-wrap ev-select-wrap--small" onclick={togglePageSizeDropdown}>
+                        <span class="ev-select-value">{pageSize}</span>
+                        <svg class="ev-select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m6 9 6 6 6-6"/>
+                        </svg>
+                        <template if:true={pageSizeDropdownOpen}>
+                            <div class="ev-dropdown ev-dropdown--small">
+                                <template for:each={pageSizeOptions} for:item="opt">
+                                    <div key={opt.value} class={opt.optionClass} data-value={opt.value} onclick={handlePageSizeChange}>
+                                        {opt.label}
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                    <span class="ev-page-info-rows">{rowsInfo}</span>
+                </div>
+                <div class="ev-pagination__right">
+                    <button class="ev-btn ev-btn--page" onclick={firstPage} disabled={isFirstPage} title="Première page">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ev-btn-icon">
+                            <path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/>
+                        </svg>
+                    </button>
+                    <button class="ev-btn ev-btn--page" onclick={prevPage} disabled={isFirstPage} title="Page précédente">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ev-btn-icon">
+                            <path d="m15 18-6-6 6-6"/>
+                        </svg>
+                    </button>
+                    <template for:each={pageNumbers} for:item="pg">
+                        <template if:true={pg.isEllipsis}>
+                            <span key={pg.key} class="ev-page-ellipsis">…</span>
+                        </template>
+                        <template if:false={pg.isEllipsis}>
+                            <button key={pg.key} class={pg.btnClass} data-page={pg.page} onclick={goToPage}>
+                                {pg.label}
+                            </button>
+                        </template>
+                    </template>
+                    <button class="ev-btn ev-btn--page" onclick={nextPage} disabled={isLastPage} title="Page suivante">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ev-btn-icon">
+                            <path d="m9 18 6-6-6-6"/>
+                        </svg>
+                    </button>
+                    <button class="ev-btn ev-btn--page" onclick={lastPage} disabled={isLastPage} title="Dernière page">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ev-btn-icon">
+                            <path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MODALE -->
+    <template if:true={showFormModal}>
+        <div class="ev-modal-overlay" onclick={handleOverlayClick}>
+            <section class="ev-modal ev-modal--large" onclick={stopPropagation}>
+                <header class="ev-modal__header">
+                    <div class="ev-modal__header-inner">
+                        <div class="ev-modal__icon">
+                            <lightning-icon icon-name="utility:event" size="small" variant="inverse"></lightning-icon>
+                        </div>
+                        <h2 class="ev-modal__title">{modalTitle}</h2>
+                    </div>
+                    <button class="ev-modal__close" onclick={closeModal} title="Fermer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px;">
+                            <path d="M18 6 6 18M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </header>
+                <div class="ev-modal__body">
+
+
+                   
+
+
+                    <!-- 01 — Informations de l'événement -->
+                    <div class="ev-section">
+                        <div class="ev-section__title">
+                            <span class="ev-section__num">01</span>
+                            Informations de l'événement
+                        </div>
+                        <div class="ev-grid" style="padding:1.1rem;">
+                            <!-- APRÈS -->
+<div class="ev-field ev-field--full">
+    <label class="pm-label">
+        <abbr class="pm-required" title="obligatoire">* </abbr>
+        Libellé de l'événement
+    </label>
+    <lightning-input name="libelle" value={form.libelle}
+        onchange={handleFieldChange} onblur={handleFieldBlur}
+        placeholder="Ex. Inondation Oued Bouregreg"
+        variant="label-hidden">
+    </lightning-input>
+    <template if:true={errors.libelle}>
+        <div class="pm-error">{errors.libelle}</div>
+    </template>
+</div>
+
+<div class="ev-field">
+    <label class="pm-label">
+        <abbr class="pm-required" title="obligatoire">* </abbr>
+        Catégorie de l'événement
+    </label>
+    <lightning-combobox name="categorie" value={form.categorie}
+        placeholder="— Sélectionner —" options={categorieOptions}
+        onchange={handleCategorieChange} onblur={handleFieldBlur}
+        variant="label-hidden">
+    </lightning-combobox>
+    <template if:true={errors.categorie}>
+        <div class="pm-error">{errors.categorie}</div>
+    </template>
+</div>
+
+<div class="ev-field">
+    <label class="pm-label">
+        <abbr class="pm-required" title="obligatoire">* </abbr>
+        Type de l'événement
+    </label>
+    <lightning-combobox name="type" value={form.type}
+        placeholder="— Choisir une catégorie d'abord —" options={typeOptions}
+        onchange={handleFieldChange} onblur={handleFieldBlur}
+        disabled={isTypeDisabled}
+        variant="label-hidden">
+    </lightning-combobox>
+    <template if:true={errors.type}>
+        <div class="pm-error">{errors.type}</div>
+    </template>
+</div>
+
+                            
+                        </div>
+                    </div>
+
+
+                     <div class="ev-section">
+    <div class="ev-section__title">
+        <span class="ev-section__num">02</span>
+         Localisation de l'événement
+    </div>
+    <div class="ev-grid" style="padding:1.1rem;">
+       <div class="ev-field">
+    <label class="pm-label">
+        <abbr class="pm-required" title="obligatoire">* </abbr>
+        Pays
+    </label>
+    <lightning-combobox name="pays" value={form.pays}
+        placeholder="— Sélectionner —" options={paysOptions}
+        onchange={handleFieldChange} onblur={handleFieldBlur}
+        variant="label-hidden" dropdown-alignment="auto">
+    </lightning-combobox>
+    <template if:true={errors.pays}>
+        <div class="pm-error">{errors.pays}</div>
+    </template>
+</div>
+<div class="ev-field">
+    <label class="pm-label">
+        <abbr class="pm-required" title="obligatoire">* </abbr>
+        Ville
+    </label>
+    <lightning-combobox name="ville" value={form.ville}
+        placeholder="— Sélectionner une ville —" options={villeOptions}
+        onchange={handleFieldChange} onblur={handleFieldBlur}
+        disabled={isVilleDisabled}
+        variant="label-hidden" dropdown-alignment="top">
+    </lightning-combobox>
+    <template if:true={errors.ville}>
+        <div class="pm-error">{errors.ville}</div>
+    </template>
+</div>
+
+<div class="ev-field ev-field--full">
+                                    <lightning-input label="Adresse" name="adresse" value={form.adresse} onchange={handleFieldChange} placeholder="Numéro, rue, quartier..."></lightning-input>
+                                </div>
+    </div>
+</div>
+
+          <!-- 02 — Période -->
+<div class="ev-section">
+    <div class="ev-section__title">
+        <span class="ev-section__num">03</span>
+        Période de l'événement
+    </div>
+    <div class="ev-grid" style="padding:1.1rem;">
+        <!-- APRÈS -->
+<div class="ev-field">
+    <label class="pm-label">
+        <abbr class="pm-required" title="obligatoire">* </abbr>
+        Date de début
+    </label>
+    <lightning-input type="date" name="dateDebut" value={form.dateDebut}
+        onchange={handleFieldChange} onblur={handleFieldBlur}
+        variant="label-hidden">
+    </lightning-input>
+    <template if:true={errors.dateDebut}>
+        <div class="pm-error">{errors.dateDebut}</div>
+    </template>
+</div>
+
+<div class="ev-field">
+    <label class="pm-label">
+        <abbr class="pm-required" title="obligatoire">* </abbr>
+        Date de fin
+    </label>
+    <lightning-input type="date" name="dateFin" value={form.dateFin}
+        onchange={handleFieldChange} onblur={handleFieldBlur}
+        variant="label-hidden">
+    </lightning-input>
+    <template if:true={errors.dateFin}>
+        <div class="pm-error">{errors.dateFin}</div>
+    </template>
+</div>
+    </div>
+</div>
+
+<!-- 03 — Lieu (DERNIER) -->
+
+
+                </div>
+                <footer class="ev-modal__footer">
+                    <button class="ev-btn ev-btn--cancel" onclick={closeModal}>Annuler</button>
+                    <button class="ev-btn ev-btn--save" onclick={handleSave} disabled={isSaving}>
+                        <template if:true={isSaving}>
+                            <lightning-spinner alternative-text="Chargement" size="x-small" variant="inverse"></lightning-spinner>
+                        </template>
+                        {saveLabel}
+                    </button>
+                </footer>
+            </section>
+        </div>
+    </template>
+
+</template>
