@@ -1,80 +1,27 @@
 <template>
     <div class="modal-shell">
 
-        <!-- ══════════════════════════════════
-             SIDEBAR — full height, étapes centrées
-             ══════════════════════════════════ -->
-        <div class="sidebar">
-            
-
-            <div class="sidebar-label">ÉTAPES</div>
-
-            <div class="steps-list">
-                <template for:each={steps} for:item="step">
-                    <div key={step.id} class={step.cssClass} onclick={handleStepClick} data-index={step.index}>
-                        <div class="step-track">
-                            <div class={step.dotClass}>
-                                <template if:true={step.isDone}>
-                                    <span class="check-icon">✓</span>
-                                </template>
-                                <template if:false={step.isDone}>
-                                    {step.num}
-                                </template>
-                            </div>
-                            <template if:false={step.isLast}>
-                                <div class={step.lineClass}></div>
-                            </template>
-                        </div>
-                        <div class="step-info">
-                            <span class="step-label">{step.label}</span>
-                            <template if:true={step.isDone}>
-                                <span class="step-status-done">Complété</span>
-                            </template>
-                            <template if:false={step.isDone}>
-                                <template if:true={step.isActive}>
-                                    <span class="step-status-active">En cours</span>
-                                </template>
-                            </template>
-                        </div>
-                    </div>
-                </template>
-            </div>
-
-            <!-- Progress en bas du sidebar -->
-            <div class="sidebar-progress">
-                <div class="sidebar-progress-row">
-                    <span class="sidebar-progress-label">PROGRESSION</span>
-                    <span class="sidebar-progress-pct">{progressPercentage}%</span>
-                </div>
-                <div class="sidebar-progress-bg">
-                    <div class="sidebar-progress-fill" style={progressStyle}></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ══════════════════════════════════
-             MAIN WRAPPER
-             ══════════════════════════════════ -->
         <div class="main-wrapper">
 
-            <!-- HEADER -->
-            <div class="modal-header">
-                <div class="modal-header-left">
-                    <div class="modal-icon">
-                        <lightning-icon icon-name="utility:shield" size="small"></lightning-icon>
+            <div class="header-progression-card">
+                <div class="header-card-inner">
+                    <div class="header-top-row">
+                        <div class="progress-info-left">
+                            <span class="icon-circle">
+                                <lightning-icon icon-name="utility:clock" size="xx-small"></lightning-icon>
+                            </span>
+                            <span class="progress-step-label">
+                                <strong>Étape {currentStepNumber} sur 4</strong>
+                            </span>
+                        </div>
+                        <div class="progress-info-right">
+                            <span class="progress-pct-badge">{progressPercentage}% complété</span>
+                            <span class="progress-motivation">— {motivationMessage}</span>
+                        </div>
                     </div>
-                    <div class="modal-title-block">
-                        <h2 class="modal-title">Nouvelle police d'assurance</h2>
-                        
-                    </div>
-                </div>
-                <div class="header-progress">
-                    <div class="header-progress-top">
-                        <span class="header-progress-pct">{progressPercentage}% complété</span>
-                        <span class="header-progress-msg">{motivationMessage}</span>
-                    </div>
-                    <div class="header-progress-bar">
-                        <div class="header-progress-fill" style={progressStyle}></div>
+
+                    <div class="header-bar-bg">
+                        <div class="header-bar-fill" style={progressStyle}></div>
                     </div>
                 </div>
             </div>
@@ -98,7 +45,6 @@
                     <template if:true={sec0Open}>
                         <div class="acc-body">
                             <div class="form-grid">
-                                <!-- Numéro de police -->
                                 <div class="field">
                                     <label class="field-label">Numéro de police <span class="req">*</span></label>
                                     <lightning-input
@@ -111,7 +57,6 @@
                                     </lightning-input>
                                 </div>
 
-                                <!-- Catégorie -->
                                 <div class="field">
                                     <label class="field-label">Catégorie <span class="req">*</span></label>
                                     <lightning-radio-group
@@ -124,7 +69,6 @@
                                     </lightning-radio-group>
                                 </div>
 
-                                <!-- Date d'effet -->
                                 <div class="field">
                                     <label class="field-label">Date d'effet <span class="req">*</span></label>
                                     <lightning-input
@@ -136,7 +80,6 @@
                                     </lightning-input>
                                 </div>
 
-                                <!-- Date d'expiration -->
                                 <div class="field">
                                     <label class="field-label">Date d'expiration <span class="req">*</span></label>
                                     <lightning-input
@@ -148,7 +91,6 @@
                                     </lightning-input>
                                 </div>
 
-                                <!-- Canal de souscription -->
                                 <div class="field">
                                     <label class="field-label">Canal de souscription</label>
                                     <lightning-combobox
@@ -161,20 +103,30 @@
                                     </lightning-combobox>
                                 </div>
 
-                                <!-- Situation de la police -->
+                                <div class="field">
+    <label class="field-label">Unité de gestion <span class="req">*</span></label>
+    <lightning-combobox
+        name="uniteGestion"
+        value={formData.uniteGestion}
+        options={uniteGestionOptions}
+        onchange={handleChange}
+        variant="label-hidden"
+        placeholder="Sélectionner l'unité...">
+    </lightning-combobox>
+</div>
+
+                                <!-- CORRECTION : Situation de la police est en lecture seule -->
+                                <!-- Elle sera toujours "Initiale" à la création (forcé côté Apex) -->
                                 <div class="field">
                                     <label class="field-label">Situation de la police</label>
-                                    <lightning-combobox
-                                        name="situationPolice"
-                                        value={formData.situationPolice}
-                                        options={situationPoliceOptions}
-                                        onchange={handleChange}
+                                    <lightning-input
+                                        type="text"
+                                        value="Initiale (par défaut)"
                                         variant="label-hidden"
-                                        placeholder="Sélectionner...">
-                                    </lightning-combobox>
+                                        disabled>
+                                    </lightning-input>
                                 </div>
 
-                                <!-- Situation de la prime -->
                                 <div class="field">
                                     <label class="field-label">Situation de la prime</label>
                                     <lightning-combobox
@@ -216,7 +168,6 @@
                     <template if:true={sec1Open}>
                         <div class="acc-body">
                             <div class="form-grid">
-                                <!-- Nom complet -->
                                 <div class="field full">
                                     <label class="field-label">Nom complet <span class="req">*</span></label>
                                     <lightning-input
@@ -229,7 +180,6 @@
                                     </lightning-input>
                                 </div>
 
-                                <!-- CIN -->
                                 <div class="field">
                                     <label class="field-label">CIN <span class="req">*</span></label>
                                     <lightning-input
@@ -242,7 +192,6 @@
                                     </lightning-input>
                                 </div>
 
-                                <!-- Téléphone -->
                                 <div class="field">
                                     <label class="field-label">Téléphone</label>
                                     <lightning-input
@@ -255,7 +204,6 @@
                                     </lightning-input>
                                 </div>
 
-                                <!-- Email -->
                                 <div class="field">
                                     <label class="field-label">Email</label>
                                     <lightning-input
@@ -268,7 +216,6 @@
                                     </lightning-input>
                                 </div>
 
-                                <!-- Pays -->
                                 <div class="field">
                                     <label class="field-label">Pays</label>
                                     <lightning-input
@@ -280,7 +227,6 @@
                                     </lightning-input>
                                 </div>
 
-                                <!-- Ville -->
                                 <div class="field">
                                     <label class="field-label">Ville</label>
                                     <lightning-input
@@ -293,7 +239,6 @@
                                     </lightning-input>
                                 </div>
 
-                                <!-- Adresse -->
                                 <div class="field full">
                                     <label class="field-label">Adresse</label>
                                     <lightning-textarea
@@ -335,7 +280,6 @@
                     <template if:true={sec2Open}>
                         <div class="acc-body">
                             <div class="form-grid">
-                                <!-- Immatriculation -->
                                 <div class="field">
                                     <label class="field-label">Numéro d'immatriculation <span class="req">*</span></label>
                                     <lightning-input
@@ -348,7 +292,6 @@
                                     </lightning-input>
                                 </div>
 
-                                <!-- Type de véhicule -->
                                 <div class="field">
                                     <label class="field-label">Type du véhicule</label>
                                     <lightning-combobox
@@ -361,20 +304,19 @@
                                     </lightning-combobox>
                                 </div>
 
-                                <!-- Marque -->
+                                <!-- CORRECTION : Brand__c est une Picklist → combobox au lieu d'input text -->
                                 <div class="field">
                                     <label class="field-label">Marque</label>
-                                    <lightning-input
-                                        type="text"
+                                    <lightning-combobox
                                         name="marque"
                                         value={formData.marque}
+                                        options={marqueOptions}
                                         onchange={handleChange}
                                         variant="label-hidden"
-                                        placeholder="Ex: Renault">
-                                    </lightning-input>
+                                        placeholder="Sélectionner...">
+                                    </lightning-combobox>
                                 </div>
 
-                                <!-- Modèle -->
                                 <div class="field">
                                     <label class="field-label">Modèle</label>
                                     <lightning-input
@@ -387,7 +329,6 @@
                                     </lightning-input>
                                 </div>
 
-                                <!-- Numéro de châssis -->
                                 <div class="field">
                                     <label class="field-label">Numéro de châssis</label>
                                     <lightning-input
@@ -400,7 +341,6 @@
                                     </lightning-input>
                                 </div>
 
-                                <!-- Numéro d'attestation -->
                                 <div class="field">
                                     <label class="field-label">Numéro d'attestation</label>
                                     <lightning-input
@@ -412,7 +352,6 @@
                                     </lightning-input>
                                 </div>
 
-                                <!-- Date de mise en circulation -->
                                 <div class="field">
                                     <label class="field-label">Date de mise en circulation</label>
                                     <lightning-input
@@ -489,7 +428,44 @@
 
             </div><!-- /acc-content -->
         </div><!-- /main-wrapper -->
+
+        <!-- ── SIDEBAR ── -->
+        <div class="sidebar">
+
+            <div class="sidebar-label">ÉTAPES</div>
+
+            <div class="steps-list">
+                <template for:each={steps} for:item="step">
+                    <div key={step.id} class={step.cssClass} onclick={handleStepClick} data-index={step.index}>
+                        <div class="step-track">
+                            <div class={step.dotClass}>
+                                <template if:true={step.isDone}>
+                                    <span class="check-icon">✓</span>
+                                </template>
+                                <template if:false={step.isDone}>
+                                    {step.num}
+                                </template>
+                            </div>
+                            <template if:false={step.isLast}>
+                                <div class={step.lineClass}></div>
+                            </template>
+                        </div>
+                        <div class="step-info">
+                            <span class="step-label">{step.label}</span>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div class="sidebar-info-box">
+                <span class="sidebar-info-icon">ℹ</span>
+                <span>Complétez chaque section dans l'ordre pour activer la confirmation finale.</span>
+            </div>
+
+        </div><!-- /sidebar -->
+
     </div><!-- /modal-shell -->
+
 
     <!-- ══ POPUP : CIN déjà existant ══ -->
     <template if:true={showCinPopup}>
@@ -509,14 +485,15 @@
         </div>
     </template>
 
-    <!-- ══ POPUP : Véhicule bloqué (police active) ══ -->
+    <!-- ══ POPUP : Véhicule bloqué (police active + prime payée) ══ -->
     <template if:true={showVehiculeBlockPopup}>
         <div class="popup-backdrop">
             <div class="popup-card">
                 <div class="popup-icon danger">✕</div>
                 <h3 class="popup-title">Véhicule non disponible</h3>
                 <p class="popup-msg">
-                    Ce véhicule est déjà assigné à une police active et ne pourra être réaffecté.
+                    Ce véhicule est déjà assigné à une police active (Initiale ou Active avec prime Payée)
+                    et ne pourra pas être réaffecté.
                     Veuillez vérifier les informations avant de créer la police.
                 </p>
                 <div class="popup-actions">

@@ -15,7 +15,7 @@ export default class DAlwc014PassagerAssure extends NavigationMixin(LightningEle
     @api recordId;
 
     @track participants          = [];
-    @track isLoading             = false;
+    @track isLoading             = true;
     @track isSaving              = false;
     @track error                 = null;
     @track isModalOpen           = false;
@@ -127,8 +127,28 @@ export default class DAlwc014PassagerAssure extends NavigationMixin(LightningEle
 
     // ── Lifecycle ─────────────────────────────────────────────────────────
     connectedCallback() {
-        this.loadPicklistValues();
-        this.loadParticipants();
+        this.initializeData();
+    }
+
+    async initializeData() {
+        this.isLoading = true;
+        this.error     = null;
+        try {
+            if (!this.recordId) {
+                this.error = "Aucun sinistre associé à cette page.";
+                this.participants = [];
+                return;
+            }
+            await Promise.all([
+                this.loadPicklistValues(),
+                this.loadParticipants()
+            ]);
+        } catch (err) {
+            console.error('Erreur initialisation:', err);
+            this.error = 'Erreur lors du chargement.';
+        } finally {
+            this.isLoading = false;
+        }
     }
 
     // ── Picklists ─────────────────────────────────────────────────────────
@@ -162,11 +182,9 @@ export default class DAlwc014PassagerAssure extends NavigationMixin(LightningEle
 
     // ── Participants ──────────────────────────────────────────────────────
     async loadParticipants() {
-        this.isLoading = true;
-        this.error     = null;
         try {
             const result   = await getClaimParticipants({ claimId: this.recordId });
-            const filtered = result.filter(p => p.Roles__c === this.roleAssureValue);
+            const filtered = (result || []).filter(p => p.Roles__c === this.roleAssureValue);
             this.participants = filtered.map(p => ({
                 ...p,
                 isDriver        : p.isDriver__c || false,
@@ -174,13 +192,12 @@ export default class DAlwc014PassagerAssure extends NavigationMixin(LightningEle
                 stateClass      : this.getStateClass(p.StateOfPerson__c),
                 participantName : p.ParticipantAccount__r?.Name || p.Name || 'N/A',
                 civilite        : p.ParticipantAccount__r?.Civility__c || '—',
-                accountId       : p.ParticipantAccount__c || null   // ══ AJOUT : ID Account pour la navigation ══
+                accountId       : p.ParticipantAccount__c || null
             }));
         } catch (err) {
             this.error = 'Erreur lors du chargement des participants';
             this.showToast('Erreur', this.error, 'error');
-        } finally {
-            this.isLoading = false;
+            this.participants = [];
         }
     }
 

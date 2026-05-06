@@ -45,12 +45,12 @@ export default class DA_lwc008_ListPassagerAdverse extends NavigationMixin(Light
     return {
         ...r,
         stateClass,
-        fullName: r.Name || '—',  // ✅ Name = vrai nom saisi
+        fullName: r.Name || '—',  
         RegistrationNumber__c: r.Vehicule__r?.RegistrationNumber__c || '—'
     };
 }
 
-    // ← 4. AJOUTER cette méthode
+    
     handleNameClick(event) {
         const recordId = event.currentTarget.dataset.id;
         this[NavigationMixin.Navigate]({

@@ -5,12 +5,6 @@ import getVehicleHistory                      from '@salesforce/apex/VehicleHist
 
 const PAGE_SIZE = 5;
 
-const ROLE_BADGE_MAP = {
-    'Passager assuré'  : 'pm-badge pm-badge--assured',
-    'Passager adverse' : 'pm-badge pm-badge--adverse',
-    'Autres partie'    : 'pm-badge pm-badge--other'
-};
-
 export default class VehicleHistory extends NavigationMixin(LightningElement) {
 
     @api recordId;
@@ -26,17 +20,21 @@ export default class VehicleHistory extends NavigationMixin(LightningElement) {
 
     @wire(getVehicleHistory, { accountId: '$recordId' })
     wiredVehicles({ data, error }) {
-        console.log('[VehicleHistory] wire appelé — recordId:', this.recordId);
         this.isLoading = false;
 
         if (data) {
-            console.log('[VehicleHistory] data reçue :', JSON.stringify(data));
-            this._allVehicles = data.map(v => ({
-                ...v,
-                uniqueKey      : (v.vehicleId || '') + '_' + (v.claimId || ''),
-                isDriver       : v.isDriver === true,
-                roleBadgeClass : ROLE_BADGE_MAP[v.role] || 'pm-badge pm-badge--other'
-            }));
+            this._allVehicles = data.map(v => {
+                const isDriver = v.isDriver === true;
+                return {
+                    ...v,
+                    isDriver,
+                    brandModel       : v.brandModel || this._composeBrandModel(v.brand, v.model),
+                    driverLabel      : isDriver ? 'Oui' : 'Non',
+                    driverBadgeClass : isDriver
+                        ? 'pm-driver-tag pm-driver-tag--yes'
+                        : 'pm-driver-tag pm-driver-tag--no'
+                };
+            });
             this._applyFilter();
             this.hasError = false;
         } else if (error) {
@@ -45,6 +43,13 @@ export default class VehicleHistory extends NavigationMixin(LightningElement) {
             this._allVehicles = [];
             this._filtered    = [];
         }
+    }
+
+    _composeBrandModel(brand, model) {
+        const b = (brand || '').trim();
+        const m = (model || '').trim();
+        if (b && m) return `${b} ${m}`;
+        return b || m || '—';
     }
 
     // ─── Getters état ────────────────────────────────────────────────────────
@@ -108,7 +113,6 @@ export default class VehicleHistory extends NavigationMixin(LightningElement) {
         } else {
             this._filtered = [...this._allVehicles];
         }
-        console.log('[VehicleHistory] filtrés :', this._filtered.length);
     }
 
     // ─── Navigation Véhicule ─────────────────────────────────────────────────
@@ -116,26 +120,12 @@ export default class VehicleHistory extends NavigationMixin(LightningElement) {
     handleNavigate(event) {
         event.preventDefault();
         const vehicleId = event.currentTarget.dataset.id;
+        if (!vehicleId) return;
         this[NavigationMixin.Navigate]({
             type       : 'standard__recordPage',
             attributes : {
                 recordId      : vehicleId,
                 objectApiName : 'Vehicule__c',
-                actionName    : 'view'
-            }
-        });
-    }
-
-    // ─── Navigation Sinistre ─────────────────────────────────────────────────
-
-    handleNavigateClaim(event) {
-        event.preventDefault();
-        const claimId = event.currentTarget.dataset.id;
-        this[NavigationMixin.Navigate]({
-            type       : 'standard__recordPage',
-            attributes : {
-                recordId      : claimId,
-                objectApiName : 'Sinistre__c',
                 actionName    : 'view'
             }
         });

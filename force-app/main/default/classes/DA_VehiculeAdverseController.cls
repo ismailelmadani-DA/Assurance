@@ -24,9 +24,9 @@ public with sharing class DA_VehiculeAdverseController {
         String whereClause;
 
         if (prefix == Schema.SObjectType.Claim__c.getKeyPrefix()) {
-            whereClause = 'Claim__c = \'' + recordId + '\' AND isOpposingCar__c = true ORDER BY CreatedDate DESC';
+            whereClause = 'Claim__c = \'' + recordId + '\' ORDER BY CreatedDate DESC';
         } else if (prefix == Schema.SObjectType.Case.getKeyPrefix()) {
-            whereClause = 'Case__c = \'' + recordId + '\' AND isOpposingCar__c = true ORDER BY CreatedDate DESC';
+            whereClause = 'Case__c = \'' + recordId + '\' ORDER BY CreatedDate DESC';
         } else {
             return new List<VehicleCaseAssignment__c>();
         }

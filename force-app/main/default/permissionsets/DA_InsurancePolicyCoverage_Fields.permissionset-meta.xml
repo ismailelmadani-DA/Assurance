@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Grants read/edit access to InsurancePolicyCoverage custom fields used by the garanties LWC component.</description>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>InsurancePolicyCoverage__c.CodeGarantie__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>InsurancePolicyCoverage__c.GarantieUsed__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>InsurancePolicyCoverage__c.NomDeLaGarantie__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>InsurancePolicyCoverage__c.TypeGarantie__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>DA InsurancePolicyCoverage Fields</label>
+</PermissionSet>

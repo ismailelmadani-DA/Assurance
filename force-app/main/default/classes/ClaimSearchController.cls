@@ -209,9 +209,7 @@ public with sharing class ClaimSearchController {
                 else passagerIdMap.put(ep.Name, ep.Id);
             }
 
-            // =========================================================
-            // ÉTAPE B : GESTION INTELLIGENTE DES COMPTES (Accounts)
-            // =========================================================
+            
             Set<String> cins = new Set<String>();
             Set<String> names = new Set<String>();
             
@@ -231,6 +229,7 @@ public with sharing class ClaimSearchController {
                 if (String.isNotBlank(acc.CIN__c)) accountMap.put(acc.CIN__c, acc);
                 accountMap.put(acc.Name, acc);
             }
+            Id passagerRTId = Schema.SObjectType.Account.getRecordTypeInfosByDeveloperName().get('Passager').getRecordTypeId();
 
             List<Account> accountsToInsert = new List<Account>();
             for (Object obj : passList) {
@@ -242,12 +241,14 @@ public with sharing class ClaimSearchController {
 
                 if (String.isNotBlank(cin) && !accountMap.containsKey(cin)) {
                     Account newAcc = new Account(Name = fullName, CIN__c = cin);
+                    newAcc.RecordTypeId = passagerRTId;
                     if (p.get('Telephone__c') != null) newAcc.Phone = String.valueOf(p.get('Telephone__c'));
                     if (p.get('Email__c') != null) newAcc.Email__c = (String)p.get('Email__c');
                     accountsToInsert.add(newAcc);
                     accountMap.put(cin, newAcc); 
                 } else if (String.isBlank(cin) && String.isNotBlank(fullName) && !accountMap.containsKey(fullName)) {
                     Account newAcc = new Account(Name = fullName);
+                    newAcc.RecordTypeId = passagerRTId;
                     if (p.get('Telephone__c') != null) newAcc.Phone = String.valueOf(p.get('Telephone__c'));
                     if (p.get('Email__c') != null) newAcc.Email__c = (String)p.get('Email__c');
                     accountsToInsert.add(newAcc);
@@ -633,7 +634,6 @@ public with sharing class ClaimSearchController {
             newClaim.AddressOfOccurrence__c = currentCase.AddressOfOccurrence__c;
             newClaim.CountryOfOccurrence__c = currentCase.CountryOfOccurrence__c;
             newClaim.IncidentReport__c = currentCase.IncidentReport__c;
-        
             newClaim.CausesAndCircumstances__c = currentCase.CausesAndCircumstances__c;
             newClaim.TriggeringEventOfClaim__c = currentCase.TriggeringEventOfClaim__c;
             newClaim.CausesOfClaim__c = currentCase.CausesOfClaim__c;
@@ -649,7 +649,7 @@ public with sharing class ClaimSearchController {
             insert newClaim;
             
 
-            List<Passager__c> passagers = [SELECT Id, Roles__c FROM Passager__c WHERE Case__c = :caseId];
+            List<Passager__c> passagers = [SELECT Id, Roles__c , Compte__c,StateOfPerson__c FROM Passager__c WHERE Case__c = :caseId];
             
             if (!passagers.isEmpty()) {
                 List<ClaimParticipant__c> participantsToInsert = new List<ClaimParticipant__c>();
@@ -657,7 +657,8 @@ public with sharing class ClaimSearchController {
                     ClaimParticipant__c participant = new ClaimParticipant__c();
                     participant.Claim__c = newClaim.Id;    
                     participant.Passager__c = p.Id;        
-                    participant.Roles__c = p.Roles__c;  
+                    participant.Roles__c = p.Roles__c;
+                    participant.StateOfPerson__c = p.StateOfPerson__c;  
                     participant.ParticipantAccount__c = p.Compte__c;    
                     participantsToInsert.add(participant);
                 }

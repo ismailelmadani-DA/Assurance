@@ -2,24 +2,31 @@ import { LightningElement, track } from 'lwc';
 import { NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
+// Imports Apex
+import getGarantiesMetadata from '@salesforce/apex/DA_lwc022_PoliceCreationController.getGarantiesMetadata';
 import checkCin             from '@salesforce/apex/DA_lwc022_PoliceCreationController.checkCin';
 import checkImmatriculation from '@salesforce/apex/DA_lwc022_PoliceCreationController.checkImmatriculation';
 import creerPolice          from '@salesforce/apex/DA_lwc022_PoliceCreationController.creerPolice';
 
 export default class DA_lwc022_PoliceCreation extends NavigationMixin(LightningElement) {
 
-    // ─── Popups ───────────────────────────────────────────────
-    @track showCinPopup          = false;
+    // ─── État des Popups ──────────────────────────────────────────
+    @track showCinPopup           = false;
     @track showVehiculeBlockPopup = false;
     @track showVehiculeWarnPopup  = false;
     @track vehiculeWarnMessage    = '';
-    @track cinConfirmed           = false;
-    @track vehiculeConfirmed      = false;
 
-    // ─── Garanties sélectionnées ──────────────────────────────
+    // ─── Flags de validation / IDs ────────────────────────────────
+    @track cinConfirmed       = false;
+    @track vehiculeConfirmed  = false;
+    @track vehiculeExistantId  = '';
+    @track anciennePoliceId    = '';
+
+    // ─── Garanties (Dynamiques) ───────────────────────────────────
+    @track garanties = []; 
     @track selectedGaranties = [];
 
-    // ─── Formulaire — tous les champs de la spec ──────────────
+    // ─── Formulaire ───────────────────────────────────────────────
     @track formData = {
         // Bloc 1 — Police
         numeroPolice:    '',
@@ -27,7 +34,7 @@ export default class DA_lwc022_PoliceCreation extends NavigationMixin(LightningE
         dateEffet:       '',
         dateExpiration:  '',
         canal:           'Courtier',
-        situationPolice: 'En cours',
+        uniteGestion:    '001', 
         situationPrime:  'Non Payée',
 
         // Bloc 2 — Assuré
@@ -39,17 +46,17 @@ export default class DA_lwc022_PoliceCreation extends NavigationMixin(LightningE
         ville:      '',
         adresse:    '',
 
-        // Bloc 3 — Véhicule
-        immatriculation:         '',
-        typeVehicule:            'Tourisme',
-        marque:                  '',
-        modele:                  '',
-        numeroChassis:           '',
-        numeroAttestation:       '',
-        dateMiseEnCirculation:   ''
+        // Bloc 3 — Véhicule (Valeurs API Salesforce)
+        immatriculation:       '',
+        typeVehicule:          'Une voiture', 
+        marque:                'Jaguar',
+        modele:                '',
+        numeroChassis:         '',
+        numeroAttestation:     '',
+        dateMiseEnCirculation: ''
     };
 
-    // ─── Sections / Stepper ───────────────────────────────────
+    // ─── Configuration Stepper ────────────────────────────────────
     @track sections = [
         { index: 0, num: 1, label: 'Informations de la police',  isOpen: true,  isDone: false, isLast: false },
         { index: 1, num: 2, label: "Informations de l'assuré",   isOpen: false, isDone: false, isLast: false },
@@ -57,9 +64,24 @@ export default class DA_lwc022_PoliceCreation extends NavigationMixin(LightningE
         { index: 3, num: 4, label: 'Choix des garanties',        isOpen: false, isDone: false, isLast: true  }
     ];
 
-    // ═══════════════════════════════════════════════════════════
-    // PROGRESSION
-    // ═══════════════════════════════════════════════════════════
+    // ─── Chargement initial ───────────────────────────────────────
+    connectedCallback() {
+        this.loadGaranties();
+    }
+
+    loadGaranties() {
+        getGarantiesMetadata()
+            .then(result => {
+                this.garanties = result;
+            })
+            .catch(error => {
+                console.error('Erreur chargement garanties metadata:', error);
+            });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // GETTERS (Progression & Stepper)
+    // ═══════════════════════════════════════════════════════════════
 
     get progressPercentage() {
         const done = this.sections.filter(s => s.isDone).length;
@@ -73,21 +95,21 @@ export default class DA_lwc022_PoliceCreation extends NavigationMixin(LightningE
     get motivationMessage() {
         const pct = this.progressPercentage;
         if (pct === 0)   return "C'est parti !";
-        if (pct < 50)    return "Bon début, continuez !";
         if (pct < 100)   return "Presque terminé !";
         return "Parfait, prêt à valider !";
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // STEPPER — getters pour le template
-    // ═══════════════════════════════════════════════════════════
+    get currentStepNumber() {
+        const openIndex = this.sections.findIndex(s => s.isOpen);
+        return openIndex >= 0 ? openIndex + 1 : this.sections.filter(s => s.isDone).length;
+    }
 
     get steps() {
         return this.sections.map(s => {
             const isActive = s.isOpen && !s.isDone;
             return {
                 ...s,
-                id:       `step-${s.index}`,
+                id: `step-${s.index}`,
                 isActive,
                 cssClass: `sb-step${s.isOpen ? ' active' : ''}${s.isDone ? ' done' : ''}`,
                 dotClass: `sb-dot${s.isDone ? ' done' : ''}${isActive ? ' active' : ''}`,
@@ -96,7 +118,7 @@ export default class DA_lwc022_PoliceCreation extends NavigationMixin(LightningE
         });
     }
 
-    // ─── Classes des accordéons ──────────────────────────────
+    // Getters pour les classes CSS des accordéons
     get section0Class() { return this._sectionClass(0); }
     get section1Class() { return this._sectionClass(1); }
     get section2Class() { return this._sectionClass(2); }
@@ -109,7 +131,7 @@ export default class DA_lwc022_PoliceCreation extends NavigationMixin(LightningE
         return cls;
     }
 
-    // ─── Numéros dans l'accordéon ────────────────────────────
+    // Getters pour les numéros/icônes des accordéons
     get accNum0() { return this._accNumClass(0); }
     get accNum1() { return this._accNumClass(1); }
     get accNum2() { return this._accNumClass(2); }
@@ -122,103 +144,23 @@ export default class DA_lwc022_PoliceCreation extends NavigationMixin(LightningE
         return cls;
     }
 
-    // ─── Ouverture / fermeture ───────────────────────────────
+    // Getters d'ouverture/fermeture et flèches
     get sec0Open() { return this.sections[0].isOpen; }
     get sec1Open() { return this.sections[1].isOpen; }
     get sec2Open() { return this.sections[2].isOpen; }
     get sec3Open() { return this.sections[3].isOpen; }
-
-    // ─── Done flags ──────────────────────────────────────────
     get sec0Done() { return this.sections[0].isDone; }
     get sec1Done() { return this.sections[1].isDone; }
     get sec2Done() { return this.sections[2].isDone; }
     get sec3Done() { return this.sections[3].isDone; }
-
-    // ─── Flèches accordéon ───────────────────────────────────
     get sec0Arrow() { return this.sections[0].isOpen ? '▲' : '▼'; }
     get sec1Arrow() { return this.sections[1].isOpen ? '▲' : '▼'; }
     get sec2Arrow() { return this.sections[2].isOpen ? '▲' : '▼'; }
     get sec3Arrow() { return this.sections[3].isOpen ? '▲' : '▼'; }
 
-    // ═══════════════════════════════════════════════════════════
-    // NAVIGATION — handlers
-    // ═══════════════════════════════════════════════════════════
-
-    /**
-     * Clic sur "Valider cette section" (data-index sur le bouton)
-     * → marque la section comme done + ouvre la suivante
-     */
-    markDone(event) {
-        const idx = parseInt(event.currentTarget.dataset.index, 10);
-
-        // Validation minimale avant de cocher
-        if (!this._validateSection(idx)) return;
-
-        this.sections = this.sections.map((s, i) => {
-            if (i === idx)     return { ...s, isDone: true,  isOpen: false };
-            if (i === idx + 1) return { ...s, isOpen: true };
-            return s;
-        });
-    }
-
-    /**
-     * Clic sur une étape du sidebar
-     */
-    handleStepClick(event) {
-        const idx = parseInt(event.currentTarget.dataset.index, 10);
-        this.sections = this.sections.map((s, i) => ({ ...s, isOpen: (i === idx) }));
-    }
-
-    /**
-     * Toggle accordéon
-     */
-    handleSectionToggle(event) {
-        const idx = parseInt(event.currentTarget.dataset.index, 10);
-        this.sections = this.sections.map((s, i) => ({
-            ...s,
-            isOpen: (i === idx) ? !s.isOpen : s.isOpen
-        }));
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // VALIDATION LOCALE PAR SECTION
-    // ═══════════════════════════════════════════════════════════
-
-    _validateSection(idx) {
-        switch (idx) {
-            case 0:
-                if (!this.formData.numeroPolice || !this.formData.dateEffet || !this.formData.dateExpiration) {
-                    this._showToast('Champs manquants', 'Veuillez remplir le numéro de police, la date d\'effet et la date d\'expiration.', 'warning');
-                    return false;
-                }
-                break;
-            case 1:
-                if (!this.formData.nomComplet || !this.formData.cin) {
-                    this._showToast('Champs manquants', 'Veuillez remplir le nom complet et le CIN.', 'warning');
-                    return false;
-                }
-                break;
-            case 2:
-                if (!this.formData.immatriculation) {
-                    this._showToast('Champs manquants', 'Veuillez renseigner le numéro d\'immatriculation.', 'warning');
-                    return false;
-                }
-                break;
-            case 3:
-                if (this.selectedGaranties.length === 0) {
-                    this._showToast('Aucune garantie', 'Veuillez sélectionner au moins une garantie.', 'warning');
-                    return false;
-                }
-                break;
-            default:
-                break;
-        }
-        return true;
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // FORMULAIRE
-    // ═══════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════
+    // NAVIGATION & ACTIONS
+    // ═══════════════════════════════════════════════════════════════
 
     handleChange(event) {
         const { name, value } = event.target;
@@ -229,9 +171,29 @@ export default class DA_lwc022_PoliceCreation extends NavigationMixin(LightningE
         this.selectedGaranties = event.detail.selectedRows.map(r => r.id);
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // ACTIONS FINALES
-    // ═══════════════════════════════════════════════════════════
+    markDone(event) {
+        const idx = parseInt(event.currentTarget.dataset.index, 10);
+        if (!this._validateSection(idx)) return;
+
+        this.sections = this.sections.map((s, i) => {
+            if (i === idx)     return { ...s, isDone: true,  isOpen: false };
+            if (i === idx + 1) return { ...s, isOpen: true };
+            return s;
+        });
+    }
+
+    handleStepClick(event) {
+        const idx = parseInt(event.currentTarget.dataset.index, 10);
+        this.sections = this.sections.map((s, i) => ({ ...s, isOpen: (i === idx) }));
+    }
+
+    handleSectionToggle(event) {
+        const idx = parseInt(event.currentTarget.dataset.index, 10);
+        this.sections = this.sections.map((s, i) => ({
+            ...s,
+            isOpen: (i === idx) ? !s.isOpen : s.isOpen
+        }));
+    }
 
     handleCancel() {
         this[NavigationMixin.Navigate]({
@@ -240,8 +202,11 @@ export default class DA_lwc022_PoliceCreation extends NavigationMixin(LightningE
         });
     }
 
+    // ═══════════════════════════════════════════════════════════════
+    // LOGIQUE DE CONFIRMATION FINALE
+    // ═══════════════════════════════════════════════════════════════
+
     async handleConfirm() {
-        // Validation globale des champs obligatoires
         if (!this._validateAll()) return;
 
         try {
@@ -252,27 +217,28 @@ export default class DA_lwc022_PoliceCreation extends NavigationMixin(LightningE
                     this.showCinPopup = true;
                     return;
                 }
+                this.cinConfirmed = true;
             }
 
-            // 2. Vérification immatriculation
+            // 2. Vérification Immatriculation
             if (!this.vehiculeConfirmed) {
-                const immaResult = await checkImmatriculation({ immatriculation: this.formData.immatriculation });
+                const immaResult = await checkImmatriculation({
+                    immatriculation: this.formData.immatriculation
+                });
 
                 if (immaResult.exists) {
-                    if (immaResult.isActif) {
-                        // Police active → BLOCAGE
+                    if (immaResult.isBlocked) {
                         this.showVehiculeBlockPopup = true;
                         return;
                     } else {
-                        // Police résiliée/suspendue → AVERTISSEMENT
-                        this.vehiculeWarnMessage =
-                            `Ce véhicule est déjà assigné à la police [${immaResult.numeroPolice}]`
-                            + ` - [${immaResult.situationPolice}].`
-                            + ' Êtes-vous sûr de vouloir créer une nouvelle police ?';
+                        this.vehiculeExistantId = immaResult.vehiculeId;
+                        this.anciennePoliceId   = immaResult.anciennePoliceId;
+                        this.vehiculeWarnMessage = `Ce véhicule est déjà assigné à la police [${immaResult.numeroPolice}] - [${immaResult.situationPolice}]. Êtes-vous sûr ?`;
                         this.showVehiculeWarnPopup = true;
                         return;
                     }
                 }
+                this.vehiculeConfirmed = true;
             }
 
             // 3. Création
@@ -280,37 +246,67 @@ export default class DA_lwc022_PoliceCreation extends NavigationMixin(LightningE
 
         } catch (error) {
             console.error('Erreur handleConfirm :', error);
-            this._showToast('Erreur', 'Une erreur technique est survenue. Veuillez réessayer.', 'error');
+            const msg = error?.body?.message || error?.message || 'Une erreur technique est survenue.';
+            this._showToast('Erreur', msg, 'error');
         }
     }
 
     async _callCreerPolice() {
-        await creerPolice({
-            formData:          JSON.stringify(this.formData),
-            garanties:         this.selectedGaranties,
-            cinConfirmed:      this.cinConfirmed,
-            vehiculeConfirmed: this.vehiculeConfirmed
+        // On récupère les noms des garanties sélectionnées
+        const garantiesNoms = this.garanties
+            .filter(g => this.selectedGaranties.includes(g.id))
+            .map(g => g.nom);
+
+        // Appel Apex
+        const newPoliceId = await creerPolice({
+            formData:           JSON.stringify(this.formData),
+            garanties:          garantiesNoms,
+            cinConfirmed:       this.cinConfirmed,
+            vehiculeConfirmed:  this.vehiculeConfirmed,
+            vehiculeExistantId: this.vehiculeExistantId  || '',
+            anciennePoliceId:   this.anciennePoliceId    || ''
         });
-        this._showToast('Succès !', 'La police d\'assurance a été créée avec succès.', 'success');
-        this.handleCancel();
+
+        this._showToast('Succès !', "La police d'assurance a été créée avec succès.", 'success');
+
+        // REDIRECTION vers la page de la nouvelle police
+        this[NavigationMixin.Navigate]({
+            type: 'standard__recordPage',
+            attributes: {
+                recordId: newPoliceId,
+                objectApiName: 'InsurancePolicy__c',
+                actionName: 'view'
+            }
+        });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // VALIDATIONS & TOASTS
+    // ═══════════════════════════════════════════════════════════════
+
+    _validateSection(idx) {
+        if (idx === 0 && (!this.formData.numeroPolice || !this.formData.dateEffet || !this.formData.dateExpiration)) {
+            this._showToast('Champs manquants', "Veuillez remplir les informations de police.", 'warning');
+            return false;
+        }
+        if (idx === 1 && (!this.formData.nomComplet || !this.formData.cin)) {
+            this._showToast('Champs manquants', 'Veuillez remplir le nom et le CIN.', 'warning');
+            return false;
+        }
+        if (idx === 2 && !this.formData.immatriculation) {
+            this._showToast('Champs manquants', "Veuillez renseigner l'immatriculation.", 'warning');
+            return false;
+        }
+        return true;
     }
 
     _validateAll() {
-        const required = [
-            { field: 'numeroPolice',   label: 'Numéro de police' },
-            { field: 'dateEffet',      label: 'Date d\'effet' },
-            { field: 'dateExpiration', label: 'Date d\'expiration' },
-            { field: 'nomComplet',     label: 'Nom complet' },
-            { field: 'cin',            label: 'CIN' },
-            { field: 'immatriculation', label: 'Numéro d\'immatriculation' }
-        ];
-        const missing = required.filter(r => !this.formData[r.field]).map(r => r.label);
-        if (missing.length > 0) {
-            this._showToast(
-                'Champs obligatoires manquants',
-                'Veuillez remplir : ' + missing.join(', '),
-                'warning'
-            );
+        if (!this.formData.numeroPolice || !this.formData.cin || !this.formData.immatriculation) {
+            this._showToast('Erreur', 'Champs obligatoires manquants.', 'warning');
+            return false;
+        }
+        if (this.selectedGaranties.length === 0) {
+            this._showToast('Erreur', 'Sélectionnez au moins une garantie.', 'warning');
             return false;
         }
         return true;
@@ -320,76 +316,27 @@ export default class DA_lwc022_PoliceCreation extends NavigationMixin(LightningE
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
 
-    // ─── Popup CIN ───────────────────────────────────────────
+    // ═══════════════════════════════════════════════════════════════
+    // POPUPS HANDLERS
+    // ═══════════════════════════════════════════════════════════════
+
     closeCinPopup() { this.showCinPopup = false; }
-
-    confirmCin() {
-        this.cinConfirmed = true;
-        this.showCinPopup = false;
-        this.handleConfirm();
-    }
-
-    // ─── Popup Véhicule bloqué ───────────────────────────────
+    confirmCin() { this.cinConfirmed = true; this.showCinPopup = false; this.handleConfirm(); }
     closeVehiculeBlockPopup() { this.showVehiculeBlockPopup = false; }
+    closeVehiculeWarnPopup() { this.showVehiculeWarnPopup = false; this.vehiculeConfirmed = false; }
+    confirmVehicule() { this.vehiculeConfirmed = true; this.showVehiculeWarnPopup = false; this.handleConfirm(); }
 
-    // ─── Popup Véhicule avertissement ────────────────────────
-    closeVehiculeWarnPopup() { this.showVehiculeWarnPopup = false; }
+    // ═══════════════════════════════════════════════════════════════
+    // OPTIONS DES LISTES (PICKLISTS)
+    // ═══════════════════════════════════════════════════════════════
 
-    confirmVehicule() {
-        this.vehiculeConfirmed   = true;
-        this.showVehiculeWarnPopup = false;
-        this.handleConfirm();
-    }
+    categorieOptions = [ { label: 'Individuelle', value: 'Individuelle' }, { label: 'Commerciale', value: 'Commerciale' } ];
+    canalOptions = [ { label: 'Agent', value: 'Agent' }, { label: 'Courtier', value: 'Courtier' }, { label: 'Direct', value: 'Direct' } ];
+    situationPoliceOptions = [ { label: 'Initiale', value: 'Initiale' }, { label: 'Active', value: 'Active' }, { label: 'Résiliée', value: 'Résiliée' }, { label: 'Suspendue', value: 'Suspendue' } ];
+    situationPrimeOptions = [ { label: 'Payée', value: 'Payée' }, { label: 'Non Payée', value: 'Non Payée' }, { label: 'Annulée', value: 'Annulée' } ];
+    typeVehiculeOptions = [ { label: 'Tourisme', value: 'Une voiture' }, { label: 'Camion', value: 'Un camion' }, { label: 'Moto', value: 'Moto' }, { label: 'Autre', value: 'Autres cas' } ];
+    marqueOptions = [ { label: 'Jaguar', value: 'Jaguar' }, { label: 'Hyundai', value: 'Hyundai' }, { label: 'Honda', value: 'Honda' }, { label: 'Ford', value: 'FORD' }, { label: 'Fiat', value: 'Fiat' } ];
+    uniteGestionOptions = [ { label: '001', value: '001' }, { label: '002', value: '002' }, { label: '003', value: '003' }, { label: '004', value: '004' }, { label: '005', value: '005' } ];
+    garantiesColumns = [ { label: 'Nom de la garantie', fieldName: 'nom', type: 'text' }, { label: 'Code', fieldName: 'code', type: 'text' } ];
 
-    // ═══════════════════════════════════════════════════════════
-    // PICKLISTS / OPTIONS
-    // ═══════════════════════════════════════════════════════════
-
-    categorieOptions = [
-        { label: 'Individuelle', value: 'Individuelle' },
-        { label: 'Commerciale',  value: 'Commerciale'  }
-    ];
-
-    canalOptions = [
-        { label: 'Agent',    value: 'Agent'    },
-        { label: 'Courtier', value: 'Courtier' },
-        { label: 'Direct',   value: 'Direct'   }
-    ];
-
-    situationPoliceOptions = [
-        { label: 'En cours',   value: 'En cours'   },
-        { label: 'Suspendue',  value: 'Suspendue'  },
-        { label: 'Résiliée',   value: 'Résiliée'   },
-        { label: 'Expirée',    value: 'Expirée'    }
-    ];
-
-    situationPrimeOptions = [
-        { label: 'Payée',     value: 'Payée'     },
-        { label: 'Non Payée', value: 'Non Payée' },
-        { label: 'Annulée',   value: 'Annulée'   }
-    ];
-
-    typeVehiculeOptions = [
-        { label: 'Tourisme',     value: 'Tourisme'     },
-        { label: 'Utilitaire',   value: 'Utilitaire'   },
-        { label: 'Moto',         value: 'Moto'         },
-        { label: 'Camion',       value: 'Camion'       },
-        { label: 'Bus / Car',    value: 'Bus'          }
-    ];
-
-    // ─── Colonnes du datatable garanties ─────────────────────
-    garantiesColumns = [
-        { label: 'Nom de la garantie', fieldName: 'nom',  type: 'text' },
-        { label: 'Code',               fieldName: 'code', type: 'text' }
-    ];
-
-    // ─── Données garanties (à remplacer par un appel Apex) ───
-    garanties = [
-        { id: 'RC-01',  nom: 'Responsabilité Civile',        code: 'RC-01'  },
-        { id: 'DC-02',  nom: 'Dommages Collision',           code: 'DC-02'  },
-        { id: 'INC-03', nom: 'Incendie / Explosion',         code: 'INC-03' },
-        { id: 'VOL-04', nom: 'Vol',                          code: 'VOL-04' },
-        { id: 'BR-05',  nom: 'Bris de glace',                code: 'BR-05'  },
-        { id: 'AT-06',  nom: 'Assistance Dépannage',         code: 'AT-06'  }
-    ];
 }

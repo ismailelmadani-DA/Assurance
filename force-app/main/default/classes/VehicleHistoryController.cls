@@ -34,17 +34,7 @@ public with sharing class VehicleHistoryController {
                 DM_VehicleHistory.getParticipantsByAccount(accountId);
             System.debug('>>> [VehicleHistory] Lien direct : ' + directCps.size());
 
-            List<ClaimParticipant__c> indirectCps =
-                DM_VehicleHistory.getParticipantsByPassager(accountId);
-            System.debug('>>> [VehicleHistory] Lien indirect : ' + indirectCps.size());
-
-            Map<Id, ClaimParticipant__c> mergedMap = new Map<Id, ClaimParticipant__c>();
-            for (ClaimParticipant__c cp : directCps)   mergedMap.put(cp.Id, cp);
-            for (ClaimParticipant__c cp : indirectCps) mergedMap.put(cp.Id, cp);
-
-            System.debug('>>> [VehicleHistory] Total fusionné : ' + mergedMap.size());
-
-            return buildWrappers(mergedMap.values());
+            return buildWrappers(directCps);
 
         } catch (AuraHandledException e) {
             throw e;
@@ -154,6 +144,7 @@ public with sharing class VehicleHistoryController {
         w.registrationNumber = immat;
         w.brand              = brand;
         w.model              = model;
+        w.brandModel         = buildBrandModel(brand, model);
         w.ownerName          = owner;
         w.isDriver           = cp.isDriver__c == true;
         w.claimId            = cp.Claim__c;
@@ -162,29 +153,34 @@ public with sharing class VehicleHistoryController {
         return w;
     }
 
+    private static String buildBrandModel(String brand, String model) {
+        Boolean hasBrand = String.isNotBlank(brand);
+        Boolean hasModel = String.isNotBlank(model);
+        if (hasBrand && hasModel) return brand + ' ' + model;
+        if (hasBrand)             return brand;
+        if (hasModel)             return model;
+        return '—';
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // BUILD WRAPPERS
     // ─────────────────────────────────────────────────────────────────────────
 
     private static List<VehicleWrapper> buildWrappers(List<ClaimParticipant__c> participants) {
-        // Clé = vehicleId + '_' + claimId  →  un même véhicule peut figurer
-        // dans plusieurs sinistres distincts
-        Map<String, VehicleWrapper> vehicleMap = new Map<String, VehicleWrapper>();
+        // Dédup par véhicule : chaque véhicule n'apparaît qu'une seule fois,
+        // même si le passager y est lié via plusieurs sinistres.
+        // isDriver = true si le passager a été conducteur dans au moins un cas.
+        Map<Id, VehicleWrapper> vehicleMap = new Map<Id, VehicleWrapper>();
 
         for (ClaimParticipant__c cp : participants) {
 
             VehicleWrapper w = resolveVehicle(cp);
             if (w == null) continue;
 
-            String mapKey = String.valueOf(w.vehicleId) + '_' + String.valueOf(cp.Claim__c);
-
-            if (!vehicleMap.containsKey(mapKey)) {
-                vehicleMap.put(mapKey, w);
-            } else {
-                // Si un autre CP du même sinistre indique conducteur → on promeut
-                if (cp.isDriver__c == true) {
-                    vehicleMap.get(mapKey).isDriver = true;
-                }
+            if (!vehicleMap.containsKey(w.vehicleId)) {
+                vehicleMap.put(w.vehicleId, w);
+            } else if (cp.isDriver__c == true) {
+                vehicleMap.get(w.vehicleId).isDriver = true;
             }
         }
 
@@ -202,6 +198,7 @@ public with sharing class VehicleHistoryController {
         @AuraEnabled public String  registrationNumber;
         @AuraEnabled public String  brand;
         @AuraEnabled public String  model;
+        @AuraEnabled public String  brandModel;
         @AuraEnabled public String  ownerName;
         @AuraEnabled public Boolean isDriver;
         @AuraEnabled public Id      claimId;
