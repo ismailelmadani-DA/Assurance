@@ -1,8 +1,5 @@
 public with sharing class DA_PassagerAdverseController {
 
-    private static final String CLAIM_PARTICIPANT = 'ClaimParticipant__c';
-    private static final String ACCOUNT = 'Account';
-    private static final String VEHICLE_ASSIGNMENT = 'VehicleCaseAssignment__c';
     private static final String ROLE_ADVERSE = 'Passager adverse';
 
     private static final String PARTICIPANT_LIST_FIELDS =
@@ -28,20 +25,12 @@ public with sharing class DA_PassagerAdverseController {
             return null;
         }
         String prefix = String.valueOf(recordId).substring(0, 3);
-        Schema.SObjectType claimType = Claim__c.SObjectType;
-        String claimPrefix = claimType.getDescribe().getKeyPrefix();
+        String claimPrefix = Claim__c.SObjectType.getDescribe().getKeyPrefix();
         if (prefix == claimPrefix) {
             return recordId;
         }
-        List<SObject> claims = DA_Utility.query(
-            'Id', 'Claim__c',
-            'Case__c = \'' + String.escapeSingleQuotes(String.valueOf(recordId)) + '\'',
-            'CreatedDate DESC', 1
-        );
-        if (!claims.isEmpty()) {
-            return claims[0].Id;
-        }
-        return null;
+        Claim__c claim = DM006_Claim.getByCase(recordId);
+        return claim != null ? claim.Id : null;
     }
 
     private static String friendlyError(Exception e) {
@@ -86,12 +75,9 @@ public with sharing class DA_PassagerAdverseController {
             if (resolvedId == null) {
                 throw new AuraHandledException('Aucun sinistre trouvé pour cet enregistrement.');
             }
-            String safeId = String.escapeSingleQuotes(String.valueOf(resolvedId));
-            return DA_Utility.query(
+            return DM002_VehicleCaseAssignment.getVehiclesAdverses(
                 'Id, Vehicule__c, Vehicule__r.RegistrationNumber__c, Vehicule__r.Brand__c, RegistrationNumber__c, Marque__c',
-                VEHICLE_ASSIGNMENT,
-                'Claim__c = \'' + safeId + '\' AND isOpposingCar__c = true',
-                'CreatedDate DESC', null
+                resolvedId
             );
         } catch (AuraHandledException ae) {
             throw ae;
@@ -110,12 +96,7 @@ public with sharing class DA_PassagerAdverseController {
             if (resolvedId == null) {
                 throw new AuraHandledException('Aucun sinistre trouvé pour cet enregistrement.');
             }
-            String safeId = String.escapeSingleQuotes(String.valueOf(resolvedId));
-            return DA_Utility.query(
-                PARTICIPANT_LIST_FIELDS, CLAIM_PARTICIPANT,
-                'Claim__c = \'' + safeId + '\' AND Roles__c = \'' + ROLE_ADVERSE + '\'',
-                'CreatedDate DESC', null
-            );
+            return DM005_ClaimParticipant.getByClaimAndRole(PARTICIPANT_LIST_FIELDS, resolvedId, ROLE_ADVERSE);
         } catch (AuraHandledException ae) {
             throw ae;
         } catch (Exception e) {
@@ -129,9 +110,7 @@ public with sharing class DA_PassagerAdverseController {
             throw new AuraHandledException('L\'identifiant du participant est requis.');
         }
         try {
-            ClaimParticipant__c p = (ClaimParticipant__c) DA_Utility.getById(
-                PARTICIPANT_DETAIL_FIELDS, CLAIM_PARTICIPANT, participantId
-            );
+            ClaimParticipant__c p = DM005_ClaimParticipant.getById(PARTICIPANT_DETAIL_FIELDS, participantId);
             if (p == null) {
                 throw new AuraHandledException('Participant introuvable.');
             }
@@ -180,15 +159,7 @@ public with sharing class DA_PassagerAdverseController {
             if (resolvedId == null) {
                 return false;
             }
-            String safeCin = String.escapeSingleQuotes(cin.trim());
-            String safeClaimId = String.escapeSingleQuotes(String.valueOf(resolvedId));
-            String conditions = 'Claim__c = \'' + safeClaimId + '\' AND Roles__c = \'' + ROLE_ADVERSE +
-                '\' AND ParticipantCNI__c = \'' + safeCin + '\'';
-            if (excludeId != null) {
-                conditions += ' AND Id != \'' + String.escapeSingleQuotes(String.valueOf(excludeId)) + '\'';
-            }
-            List<SObject> existing = DA_Utility.query('Id', CLAIM_PARTICIPANT, conditions, null, 1);
-            return !existing.isEmpty();
+            return DM005_ClaimParticipant.existsByClaimRoleAndCIN(resolvedId, ROLE_ADVERSE, cin.trim(), excludeId);
         } catch (Exception e) {
             return false;
         }
@@ -221,8 +192,8 @@ public with sharing class DA_PassagerAdverseController {
             // Validate state transition on update
             if (isUpdateMode && formData.get('participantId') != null) {
                 String newEtat = (String) formData.get('etatPassager');
-                ClaimParticipant__c existing = (ClaimParticipant__c) DA_Utility.getById(
-                    'Id, StateOfPerson__c', CLAIM_PARTICIPANT, (Id) formData.get('participantId')
+                ClaimParticipant__c existing = DM005_ClaimParticipant.getById(
+                    'Id, StateOfPerson__c', (Id) formData.get('participantId')
                 );
                 if (existing != null && String.isNotBlank(existing.StateOfPerson__c) && String.isNotBlank(newEtat)) {
                     String oldEtat = existing.StateOfPerson__c;
@@ -241,14 +212,10 @@ public with sharing class DA_PassagerAdverseController {
             }
 
             // Validate dates against sinistre creation date
-            List<SObject> claims = DA_Utility.query(
-                'Id, CreatedDate', 'Claim__c',
-                'Id = \'' + String.escapeSingleQuotes(String.valueOf(resolvedClaimId)) + '\'',
-                null, 1
-            );
-            if (!claims.isEmpty()) {
-                Date sinistreDate = claims[0].getPopulatedFieldsAsMap().containsKey('CreatedDate')
-                    ? ((Datetime) claims[0].get('CreatedDate')).date()
+            Claim__c claim = DM006_Claim.getById('Id, CreatedDate', resolvedClaimId);
+            if (claim != null) {
+                Date sinistreDate = claim.CreatedDate != null
+                    ? claim.CreatedDate.date()
                     : Date.today();
 
                 String dateNaissStr = (String) formData.get('dateNaissance');
@@ -357,7 +324,7 @@ public with sharing class DA_PassagerAdverseController {
             return response;
         }
         try {
-            DA_Utility.deleteById(CLAIM_PARTICIPANT, participantId);
+            DM005_ClaimParticipant.deleteById(participantId);
             response.put('success', true);
             response.put('message', 'Passager adverse supprimé avec succès.');
             return response;

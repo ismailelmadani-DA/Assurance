@@ -113,16 +113,18 @@ public with sharing class DA_FlagSinistreController {
 
                 cancelExistingPendingRequests(claimId);
 
+                List<RequestApproval__c> requestsToInsert = new List<RequestApproval__c>();
                 for (String flag : flagsNeedingApproval) {
-                    EM_RequestApproval.createRequest(
+                    requestsToInsert.add(EM_RequestApproval.createRequest(
                         claimId, flag, commentaire, currentUser.Id, currentUser.ManagerId
-                    );
+                    ));
                 }
                 for (String flag : flagsToRemoveNeedingApproval) {
-                    EM_RequestApproval.createRequest(
+                    requestsToInsert.add(EM_RequestApproval.createRequest(
                         claimId, flag, commentaire, currentUser.Id, currentUser.ManagerId
-                    );
+                    ));
                 }
+                EM_RequestApproval.insertRequests(requestsToInsert);
             }
 
             // Build final flags: restricted flags keep current state (non-privileged can't directly change)

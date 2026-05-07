@@ -10,6 +10,12 @@ public with sharing class DM006_Claim {
                 return (Claim__c) DA_Utility.getById(queryFields, OBJ, claimId);
             }
 
+            public static Claim__c getByCase(Id caseId) {
+                String safeId = String.escapeSingleQuotes(String.valueOf(caseId));
+                List<SObject> results = DA_Utility.query(FIELDS, OBJ, 'Case__c = \'' + safeId + '\'', 'CreatedDate DESC', 1);
+                return results.isEmpty() ? null : (Claim__c) results[0];
+            }
+
             public static void updateClaim(Claim__c claim) {
                 update claim;
             }

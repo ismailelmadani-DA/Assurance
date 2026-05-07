@@ -9,7 +9,12 @@ public with sharing class EM_RequestApproval {
         req.Status__c = 'En attente d\'approbation';
         req.Submitter__c = submitterId;
         req.NextApprover__c = approverId;
-        insert req;
         return req;
+    }
+
+    public static void insertRequests(List<RequestApproval__c> requests) {
+        if (!requests.isEmpty()) {
+            insert requests;
+        }
     }
 }

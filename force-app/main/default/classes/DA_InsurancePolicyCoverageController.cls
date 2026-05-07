@@ -18,7 +18,7 @@ public with sharing class DA_InsurancePolicyCoverageController {
     public static void saveCoverages(Id policyId, List<Id> selectedIds) {
         try {
             List<InsurancePolicyCoverage__c> allCoverages = DM008_InsurancePolicyCoverage.getByPolicyId(
-                'Id, NomDeLaGarantie__c, GarantieUsed__c', policyId
+                'Id, CodeGarantie__c, GarantieUsed__c', policyId
             );
 
             Set<Id> selectedSet = new Set<Id>(selectedIds);
@@ -26,7 +26,7 @@ public with sharing class DA_InsurancePolicyCoverageController {
 
             for (InsurancePolicyCoverage__c cov : allCoverages) {
                 Boolean shouldBeChecked = selectedSet.contains(cov.Id)
-                    || cov.NomDeLaGarantie__c == 'Responsabilité civile (RC)';
+                    || cov.CodeGarantie__c == '001';
 
                 if (cov.GarantieUsed__c != shouldBeChecked) {
                     cov.GarantieUsed__c = shouldBeChecked;

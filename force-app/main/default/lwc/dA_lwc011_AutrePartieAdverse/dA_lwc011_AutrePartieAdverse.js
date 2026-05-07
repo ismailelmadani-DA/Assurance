@@ -576,8 +576,7 @@ export default class DA_lwc011_AutrePartieAdverse extends NavigationMixin(Lightn
             if (result.success) {
                 this._toast('Succès', result.message, 'success');
                 this.closeModal();
-                // eslint-disable-next-line @lwc/lwc/no-async-operation
-                setTimeout(() => { window.location.reload(); }, 800);
+                await this.loadParticipants();
             } else {
                 this._toast('Erreur', result.message, 'error', 'sticky');
             }

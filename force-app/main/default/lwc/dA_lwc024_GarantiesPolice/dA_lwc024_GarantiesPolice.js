@@ -6,7 +6,7 @@ import saveCoverages from '@salesforce/apex/DA_InsurancePolicyCoverageController
 import COVERAGE_OBJECT from '@salesforce/schema/InsurancePolicyCoverage__c';
 import TYPE_FIELD from '@salesforce/schema/InsurancePolicyCoverage__c.TypeGarantie__c';
 
-const RC_NAME = 'Responsabilité civile (RC)';
+const RC_CODE = '001';
 
 export default class DA_lwc024_GarantiesPolice extends LightningElement {
     @api recordId;
@@ -57,7 +57,7 @@ export default class DA_lwc024_GarantiesPolice extends LightningElement {
 
     get coverages() {
         return this._rawData.map((cov) => {
-            const isRC = cov.NomDeLaGarantie__c === RC_NAME;
+            const isRC = cov.CodeGarantie__c === RC_CODE;
             const isChecked = isRC ? true : (this._localState.get(cov.Id) ?? cov.GarantieUsed__c);
             const typeLabel = this._typeLabels[cov.TypeGarantie__c] || cov.TypeGarantie__c || '';
             return {
@@ -82,7 +82,7 @@ export default class DA_lwc024_GarantiesPolice extends LightningElement {
 
     get hasChanges() {
         return this._rawData.some((cov) => {
-            if (cov.NomDeLaGarantie__c === RC_NAME) return false;
+            if (cov.CodeGarantie__c === RC_CODE) return false;
             return this._localState.get(cov.Id) !== cov.GarantieUsed__c;
         });
     }

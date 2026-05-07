@@ -45,6 +45,16 @@ public with sharing class DM002_VehicleCaseAssignment{
         );
     }
 
+    public static List<SObject> getVehiclesAdverses(String fields, Id claimId) {
+        String queryFields = String.isNotBlank(fields) ? fields : LIST_FIELDS;
+        String safeId = String.escapeSingleQuotes(String.valueOf(claimId));
+        return DA_Utility.query(
+            queryFields, VEHICLE_ASSIGNMENT,
+            'Claim__c = \'' + safeId + '\' AND isOpposingCar__c = true',
+            'CreatedDate DESC', null
+        );
+    }
+
     /**
      * Retourne le détail d'un véhicule adverse par son assignmentId,
      * mappé dans une Map pour le contrôleur.
