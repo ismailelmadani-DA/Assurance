@@ -474,24 +474,19 @@
 
     <!-- MODALE CONFIRMATION SUPPRESSION -->
     <template if:true={showDeleteModal}>
-        <div class="pm-modal-overlay" onclick={handleCancelDelete}>
-            <section class="pm-modal pm-modal--small" role="dialog" aria-modal="true" onclick={stopPropagation}>
-                <header class="pm-modal__header pm-modal__header--danger">
+        <div class="pm-modal-overlay">
+            <div class="pm-modal pm-modal--confirm">
+                <div class="pm-modal__header">
                     <div class="pm-modal__header-inner">
-                        <lightning-icon icon-name="utility:warning" size="small" variant="inverse"></lightning-icon>
-                        <h2 class="pm-modal__title">Confirmer la suppression</h2>
+                        <lightning-icon icon-name="utility:warning" size="small"></lightning-icon>
+                        <h3 class="pm-modal__title">Confirmer la suppression</h3>
                     </div>
-                    <button class="pm-modal__close" onclick={handleCancelDelete} title="Fermer">
-                        <lightning-icon icon-name="utility:close" size="x-small" variant="inverse"></lightning-icon>
-                    </button>
-                </header>
-                <div class="pm-modal__body">
-                    <p class="pm-delete-msg">
-                        &#202;tes-vous s&#251;r de vouloir supprimer le passager adverse
-                        "<strong>{deleteRecordName}</strong>" ? Cette action est irr&#233;versible.
-                    </p>
+                    <button class="pm-modal__close" onclick={handleCancelDelete}>&#10005;</button>
                 </div>
-                <footer class="pm-modal__footer">
+                <div class="pm-modal__body pm-modal__body--confirm">
+                    &#202;tes-vous s&#251;r de vouloir supprimer ce passager ? Cette action est irr&#233;versible.
+                </div>
+                <div class="pm-modal__footer">
                     <button class="pm-btn pm-btn--cancel" onclick={handleCancelDelete}>Annuler</button>
                     <button class="pm-btn pm-btn--danger" onclick={handleConfirmDelete} disabled={isDeleting}>
                         <template if:true={isDeleting}>
@@ -501,8 +496,8 @@
                             Supprimer
                         </template>
                     </button>
-                </footer>
-            </section>
+                </div>
+            </div>
         </div>
     </template>
 

@@ -667,6 +667,10 @@
     max-width: 460px;
 }
 
+.ap-modal--confirm {
+    max-width: 680px;
+}
+
 .ap-modal__header {
     display: flex;
     align-items: center;
@@ -761,6 +765,13 @@
 .ap-modal__body::-webkit-scrollbar-thumb {
     background: var(--wafa-green);
     border-radius: 3px;
+}
+
+.ap-modal__body--confirm {
+    padding: 1.75rem 1.75rem 1rem;
+    font-size: .9rem;
+    color: var(--text-main);
+    background: var(--white);
 }
 
 .ap-modal__footer {

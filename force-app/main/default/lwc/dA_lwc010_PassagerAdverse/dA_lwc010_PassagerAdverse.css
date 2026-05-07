@@ -898,6 +898,10 @@
     max-width: 460px;
 }
 
+.pm-modal--confirm {
+    max-width: 680px;
+}
+
 .pm-modal__header {
     display: flex;
     align-items: center;

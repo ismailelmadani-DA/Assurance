@@ -61,15 +61,11 @@
                                     <td class="ap-td">{rec.TypePartieAdverse__c}</td>
                                     <td class="ap-td">{rec.civility}</td>
                                     <td class="ap-td ap-td--name">
-                                        <a class="ap-link" href="javascript:void(0)" data-id={rec.Id} onclick={navigateToRecord}>
+                                        <a class="ap-link" href="javascript:void(0)" data-id={rec.ParticipantAccount__c} onclick={navigateToRecord}>
                                             {rec.accountName}
                                         </a>
                                     </td>
-                                    <td class="ap-td ap-td--mono">
-                                        <a class="ap-link" href="javascript:void(0)" data-id={rec.Id} onclick={navigateToRecord}>
-                                            {rec.ParticipantCNI__c}
-                                        </a>
-                                    </td>
+                                    <td class="ap-td ap-td--mono">{rec.ParticipantCNI__c}</td>
                                     <td class="ap-td">
                                         <template if:true={rec.hasCompagnie}>
                                             <a class="ap-link" href="javascript:void(0)" data-id={rec.CompagnieAdverse__c} onclick={navigateToRecord}>{rec.compagnieName}</a>
@@ -474,24 +470,19 @@
 
     <!-- MODALE CONFIRMATION SUPPRESSION -->
     <template if:true={showDeleteModal}>
-        <div class="ap-modal-overlay" onclick={handleCancelDelete}>
-            <section class="ap-modal ap-modal--small" role="dialog" aria-modal="true" onclick={stopPropagation}>
-                <header class="ap-modal__header ap-modal__header--danger">
+        <div class="ap-modal-overlay">
+            <div class="ap-modal ap-modal--confirm">
+                <div class="ap-modal__header">
                     <div class="ap-modal__header-inner">
-                        <lightning-icon icon-name="utility:warning" size="small" variant="inverse"></lightning-icon>
-                        <h2 class="ap-modal__title">Confirmer la suppression</h2>
+                        <lightning-icon icon-name="utility:warning" size="small"></lightning-icon>
+                        <h3 class="ap-modal__title">Confirmer la suppression</h3>
                     </div>
-                    <button class="ap-modal__close" onclick={handleCancelDelete} title="Fermer">
-                        <lightning-icon icon-name="utility:close" size="x-small" variant="inverse"></lightning-icon>
-                    </button>
-                </header>
-                <div class="ap-modal__body">
-                    <p class="ap-delete-msg">
-                        &#202;tes-vous s&#251;r de vouloir supprimer l'autre partie adverse
-                        "<strong>{deleteRecordName}</strong>" ? Cette action est irr&#233;versible.
-                    </p>
+                    <button class="ap-modal__close" onclick={handleCancelDelete}>&#10005;</button>
                 </div>
-                <footer class="ap-modal__footer">
+                <div class="ap-modal__body ap-modal__body--confirm">
+                    &#202;tes-vous s&#251;r de vouloir supprimer ce passager ? Cette action est irr&#233;versible.
+                </div>
+                <div class="ap-modal__footer">
                     <button class="ap-btn ap-btn--cancel" onclick={handleCancelDelete}>Annuler</button>
                     <button class="ap-btn ap-btn--danger" onclick={handleConfirmDelete} disabled={isDeleting}>
                         <template if:true={isDeleting}>
@@ -501,8 +492,8 @@
                             Supprimer
                         </template>
                     </button>
-                </footer>
-            </section>
+                </div>
+            </div>
         </div>
     </template>
 

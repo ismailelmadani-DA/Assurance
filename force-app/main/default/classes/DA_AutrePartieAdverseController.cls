@@ -264,7 +264,7 @@ public with sharing class DA_AutrePartieAdverseController {
 
             upsert participant;
 
-            // Update Account with civility, nomComplet, email, phone + RecordType Passager
+            // Update Account with all synced fields + RecordType Passager
             Map<String, Object> accFields = new Map<String, Object>();
             String civility = (String) formData.get('civility');
             if (String.isNotBlank(civility)) { accFields.put('Civility__c', civility); }
@@ -274,6 +274,19 @@ public with sharing class DA_AutrePartieAdverseController {
             if (String.isNotBlank(email)) { accFields.put('Email__c', email); }
             String phone = (String) formData.get('telephone');
             if (String.isNotBlank(phone)) { accFields.put('Phone', phone); }
+            String sexe = (String) formData.get('sexe');
+            if (String.isNotBlank(sexe)) { accFields.put('Sexe__c', sexe); }
+            String cin = (String) formData.get('cin');
+            if (String.isNotBlank(cin)) { accFields.put('CIN__c', cin.trim()); }
+            String situationFamiliale = (String) formData.get('situationFamiliale');
+            if (String.isNotBlank(situationFamiliale)) { accFields.put('MaritalStatus__c', situationFamiliale); }
+            String pays = (String) formData.get('pays');
+            if (String.isNotBlank(pays)) { accFields.put('Pays__c', pays); }
+            String ville = (String) formData.get('ville');
+            if (String.isNotBlank(ville)) { accFields.put('Ville__c', ville); }
+            String adresse = (String) formData.get('adresse');
+            if (String.isNotBlank(adresse)) { accFields.put('Adresse__c', adresse); }
+            if (String.isNotBlank(dateNaissStr)) { accFields.put('DateDeNaissance__c', Date.valueOf(dateNaissStr)); }
             DA_Utility.updateByRecordType('Account', 'Passager', accountId, accFields);
 
             response.put('success', true);
