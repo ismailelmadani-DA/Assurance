@@ -5,6 +5,11 @@ public with sharing class EMClaimParticipant {
     // ══════════════════════════════════════════════════════════════════════
 
     public static Id resolveAccount(Map<String, Object> formData, Id existingAccountId) {
+        return resolveAccount(formData, existingAccountId, null, null, null);
+    }
+
+    public static Id resolveAccount(Map<String, Object> formData, Id existingAccountId,
+                                    Id claimId, String role, Id excludeParticipantId) {
         String cni      = (String) formData.get('cni');
         String email    = (String) formData.get('email');
         String phone    = (String) formData.get('phone');
@@ -17,9 +22,10 @@ public with sharing class EMClaimParticipant {
         String marital  = (String) formData.get('maritalStatus');
         String birthStr = (String) formData.get('birthDate');
 
-        if (DMClaimParticipant.isCinDuplicate(cni, existingAccountId)) {
+        // Blocage CIN dupliqué sur le MÊME sinistre uniquement
+        if (DM005_ClaimParticipant.isCinDuplicateInClaim(cni, claimId, role, excludeParticipantId)) {
             throw new AuraHandledException(
-                'CIN_DUPLICATE:Un passager avec le CIN « ' + cni + ' » existe déjà.'
+                'CIN_DUPLICATE:Un passager avec le CIN « ' + cni + ' » existe déjà sur ce sinistre.'
             );
         }
 
@@ -28,12 +34,8 @@ public with sharing class EMClaimParticipant {
         if (existingAccountId != null) {
             acc = new Account(Id = existingAccountId);
         } else {
-            Account found = DMClaimParticipant.findAccountByEmailOrName(email, fullName);
-            if (found != null) {
-                acc = found;
-            } else {
-                acc = new Account();
-            }
+            Account found = DM005_ClaimParticipant.findAccountByEmailOrName(email, fullName);
+            acc = found != null ? found : new Account();
         }
 
         acc.Name = fullName;
@@ -49,10 +51,8 @@ public with sharing class EMClaimParticipant {
         if (String.isNotBlank(birthStr)) acc.DateDeNaissance__c = Date.valueOf(birthStr);
 
         if (acc.Id != null) {
-            // Mise à jour : on ne touche pas au RecordType existant
             update acc;
         } else {
-            // ══ AJOUT : RecordType "Passager" affecté automatiquement à la création ══
             Id passagerRtId = DA_Utility.getRecordTypeId('Account', 'Passager');
             if (passagerRtId != null) {
                 acc.RecordTypeId = passagerRtId;
@@ -69,13 +69,12 @@ public with sharing class EMClaimParticipant {
     public static ClaimParticipant__c createParticipant(
             Map<String, Object> formData, Id claimId, Id accountId, String role) {
 
-        ClaimParticipant__c p = buildParticipant(formData, null);
+        ClaimParticipant__c p   = buildParticipant(formData, null);
         p.Claim__c              = claimId;
         p.ParticipantAccount__c = accountId;
         p.Roles__c              = role;
 
-        // ══ AJOUT : affecter le véhicule du sinistre au participant ══
-        Id claimVehicleId = DMClaimParticipant.getClaimVehicleId(claimId);
+        Id claimVehicleId = DM005_ClaimParticipant.getClaimVehicleId(claimId);
         if (claimVehicleId != null) {
             p.Vehicule__c = claimVehicleId;
         }
@@ -86,7 +85,7 @@ public with sharing class EMClaimParticipant {
 
     public static ClaimParticipant__c updateParticipant(
             Map<String, Object> formData, Id participantId, Id accountId) {
-        ClaimParticipant__c p = buildParticipant(formData, participantId);
+        ClaimParticipant__c p   = buildParticipant(formData, participantId);
         p.ParticipantAccount__c = accountId;
         update p;
         return p;
@@ -114,11 +113,11 @@ public with sharing class EMClaimParticipant {
         p.StateOfPerson__c = (String) formData.get('stateOfPerson');
         p.isDriver__c      = formData.get('isDriver') == true;
 
-        if (formData.get('maritalStatus') != null) p.MaritalStatus__c  = (String) formData.get('maritalStatus');
-        if (formData.get('sexe')          != null) p.Sexe__c           = (String) formData.get('sexe');
-        if (formData.get('address')       != null) p.Adresse__c        = (String) formData.get('address');
-        if (formData.get('city')          != null) p.Ville__c          = (String) formData.get('city');
-        if (formData.get('country')       != null) p.Pays__c           = (String) formData.get('country');
+        if (formData.get('maritalStatus') != null) p.MaritalStatus__c = (String) formData.get('maritalStatus');
+        if (formData.get('sexe')          != null) p.Sexe__c          = (String) formData.get('sexe');
+        if (formData.get('address')       != null) p.Adresse__c       = (String) formData.get('address');
+        if (formData.get('city')          != null) p.Ville__c         = (String) formData.get('city');
+        if (formData.get('country')       != null) p.Pays__c          = (String) formData.get('country');
 
         if (formData.get('ipp')          != null) p.IPP__c          = Decimal.valueOf(String.valueOf(formData.get('ipp')));
         if (formData.get('itt')          != null) p.ITT__c          = Decimal.valueOf(String.valueOf(formData.get('itt')));

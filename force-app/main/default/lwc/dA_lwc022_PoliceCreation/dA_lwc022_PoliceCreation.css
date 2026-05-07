@@ -1184,3 +1184,98 @@ lightning-datatable { --lwc-colorBrand: var(--wafa-green); width: 100%; }
 @media (max-width: 900px) {
     .sidebar { width: 340px; min-width: 340px; }
 }
+
+/* ════════════════════════════════════════
+   SIDEBAR - VERSION CORRIGÉE ET FLUIDE
+════════════════════════════════════════ */
+.sidebar {
+    /* Largeur par défaut pour les très grands écrans */
+    width: 400px; 
+    min-width: 400px;
+    flex-shrink: 0;
+    background: #ffffff;
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 5;
+    box-sizing: border-box;
+}
+
+/* ── RESPONSIVE : On réduit la taille au fur et à mesure que l'écran rétrécit ── */
+
+/* Écrans Laptop standards (moins de 1400px) */
+@media (max-width: 1400px) {
+    .sidebar {
+        width: 320px;     /* On réduit ici au lieu d'augmenter */
+        min-width: 320px;
+        padding: 1.5rem;
+    }
+}
+
+/* Tablettes en mode paysage / Petits laptops (moins de 1100px) */
+@media (max-width: 1100px) {
+    .sidebar {
+        width: 280px; 
+        min-width: 280px;
+    }
+    .step-label {
+        font-size: 0.75rem; /* On réduit un peu le texte pour que ça tienne */
+    }
+}
+
+/* Tablettes en mode portrait (moins de 900px) */
+@media (max-width: 900px) {
+    .sidebar {
+        width: 240px;
+        min-width: 240px;
+        padding: 1rem;
+    }
+}
+
+/* Mobiles et petites tablettes (moins de 768px) 
+   On passe la sidebar en haut (stacking) pour libérer de la place */
+@media (max-width: 768px) {
+    .modal-shell {
+        flex-direction: column; /* Le contenu passe sous la sidebar */
+    }
+    .sidebar {
+        width: 100%;
+        min-width: 100%;
+        height: auto;
+        position: relative;
+        border-left: none;
+        border-bottom: 1px solid var(--border);
+        padding: 1rem;
+    }
+    .steps-list {
+        flex-direction: row; /* Les étapes s'alignent horizontalement sur mobile */
+        overflow-x: auto;
+        justify-content: flex-start;
+        gap: 1rem;
+    }
+    .step-line {
+        display: none; /* On cache les lignes verticales sur mobile */
+    }
+    .sidebar-info-box {
+        display: none; /* On cache les infos secondaires pour gagner de la place */
+    }
+}
+
+/* Fix dropdown clipping */
+.acc-item.active {
+    overflow: visible;
+}
+
+.acc-body {
+    overflow: visible;
+}
+
+.acc-item {
+    overflow: visible;
+}

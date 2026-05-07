@@ -2,6 +2,8 @@ public with sharing class DA_FlagSinistreController {
 
     private static final Set<String> RESTRICTED_FLAGS = new Set<String>{'Frauduleux', 'Douteux'};
     private static final Set<String> ALL_FLAGS = new Set<String>{'Sensible', 'Majeur', 'Grave', 'Frauduleux', 'Douteux'};
+    private static final User currentUser = DA_Utility.getCurrentUserInfo();
+
 
     @AuraEnabled(cacheable=false)
     public static Map<String, Object> getClaimFlagData(Id claimId) {
@@ -64,7 +66,7 @@ public with sharing class DA_FlagSinistreController {
         }
 
         try {
-            User currentUser = DA_Utility.getCurrentUserInfo();
+            
 
             Claim__c claim = DM006_Claim.getById('Id, Name, Flags__c', claimId);
             if (claim == null) {

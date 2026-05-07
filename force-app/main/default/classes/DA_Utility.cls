@@ -10,6 +10,7 @@ public with sharing class DA_Utility {
         }
         return query;
     }
+
     /*
      * Method for building Queries this one for queries with WHERE Clause
      */
@@ -59,7 +60,7 @@ public with sharing class DA_Utility {
         return Database.query(soql);
     }
 
-     /**
+    /**
      * Récupère un enregistrement unique par son Id.
      */
     public static SObject getById(String fields, String sObjectName, Id recordId) {
@@ -79,14 +80,13 @@ public with sharing class DA_Utility {
     }
 
     /**
-     * @description      :   Récupère l’ID d’un RecordType par nom d’objet et nom de développeur
+     * @description      :   Récupère l'ID d'un RecordType par nom d'objet et nom de développeur
      * @method Name      :   getRecordTypeId
      * @Author           :   D&A Technologies
      * @date             :   2026-02-07
      * @param            :   objectName => objectName (String)
      * @param            :   developerName => developerName (String)
      * @return           :   Id
-     * -------------------------------------------------------------------------------------------------
      **/
     public static SObject addByRecordType(String sObjectName, String developerName, Map<String, Object> fieldValues) {
         Id rtId = getRecordTypeId(sObjectName, developerName);
@@ -120,25 +120,151 @@ public with sharing class DA_Utility {
 
     public static Id getRecordTypeId(String objectName, String developerName) {
         try {
-            if(String.isNotBlank(objectName) && String.isNotBlank(developerName)){
-                return Schema.getGlobalDescribe().get(objectName).getDescribe().getRecordTypeInfosByDeveloperName().get(developerName).getRecordTypeId();
+            if (String.isNotBlank(objectName) && String.isNotBlank(developerName)) {
+                return Schema.getGlobalDescribe()
+                    .get(objectName)
+                    .getDescribe()
+                    .getRecordTypeInfosByDeveloperName()
+                    .get(developerName)
+                    .getRecordTypeId();
             }
             return null;
         } catch (Exception e) {
-            // Handle the case where record type is not found
             System.debug('Error getting record type: ' + e.getMessage());
             return null;
         }
     }
-       /**
-     * @description      :   Récupère les informations de l’utilisateur courant (profil, habilitations, pays, responsable)
+
+    /**
+     * @description      :   Récupère les informations de l'utilisateur courant (profil, habilitations, pays, responsable)
      * @method Name      :   getCurrentUserInfo
      * @Author           :   D&A Technologies
      * @date             :   2026-02-07
      * @return           :   User
-     * -------------------------------------------------------------------------------------------------
      **/
-    public static User getCurrentUserInfo(){
-        return [SELECT Id, Name, Email, ManagerId, Profile.Name FROM User WHERE Id = :UserInfo.getUserId() limit 1];
+    public static User getCurrentUserInfo() {
+        return [SELECT Id, Name, Email, ManagerId, Profile.Name FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // PICKLISTS — Méthodes génériques réutilisables
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * @description      :   Retourne les valeurs actives d'une picklist simple
+     * @Author           :   D&A Technologies
+     * @param objectName :   API name de l'objet  (ex: 'InsurancePolicy__c')
+     * @param fieldName  :   API name du champ picklist (ex: 'Canal__c')
+     * @return           :   List<Map<String, String>> — chaque map contient 'label' et 'value'
+     **/
+    public static List<Map<String, String>> getPicklistValues(String objectName, String fieldName) {
+        List<Map<String, String>> opts = new List<Map<String, String>>();
+        try {
+            Schema.DescribeFieldResult fieldDesc = Schema.getGlobalDescribe()
+                .get(objectName)
+                .getDescribe()
+                .fields
+                .getMap()
+                .get(fieldName)
+                .getDescribe();
+
+            for (Schema.PicklistEntry e : fieldDesc.getPicklistValues()) {
+                if (e.isActive()) {
+                    opts.add(new Map<String, String>{
+                        'label' => e.getLabel(),
+                        'value' => e.getValue()
+                    });
+                }
+            }
+        } catch (Exception e) {
+            System.debug('DA_Utility.getPicklistValues error ['
+                + objectName + '.' + fieldName + ']: ' + e.getMessage());
+        }
+        return opts;
+    }
+
+    /**
+     * @description            :   Retourne les valeurs actives d'une picklist dépendante,
+     *                             groupées par valeur du champ contrôlant.
+     * @Author                 :   D&A Technologies
+     * @param objectName       :   API name de l'objet
+     * @param controllingField :   API name du champ contrôlant (ex: 'Brand__c')
+     * @param dependentField   :   API name du champ dépendant  (ex: 'ModelePicklist__c')
+     * @return                 :   Map<String, List<Map<String, String>>>
+     *                             clé    = valeur du champ contrôlant
+     *                             valeur = liste {label, value} du champ dépendant
+     **/
+    public static Map<String, List<Map<String, String>>> getDependentPicklistValues(
+        String objectName,
+        String controllingField,
+        String dependentField
+    ) {
+        Map<String, List<Map<String, String>>> result = new Map<String, List<Map<String, String>>>();
+        try {
+            Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe()
+                .get(objectName)
+                .getDescribe()
+                .fields
+                .getMap();
+
+            List<Schema.PicklistEntry> ctrlEntries = fieldMap.get(controllingField)
+                .getDescribe().getPicklistValues();
+            List<Schema.PicklistEntry> depEntries  = fieldMap.get(dependentField)
+                .getDescribe().getPicklistValues();
+
+            // Initialiser une entrée vide pour chaque valeur active du contrôlant
+            for (Schema.PicklistEntry ctrl : ctrlEntries) {
+                if (ctrl.isActive()) {
+                    result.put(ctrl.getValue(), new List<Map<String, String>>());
+                }
+            }
+
+            // Distribuer les valeurs dépendantes selon le bitmask 'validFor'
+            for (Schema.PicklistEntry dep : depEntries) {
+                if (!dep.isActive()) continue;
+
+                Map<String, Object> depMap   = (Map<String, Object>) JSON.deserializeUntyped(JSON.serialize(dep));
+                String              validFor = (String) depMap.get('validFor');
+                if (String.isBlank(validFor)) continue;
+
+                String hexString = EncodingUtil.convertToHex(EncodingUtil.base64Decode(validFor));
+
+                for (Integer i = 0; i < ctrlEntries.size(); i++) {
+                    Schema.PicklistEntry ctrl = ctrlEntries[i];
+                    if (!ctrl.isActive()) continue;
+
+                    Integer byteIndex = i / 8;
+                    Integer bitIndex  = 7 - Math.mod(i, 8);
+                    if (byteIndex * 2 + 2 > hexString.length()) continue;
+
+                    Integer byteVal = hexToInt(hexString.substring(byteIndex * 2, byteIndex * 2 + 2));
+                    if ((byteVal & (1 << bitIndex)) != 0 && result.containsKey(ctrl.getValue())) {
+                        result.get(ctrl.getValue()).add(new Map<String, String>{
+                            'label' => dep.getLabel(),
+                            'value' => dep.getValue()
+                        });
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.debug('DA_Utility.getDependentPicklistValues error ['
+                + objectName + ' ' + controllingField + ' → ' + dependentField + ']: ' + e.getMessage());
+        }
+        return result;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Helper privé — conversion hex → entier (utilisé par getDependentPicklistValues)
+    // ─────────────────────────────────────────────────────────────
+    private static Integer hexToInt(String hex) {
+        Integer result = 0;
+        for (Integer i = 0; i < hex.length(); i++) {
+            Integer c     = hex.charAt(i);
+            Integer digit = (c >= 48 && c <= 57)  ? c - 48
+                          : (c >= 97 && c <= 102) ? c - 87
+                          : (c >= 65 && c <= 70)  ? c - 55 : 0;
+            result = result * 16 + digit;
+        }
+        return result;
     }
 }

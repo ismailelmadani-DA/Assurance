@@ -1,5 +1,5 @@
 import { LightningElement, api, track } from 'lwc';
-import { NavigationMixin }              from 'lightning/navigation';  // ══ AJOUT NavigationMixin ══
+import { NavigationMixin }              from 'lightning/navigation';
 
 import getClaimParticipants from '@salesforce/apex/ClaimParticipantController.getClaimParticipants';
 import getParticipantById   from '@salesforce/apex/ClaimParticipantController.getParticipantById';
@@ -10,7 +10,6 @@ import isCinAlreadyUsed     from '@salesforce/apex/ClaimParticipantController.is
 import getPicklistValues    from '@salesforce/apex/ClaimParticipantController.getPicklistValues';
 import { ShowToastEvent }   from 'lightning/platformShowToastEvent';
 
-// ══ CORRECTION : NavigationMixin appliqué à la classe ══
 export default class DAlwc014PassagerAssure extends NavigationMixin(LightningElement) {
     @api recordId;
 
@@ -212,7 +211,7 @@ export default class DAlwc014PassagerAssure extends NavigationMixin(LightningEle
         }[state] || 'pm-state pm-state--default';
     }
 
-    // ══ AJOUT : Navigation vers l'Account via NavigationMixin ══
+    // ── Navigation vers l'Account ─────────────────────────────────────────
     handleNavigateToAccount(event) {
         event.preventDefault();
         const accountId = event.currentTarget.dataset.accountId;
@@ -253,23 +252,39 @@ export default class DAlwc014PassagerAssure extends NavigationMixin(LightningEle
         this.formData = { ...this.formData, [field]: value };
         if (this.formErrors[field]) this.formErrors = { ...this.formErrors, [field]: null };
 
-        // Vérification unicité CIN avec debounce (600 ms)
+        // Vérification unicité CIN avec debounce (600 ms).
+        // CORRECTION : on annule le timer précédent à chaque frappe pour ne
+        // déclencher qu'un seul appel serveur après la pause de 600 ms.
         if (field === 'cni') {
             clearTimeout(this._cinCheckTimer);
             if (value?.trim()) {
                 this._cinCheckTimer = setTimeout(() => {
                     this.checkCinUniqueness(value.trim());
                 }, 600);
+            } else {
+                // Champ vidé : on efface l'erreur CIN éventuelle
+                this.formErrors = { ...this.formErrors, cni: null };
             }
         }
     }
 
+    /**
+     * Vérifie côté serveur si le CIN est déjà utilisé sur CE sinistre.
+     * Un même CIN sur un sinistre différent est autorisé.
+     */
     async checkCinUniqueness(cin) {
         try {
-            const excludeId = this.isEditMode ? this.editAccountId : null;
-            const isDuplicate = await isCinAlreadyUsed({ cin, excludeAccountId: excludeId });
+            const excludeParticipantId = this.isEditMode ? this.editParticipantId : null;
+            const isDuplicate = await isCinAlreadyUsed({
+                cin,
+                claimId            : this.recordId,
+                excludeParticipantId
+            });
             if (isDuplicate) {
-                this.formErrors = { ...this.formErrors, cni: `Le CIN « ${cin} » est déjà utilisé par un autre passager.` };
+                this.formErrors = {
+                    ...this.formErrors,
+                    cni: `Le CIN « ${cin} » est déjà utilisé par un passager assuré sur ce sinistre.`
+                };
             } else {
                 this.formErrors = { ...this.formErrors, cni: null };
             }
@@ -280,10 +295,22 @@ export default class DAlwc014PassagerAssure extends NavigationMixin(LightningEle
 
     // ── Validation ────────────────────────────────────────────────────────
     validateForm() {
-        const e = { ...this.formErrors };
+        // CORRECTION : on repart d'un objet vide pour éviter de cumuler
+        // des erreurs obsolètes, mais on conserve l'erreur CIN si elle existe
+        // (elle peut avoir été posée par le debounce avant la soumission).
+        const cinError = this.formErrors.cni || null;
+        const e = { cni: cinError };
+
         if (!this.formData.participantName?.trim()) e.participantName = 'Le nom est requis';
-        if (!this.formData.cni?.trim())             e.cni             = e.cni || 'Le CIN est requis';
-        if (!this.formData.stateOfPerson)           e.stateOfPerson   = "L'état du passager est requis";
+
+        if (!this.formData.cni?.trim()) {
+            // CIN vide : on écrase avec le message "requis" (prioritaire)
+            e.cni = 'Le CIN est requis';
+        }
+        // Si le CIN n'est pas vide mais qu'une erreur de doublon est déjà présente,
+        // elle est conservée depuis cinError — aucune action supplémentaire nécessaire.
+
+        if (!this.formData.stateOfPerson)   e.stateOfPerson   = "L'état du passager est requis";
 
         const mode = this.formData.contactMode;
         if (mode === 'tel' || mode === 'tel_email') {
@@ -329,17 +356,27 @@ export default class DAlwc014PassagerAssure extends NavigationMixin(LightningEle
                 this.closeModal();
                 await this.loadParticipants();
             } else {
-                if (result.message?.startsWith('CIN_DUPLICATE:')) {
-                    const cinMsg = result.message.replace('CIN_DUPLICATE:', '');
+                // CORRECTION : le préfixe CIN_DUPLICATE: est parsé ici pour
+                // afficher l'erreur sur le champ CIN et non dans un toast générique.
+                const msg = result.message || '';
+                if (msg.startsWith('CIN_DUPLICATE:')) {
+                    const cinMsg = msg.replace('CIN_DUPLICATE:', '').trim();
                     this.formErrors = { ...this.formErrors, cni: cinMsg };
                     this.showToast('CIN déjà utilisé', cinMsg, 'error');
                 } else {
-                    this.showToast('Erreur', result.message, 'error');
+                    this.showToast('Erreur', msg, 'error');
                 }
             }
         } catch (err) {
-            const msg = err.body?.message || err.message || "Erreur lors de l'enregistrement";
-            this.showToast('Erreur', msg, 'error');
+            const raw = err.body?.message || err.message || "Erreur lors de l'enregistrement";
+            // Sécurité : si l'exception AuraHandledException repassait le préfixe
+            if (raw.startsWith('CIN_DUPLICATE:')) {
+                const cinMsg = raw.replace('CIN_DUPLICATE:', '').trim();
+                this.formErrors = { ...this.formErrors, cni: cinMsg };
+                this.showToast('CIN déjà utilisé', cinMsg, 'error');
+            } else {
+                this.showToast('Erreur', raw, 'error');
+            }
         } finally {
             this.isSaving = false;
         }
@@ -449,6 +486,8 @@ export default class DAlwc014PassagerAssure extends NavigationMixin(LightningEle
         this.formErrors      = {};
         this.editAccountId   = null;
         this.isLoadingDetail = false;
+        // CORRECTION : on annule aussi le timer debounce CIN à la fermeture du modal
+        clearTimeout(this._cinCheckTimer);
     }
 
     // ── Pagination / filtres ──────────────────────────────────────────────

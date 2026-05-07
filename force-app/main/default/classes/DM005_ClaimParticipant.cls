@@ -58,4 +58,73 @@ public with sharing class DM005_ClaimParticipant {
         List<SObject> results = DA_Utility.query(fields, 'Claim__c', 'Id = \'' + safeId + '\'', null, 1);
         return results.isEmpty() ? null : (Claim__c) results[0];
     }
+    // ── Méthodes ajoutées pour ClaimParticipantController / EMClaimParticipant ──
+
+    /**
+     * Surcharge sans paramètre fields — utilisée par ClaimParticipantController.getClaimParticipants()
+     */
+    public static List<ClaimParticipant__c> getByClaimAndRole(Id claimId, String role) {
+        return getByClaimAndRole(null, claimId, role);
+    }
+
+    /**
+     * Retourne le détail complet d'un participant pour le formulaire d'édition.
+     * Utilisée par ClaimParticipantController.getParticipantById()
+     * et EMClaimParticipant.updateParticipant() pour récupérer le Claim__c.
+     */
+    public static ClaimParticipant__c getDetailById(Id recordId) {
+        String detailFields =
+            'Id, Name, Claim__c, ' +
+            'ParticipantAccount__c, ParticipantAccount__r.Name, ' +
+            'ParticipantAccount__r.Civility__c, ' +
+            'ParticipantAccount__r.Email__c, ' +
+            'ParticipantAccount__r.Phone, ' +
+            'Roles__c, StateOfPerson__c, ' +
+            'Vehicule__c, ' +
+            'BirthDay__c, Sexe__c, MaritalStatus__c, ' +
+            'ParticipantCNI__c, Adresse__c, Ville__c, Pays__c, ' +
+            'isDriver__c, IPP__c, ITT__c, DateDeces__c, RevenuAnnuel__c';
+        return (ClaimParticipant__c) DA_Utility.getById(detailFields, CLAIM_PARTICIPANT, recordId);
+    }
+
+    /**
+     * Alias de existsByClaimRoleAndCIN avec signature attendue par EMClaimParticipant.
+     * Vérifie le doublon CIN uniquement sur le même sinistre — autres sinistres autorisés.
+     */
+    public static Boolean isCinDuplicateInClaim(String cin, Id claimId, String role, Id excludeParticipantId) {
+        if (String.isBlank(cin) || claimId == null) return false;
+        return existsByClaimRoleAndCIN(claimId, role, cin, excludeParticipantId);
+    }
+
+    /**
+     * Recherche un Account par email ou par nom.
+     */
+    public static Account findAccountByEmailOrName(String email, String fullName) {
+        String conditions;
+        if (String.isNotBlank(email)) {
+            conditions = 'Email__c = \'' + String.escapeSingleQuotes(email) + '\'';
+        } else if (String.isNotBlank(fullName)) {
+            conditions = 'Name = \'' + String.escapeSingleQuotes(fullName) + '\'';
+        } else {
+            return null;
+        }
+        List<SObject> results = DA_Utility.query(
+            'Id, Name, Email__c, Phone, CIN__c',
+            'Account',
+            conditions,
+            null,
+            1
+        );
+        return results.isEmpty() ? null : (Account) results[0];
+    }
+
+    /**
+     * Retourne l'Id du véhicule associé à un sinistre.
+     * Utilisée par EMClaimParticipant.createParticipant()
+     */
+    public static Id getClaimVehicleId(Id claimId) {
+        if (claimId == null) return null;
+        Claim__c c = getClaimById('Id, Vehicule__c', claimId);
+        return c?.Vehicule__c;
+    }
 }

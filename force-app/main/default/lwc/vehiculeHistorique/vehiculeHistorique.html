@@ -1,4 +1,3 @@
-<!-- vehicleHistory.html -->
 <template>
     <div class="pm-card">
 
@@ -59,7 +58,8 @@
                         <tbody>
                             <template for:each={pagedVehicles} for:item="row">
                                 <tr key={row.vehicleId}>
-                                    <!-- N° Immatriculation (cliquable) -->
+
+                                    <!-- N° Immatriculation -->
                                     <td class="pm-td pm-td--mono">
                                         <button
                                             class="pm-link"
@@ -73,12 +73,25 @@
                                     <td class="pm-td">{row.brandModel}</td>
 
                                     <!-- Propriétaire -->
-                                    <td class="pm-td">{row.ownerName}</td>
+                                    <td class="pm-td">
+                                        <template if:true={row.ownerId}>
+                                            <button
+                                                class="pm-link"
+                                                data-id={row.ownerId}
+                                                onclick={handleNavigateOwner}>
+                                                {row.ownerName}
+                                            </button>
+                                        </template>
+                                        <template if:false={row.ownerId}>
+                                            {row.ownerName}
+                                        </template>
+                                    </td>
 
-                                    <!-- Conducteur (Oui / Non) -->
+                                    <!-- Conducteur -->
                                     <td class="pm-td pm-td--center">
                                         <span class={row.driverBadgeClass}>{row.driverLabel}</span>
                                     </td>
+
                                 </tr>
                             </template>
                         </tbody>

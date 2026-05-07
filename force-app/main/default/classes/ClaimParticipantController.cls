@@ -14,6 +14,9 @@ public with sharing class ClaimParticipantController {
     private static String friendlyError(Exception e) {
         String msg = e.getMessage();
         if (msg == null)                               return 'Une erreur inattendue s\'est produite.';
+        // CORRECTION : on laisse passer le préfixe CIN_DUPLICATE tel quel
+        // pour que le LWC puisse identifier l'erreur et l'afficher sur le bon champ.
+        if (msg.startsWith('CIN_DUPLICATE:'))          return msg;
         if (msg.contains('FIELD_INTEGRITY_EXCEPTION')) return 'Erreur de données : un champ obligatoire est manquant ou incorrect.';
         if (msg.contains('DUPLICATE_VALUE'))           return 'Un enregistrement avec ces informations existe déjà.';
         if (msg.contains('INSUFFICIENT_ACCESS'))       return 'Vous n\'avez pas les droits nécessaires pour effectuer cette action.';
@@ -79,10 +82,18 @@ public with sharing class ClaimParticipantController {
         }
     }
 
+    /**
+     * Vérifie si un CIN est déjà utilisé sur le sinistre courant.
+     *
+     * Appelé en debounce depuis le LWC (600 ms après la saisie).
+     * Retourne true si un autre passager du même sinistre possède déjà ce CIN.
+     *
+     * Note : un même CIN sur un sinistre DIFFÉRENT est autorisé.
+     */
     @AuraEnabled
-    public static Boolean isCinAlreadyUsed(String cin, Id excludeAccountId) {
+    public static Boolean isCinAlreadyUsed(String cin, Id claimId, Id excludeParticipantId) {
         try {
-            return DMClaimParticipant.isCinDuplicate(cin, excludeAccountId);
+            return DMClaimParticipant.isCinDuplicateInClaim(cin, claimId, ROLE_ASSURE, excludeParticipantId);
         } catch (Exception e) {
             throw new AuraHandledException(friendlyError(e));
         }
@@ -107,7 +118,9 @@ public with sharing class ClaimParticipantController {
         }
 
         try {
-            Id resolvedAccountId = EMClaimParticipant.resolveAccount(formData, null);
+            Id resolvedAccountId = EMClaimParticipant.resolveAccount(
+                formData, null, claimId, ROLE_ASSURE, null
+            );
 
             ClaimParticipant__c saved = EMClaimParticipant.createParticipant(
                 formData, claimId, resolvedAccountId, ROLE_ASSURE
@@ -149,7 +162,12 @@ public with sharing class ClaimParticipantController {
         }
 
         try {
-            Id resolvedAccountId = EMClaimParticipant.resolveAccount(formData, accountId);
+            ClaimParticipant__c current = DMClaimParticipant.getDetailById(participantId);
+            Id claimId = current != null ? current.Claim__c : null;
+
+            Id resolvedAccountId = EMClaimParticipant.resolveAccount(
+                formData, accountId, claimId, ROLE_ASSURE, participantId
+            );
 
             ClaimParticipant__c saved = EMClaimParticipant.updateParticipant(
                 formData, participantId, resolvedAccountId

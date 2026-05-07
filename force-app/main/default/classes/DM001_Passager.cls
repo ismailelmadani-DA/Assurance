@@ -6,15 +6,13 @@ public with sharing class DM001_Passager {
         'Id, Civilite__c, Name, Name__c, CIN__c, Pays__c, Ville__c, ' +
         'StateOfPerson__c, isDriver__c, TypeContact__c, Compte__c, Compte__r.Name';
 
-    // Champs étendus pour les passagers adverses (cas sinistre)
- private static final String PASSENGER_ADVERSE_FIELDS =
-    'Id, Name, Civilite__c, CIN__c, Sexe__c, ' +  
-    'Pays__c, Ville__c, StateOfPerson__c, ' +
-    'isDriver__c, Passager_mineurisMinorPassenger__c, ' +
-    'Vehicule__c, Vehicule__r.RegistrationNumber__c, ' +
-    'Roles__c, Case__c';
+    private static final String PASSENGER_ADVERSE_FIELDS =
+        'Id, Name, Civilite__c, CIN__c, Sexe__c, ' +  
+        'Pays__c, Ville__c, StateOfPerson__c, ' +
+        'isDriver__c, Passager_mineurisMinorPassenger__c, ' +
+        'Vehicule__c, Vehicule__r.RegistrationNumber__c, ' +
+        'Roles__c, Case__c';
 
-    
     private static final String ROLE_ADVERSE = 'Passager adverse';
 
     public static List<Passager__c> getPassengersByCase(Id caseId, String role) {
@@ -30,11 +28,7 @@ public with sharing class DM001_Passager {
             null
         );
 
-        List<Passager__c> passengers = new List<Passager__c>();
-        for (SObject record : records) {
-            passengers.add((Passager__c) record);
-        }
-        return passengers;
+        return (List<Passager__c>) records;
     }
 
     public static Passager__c getPassagerById(Id passagerId) {
@@ -59,14 +53,9 @@ public with sharing class DM001_Passager {
             null
         );
 
-        List<Passager__c> passengers = new List<Passager__c>();
-        for (SObject record : records) {
-            passengers.add((Passager__c) record);
-        }
-        return passengers;
+        return (List<Passager__c>) records;
     }
 
-    // Nouvelle méthode — champs complets pour le contexte sinistre/case
     public static List<Passager__c> getPassagersAdversesByCase(Id caseId) {
         String conditions =
             'Case__c = \'' + String.escapeSingleQuotes(String.valueOf(caseId)) + '\'' +
@@ -80,10 +69,6 @@ public with sharing class DM001_Passager {
             null
         );
 
-        List<Passager__c> passengers = new List<Passager__c>();
-        for (SObject record : records) {
-            passengers.add((Passager__c) record);
-        }
-        return passengers;
+        return (List<Passager__c>) records;
     }
 }

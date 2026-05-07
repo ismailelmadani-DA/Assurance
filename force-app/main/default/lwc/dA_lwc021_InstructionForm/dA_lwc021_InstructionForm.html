@@ -1,0 +1,305 @@
+<template>
+    <div class="instruction-wrapper">
+
+        <!-- ══════════════════════════════════════════
+             HEADER
+        ══════════════════════════════════════════ -->
+        <div class="form-header">
+            <div class="header-icon">
+                <lightning-icon icon-name="standard:task" size="medium"></lightning-icon>
+            </div>
+            <div class="header-text">
+                <h1 class="form-title">Nouvelle Instruction</h1>
+                <p class="form-subtitle">Sinistre : {claimName} &nbsp;|&nbsp; Type de dégât :
+                    <span class={typeDegaTBadgeClass}>{typeDegat}</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+             STEP INDICATOR
+        ══════════════════════════════════════════ -->
+        <div class="step-indicator">
+            <div class={step1Class}>
+                <div class="step-circle">1</div>
+                <span class="step-label">Type d'instruction</span>
+            </div>
+            <div class="step-line"></div>
+            <div class={step2Class}>
+                <div class="step-circle">2</div>
+                <span class="step-label">
+                    <template if:true={isMateriel}>Véhicule</template>
+                    <template if:true={isCorporel}>Victime</template>
+                    <template if:false={hasDegat}>Contexte</template>
+                </span>
+            </div>
+            <div class="step-line"></div>
+            <div class={step3Class}>
+                <div class="step-circle">3</div>
+                <span class="step-label">Confirmation</span>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════
+             STEP 1 — TYPE D'INSTRUCTION
+        ══════════════════════════════════════════ -->
+        <template if:true={isStep1}>
+            <div class="form-card animate-in">
+                <h2 class="section-title">
+                    <lightning-icon icon-name="utility:settings" size="x-small" class="section-icon"></lightning-icon>
+                    Sélectionner le type d'instruction
+                </h2>
+
+                <div class="type-selector">
+                    <div class={pecCardClass} onclick={selectPEC} role="button" tabindex="0">
+                        <div class="type-card-icon">
+                            <lightning-icon icon-name="standard:approval" size="large"></lightning-icon>
+                        </div>
+                        <div class="type-card-content">
+                            <h3>PEC</h3>
+                            <p>Prise en Charge</p>
+                            <span class="type-card-desc">Autorisation de prise en charge des frais liés au sinistre</span>
+                        </div>
+                        <template if:true={isPEC}>
+                            <div class="type-card-check">
+                                <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class={remboursementCardClass} onclick={selectRemboursement} role="button" tabindex="0">
+                        <div class="type-card-icon">
+                            <lightning-icon icon-name="standard:currency" size="large"></lightning-icon>
+                        </div>
+                        <div class="type-card-content">
+                            <h3>Remboursement</h3>
+                            <p>Indemnisation</p>
+                            <span class="type-card-desc">Remboursement des frais déjà engagés par l'assuré</span>
+                        </div>
+                        <template if:true={isRemboursement}>
+                            <div class="type-card-check">
+                                <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <lightning-button
+                        label="Suivant"
+                        variant="brand"
+                        icon-name="utility:forward"
+                        icon-position="right"
+                        onclick={goToStep2}
+                        disabled={isStep1NextDisabled}
+                        class="btn-next">
+                    </lightning-button>
+                </div>
+            </div>
+        </template>
+
+        <!-- ══════════════════════════════════════════
+             STEP 2 — VÉHICULE OU VICTIME
+        ══════════════════════════════════════════ -->
+        <template if:true={isStep2}>
+            <div class="form-card animate-in">
+
+                <!-- MATÉRIEL → liste véhicules -->
+                <template if:true={isMateriel}>
+                    <h2 class="section-title">
+                        <lightning-icon icon-name="standard:vehicle" size="x-small" class="section-icon"></lightning-icon>
+                        Sélectionner le véhicule concerné
+                    </h2>
+
+                    <template if:true={isLoadingVehicles}>
+                        <div class="loading-container">
+                            <lightning-spinner alternative-text="Chargement des véhicules..." size="medium"></lightning-spinner>
+                            <p class="loading-text">Chargement des véhicules liés au sinistre…</p>
+                        </div>
+                    </template>
+
+                    <template if:false={isLoadingVehicles}>
+                        <template if:true={hasVehicles}>
+                            <div class="entity-list">
+                                <template for:each={vehicles} for:item="v">
+                                    <div key={v.Id} class={v.cardClass} onclick={selectVehicle} data-id={v.Id} role="button" tabindex="0">
+                                        <div class="entity-icon">
+                                            <lightning-icon icon-name="standard:vehicle" size="small"></lightning-icon>
+                                        </div>
+                                        <div class="entity-info">
+                                            <span class="entity-name">{v.Name}</span>
+                                            <span class="entity-detail">{v.immat} &nbsp;·&nbsp; {v.marque}</span>
+                                        </div>
+                                        <template if:true={v.selected}>
+                                            <div class="entity-check">
+                                                <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        <template if:false={hasVehicles}>
+                            <div class="empty-state">
+                                <lightning-icon icon-name="utility:warning" size="medium" variant="warning"></lightning-icon>
+                                <p>Aucun véhicule trouvé pour ce sinistre.</p>
+                            </div>
+                        </template>
+                    </template>
+                </template>
+
+                <!-- CORPOREL → liste participants / victimes -->
+                <template if:true={isCorporel}>
+                    <h2 class="section-title">
+                        <lightning-icon icon-name="standard:person_account" size="x-small" class="section-icon"></lightning-icon>
+                        Sélectionner la victime / le participant
+                    </h2>
+
+                    <template if:true={isLoadingParticipants}>
+                        <div class="loading-container">
+                            <lightning-spinner alternative-text="Chargement des participants..." size="medium"></lightning-spinner>
+                            <p class="loading-text">Chargement des participants liés au sinistre…</p>
+                        </div>
+                    </template>
+
+                    <template if:false={isLoadingParticipants}>
+                        <template if:true={hasParticipants}>
+                            <div class="entity-list">
+                                <template for:each={participants} for:item="p">
+                                    <div key={p.Id} class={p.cardClass} onclick={selectParticipant} data-id={p.Id} role="button" tabindex="0">
+                                        <div class="entity-icon">
+                                            <lightning-icon icon-name="standard:person_account" size="small"></lightning-icon>
+                                        </div>
+                                        <div class="entity-info">
+                                            <span class="entity-name">{p.Name}</span>
+                                            <span class="entity-detail">{p.role} &nbsp;·&nbsp; {p.etat}</span>
+                                        </div>
+                                        <template if:true={p.selected}>
+                                            <div class="entity-check">
+                                                <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        <template if:false={hasParticipants}>
+                            <div class="empty-state">
+                                <lightning-icon icon-name="utility:warning" size="medium" variant="warning"></lightning-icon>
+                                <p>Aucun participant trouvé pour ce sinistre.</p>
+                            </div>
+                        </template>
+                    </template>
+                </template>
+
+                <div class="form-actions">
+                    <lightning-button label="Retour" variant="neutral" icon-name="utility:back" onclick={goToStep1} class="btn-back"></lightning-button>
+                    <lightning-button
+                        label="Suivant"
+                        variant="brand"
+                        icon-name="utility:forward"
+                        icon-position="right"
+                        onclick={goToStep3}
+                        disabled={isStep2NextDisabled}
+                        class="btn-next">
+                    </lightning-button>
+                </div>
+            </div>
+        </template>
+
+        <!-- ══════════════════════════════════════════
+             STEP 3 — RÉCAPITULATIF & CONFIRMATION
+        ══════════════════════════════════════════ -->
+        <template if:true={isStep3}>
+            <div class="form-card animate-in">
+                <h2 class="section-title">
+                    <lightning-icon icon-name="utility:preview" size="x-small" class="section-icon"></lightning-icon>
+                    Récapitulatif de l'instruction
+                </h2>
+
+                <div class="recap-grid">
+                    <div class="recap-item">
+                        <span class="recap-label">Sinistre</span>
+                        <span class="recap-value">{claimName}</span>
+                    </div>
+                    <div class="recap-item">
+                        <span class="recap-label">Type d'instruction</span>
+                        <span class={recapTypeBadgeClass}>{selectedInstructionType}</span>
+                    </div>
+                    <div class="recap-item">
+                        <span class="recap-label">Type de dégât</span>
+                        <span class={typeDegaTBadgeClass}>{typeDegat}</span>
+                    </div>
+                    <template if:true={isMateriel}>
+                        <div class="recap-item">
+                            <span class="recap-label">Véhicule</span>
+                            <span class="recap-value">{selectedVehicleName}</span>
+                        </div>
+                    </template>
+                    <template if:true={isCorporel}>
+                        <div class="recap-item">
+                            <span class="recap-label">Victime / Participant</span>
+                            <span class="recap-value">{selectedParticipantName}</span>
+                        </div>
+                    </template>
+                    <div class="recap-item">
+                        <span class="recap-label">Statut initial</span>
+                        <span class="recap-value status-badge">Instruction créée</span>
+                    </div>
+                    <div class="recap-item">
+                        <span class="recap-label">Étape de traitement</span>
+                        <span class="recap-value etape-badge">Étude de documents</span>
+                    </div>
+                </div>
+
+                <div class="confirmation-note">
+                    <lightning-icon icon-name="utility:info" size="x-small"></lightning-icon>
+                    <span>À la validation, l'instruction sera automatiquement créée avec le statut <strong>« Instruction créée »</strong> et positionnée à l'étape <strong>« Étude de documents »</strong>.</span>
+                </div>
+
+                <template if:true={saveError}>
+                    <div class="error-banner">
+                        <lightning-icon icon-name="utility:error" size="x-small" variant="error"></lightning-icon>
+                        <span>{saveError}</span>
+                    </div>
+                </template>
+
+                <div class="form-actions">
+                    <lightning-button label="Retour" variant="neutral" icon-name="utility:back" onclick={goToStep2} class="btn-back"></lightning-button>
+                    <lightning-button
+                        label="Valider l'instruction"
+                        variant="success"
+                        icon-name="utility:check"
+                        onclick={handleSave}
+                        disabled={isSaving}
+                        class="btn-save">
+                    </lightning-button>
+                </div>
+                <template if:true={isSaving}>
+                    <div class="saving-overlay">
+                        <lightning-spinner alternative-text="Enregistrement..." size="small"></lightning-spinner>
+                        <span>Enregistrement en cours…</span>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- ══════════════════════════════════════════
+             SUCCESS STATE
+        ══════════════════════════════════════════ -->
+        <template if:true={isSaved}>
+            <div class="form-card success-card animate-in">
+                <div class="success-icon">
+                    <lightning-icon icon-name="action:approval" size="large" variant="success"></lightning-icon>
+                </div>
+                <h2 class="success-title">Instruction créée avec succès !</h2>
+                <p class="success-msg">L'instruction <strong>{createdInstructionName}</strong> a été créée et positionnée à l'étape <em>Étude de documents</em>.</p>
+                <div class="form-actions center">
+                    <lightning-button label="Créer une autre instruction" variant="brand" icon-name="utility:add" onclick={resetForm}></lightning-button>
+                    <lightning-button label="Voir l'instruction" variant="neutral" icon-name="utility:preview" onclick={navigateToInstruction}></lightning-button>
+                </div>
+            </div>
+        </template>
+
+    </div>
+</template>

@@ -1,6 +1,7 @@
 public with sharing class DA_PassengerController {
 
     private static final String CLASS_NAME = DA_PassengerController.class.getName();
+    private static final String ROLE_PASSAGER_ASSURE = 'Passager assuré';
 
             private static final String CLAIM_PARTICIPANT = 'ClaimParticipant__c';
             private static final String ACCOUNT = 'Account';
@@ -28,8 +29,7 @@ public with sharing class DA_PassengerController {
                     throw new AuraHandledException('L\'identifiant du sinistre est requis.');
                 }
                 try {
-                    String conditions = 'Claim__c = \'' + String.escapeSingleQuotes(String.valueOf(claimId)) + '\'';
-                    return DM_DataManager.query(PARTICIPANT_LIST_FIELDS, CLAIM_PARTICIPANT, conditions, 'CreatedDate DESC', null);
+                    return DM005_ClaimParticipant.getByClaimId(PARTICIPANT_LIST_FIELDS, claimId);
                 } catch (Exception e) {
                     throw new AuraHandledException(e.getMessage());
                 }
@@ -41,7 +41,7 @@ public with sharing class DA_PassengerController {
                     throw new AuraHandledException('L\'identifiant du participant est requis.');
                 }
                 try {
-                    ClaimParticipant__c p = (ClaimParticipant__c) DM_DataManager.getById(PARTICIPANT_DETAIL_FIELDS, CLAIM_PARTICIPANT, participantId);
+                    ClaimParticipant__c p = DM005_ClaimParticipant.getById(PARTICIPANT_DETAIL_FIELDS, participantId);
                     if (p == null) {
                         throw new AuraHandledException('Participant introuvable.');
                     }
@@ -77,19 +77,12 @@ public with sharing class DA_PassengerController {
             }
 
             @AuraEnabled
-            public static Boolean checkDuplicate(String nom, String prenom, Id claimId, Id excludeId) {
-                if (String.isBlank(nom) || String.isBlank(prenom) || claimId == null) {
+            public static Boolean checkDuplicate(String cin, Id claimId, Id excludeId) {
+                if (String.isBlank(cin) || claimId == null) {
                     return false;
                 }
                 try {
-                    String fullName = String.escapeSingleQuotes(nom.trim() + ' ' + prenom.trim());
-                    String safeClaimId = String.escapeSingleQuotes(String.valueOf(claimId));
-                    String conditions = 'Claim__c = \'' + safeClaimId + '\' AND ParticipantAccount__r.Name = \'' + fullName + '\'';
-                    if (excludeId != null) {
-                        conditions += ' AND Id != \'' + String.escapeSingleQuotes(String.valueOf(excludeId)) + '\'';
-                    }
-                    List<SObject> existing = DM_DataManager.query('Id', CLAIM_PARTICIPANT, conditions, null, 1);
-                    return !existing.isEmpty();
+                    return DM005_ClaimParticipant.existsByClaimRoleAndCIN(claimId, ROLE_PASSAGER_ASSURE, cin, excludeId);
                 } catch (Exception e) {
                     throw new AuraHandledException(e.getMessage());
                 }
@@ -121,7 +114,7 @@ public with sharing class DA_PassengerController {
                 } else {
                     participant = new ClaimParticipant__c();
                     participant.Claim__c = claimId;
-                    participant.Roles__c = 'Assuré'; // ✅ Valeur par défaut à la création
+                    participant.Roles__c = ROLE_PASSAGER_ASSURE;
                     if (vehiculeId != null) {
                         participant.Vehicule__c = vehiculeId;
                     }
@@ -129,7 +122,7 @@ public with sharing class DA_PassengerController {
 
                 participant.ParticipantAccount__c = accountId;
 
-                // ✅ N'écrase le rôle que s'il est explicitement fourni
+                // N'écrase le rôle que s'il est explicitement fourni
                 String roles = (String) formData.get('roles');
                 if (String.isNotBlank(roles)) {
                     participant.Roles__c = roles;
@@ -194,7 +187,7 @@ public with sharing class DA_PassengerController {
                     return response;
                 }
                 try {
-                    DM_DataManager.deleteById(CLAIM_PARTICIPANT, participantId);
+                    DM005_ClaimParticipant.deleteById(participantId);
                     response.put('success', true);
                     response.put('message', 'Passager supprimé avec succès.');
                     return response;

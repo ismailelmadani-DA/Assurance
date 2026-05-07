@@ -1,4 +1,3 @@
-// vehicleHistory.js
 import { LightningElement, api, wire, track } from 'lwc';
 import { NavigationMixin }                    from 'lightning/navigation';
 import getVehicleHistory                      from '@salesforce/apex/VehicleHistoryController.getVehicleHistory';
@@ -126,6 +125,22 @@ export default class VehicleHistory extends NavigationMixin(LightningElement) {
             attributes : {
                 recordId      : vehicleId,
                 objectApiName : 'Vehicule__c',
+                actionName    : 'view'
+            }
+        });
+    }
+
+    // ─── Navigation Propriétaire ─────────────────────────────────────────────
+
+    handleNavigateOwner(event) {
+        event.preventDefault();
+        const ownerId = event.currentTarget.dataset.id;
+        if (!ownerId) return;
+        this[NavigationMixin.Navigate]({
+            type       : 'standard__recordPage',
+            attributes : {
+                recordId      : ownerId,
+                objectApiName : 'Account',
                 actionName    : 'view'
             }
         });
