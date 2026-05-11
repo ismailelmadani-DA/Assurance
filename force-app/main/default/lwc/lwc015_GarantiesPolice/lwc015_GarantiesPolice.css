@@ -1,0 +1,133 @@
+.header-summary-box {
+    background-color: #F3F3F3 !important;
+    color: #1A0273 !important;
+    font-weight: bold !important;
+    padding: 12px !important;
+    border: 1px solid #EAEAEA;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.main-title {
+    color: #00008F;
+    font-size: 1.4rem;
+    font-weight: bold;
+}
+
+.subtitle {
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.white-box {
+    background: #FFFFFF;
+    border: 1px solid #EAEAEA;
+    border-radius: 4px;
+    padding: 0 !important;
+    overflow: hidden;
+}
+
+.error-box {
+    background: #fdf0ef;
+    color: #c0392b;
+    border: 1px solid #e6b0aa;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 10px 14px !important;
+    font-size: 0.85rem;
+}
+
+/* Table */
+.garantie-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.garantie-table thead tr {
+    background: #00008F;
+    color: #ffffff;
+}
+
+.garantie-table th {
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.garantie-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #EAEAEA;
+    color: #1a1a1a;
+    vertical-align: middle;
+}
+
+.garantie-table tbody tr:hover td {
+    background: #f0f4ff;
+}
+
+.garantie-table tbody tr:nth-child(even) td {
+    background: #fafafa;
+}
+
+.garantie-table tbody tr:nth-child(even):hover td {
+    background: #f0f4ff;
+}
+
+.garantie-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.th-center,
+.td-center {
+    text-align: center;
+}
+
+.td-code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: #555;
+}
+
+.td-name {
+    font-weight: 600;
+}
+
+/* RC row (grayed out) */
+.row-rc td {
+    background: #f0f0f0 !important;
+    color: #888;
+}
+
+.row-rc:hover td {
+    background: #e8e8e8 !important;
+}
+
+/* Checkbox */
+.garantie-checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: #00008F;
+    cursor: pointer;
+}
+
+.garantie-checkbox:disabled {
+    accent-color: #999;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Empty state */
+.empty-icon {
+    opacity: 0.3;
+}
+
+.empty-text {
+    color: #707070;
+    font-size: 0.9rem;
+}

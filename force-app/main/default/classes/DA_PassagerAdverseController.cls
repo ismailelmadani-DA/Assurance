@@ -285,7 +285,7 @@ public with sharing class DA_PassagerAdverseController {
 
             Boolean isOwner = formData.get('isOwner') == true;
             participant.isOwner__c = isOwner;
-            upsert participant;
+            EMClaimParticipant.upsertParticipant(participant);
 
             // Update Account with civility, email, phone + RecordType Passager
             Map<String, Object> accFields = new Map<String, Object>();
@@ -324,7 +324,7 @@ public with sharing class DA_PassagerAdverseController {
             return response;
         }
         try {
-            DM005_ClaimParticipant.deleteById(participantId);
+            EMClaimParticipant.deleteParticipant(participantId);
             response.put('success', true);
             response.put('message', 'Passager adverse supprimé avec succès.');
             return response;

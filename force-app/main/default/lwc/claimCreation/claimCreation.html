@@ -369,6 +369,12 @@
 
                 <!-- ===================== ÉTAPE 11 ===================== -->
                 <template lwc:if={isStep11}>
+                    <c-lwc015_-garanties-police claim-summary={summaryForChild} policy-id={selectedPolicyId} case-id={createdCaseId}>
+                    </c-lwc015_-garanties-police>
+                </template>
+
+                <!-- ===================== ÉTAPE 12 ===================== -->
+                <template lwc:if={isStep12}>
                     <h1 class="main-title slds-m-bottom_large">Récapitulatif de la déclaration</h1>
 
                     <c-lwc014_-recapitulatif policy={selectedPolicyRecord} case-data={caseData}
@@ -392,7 +398,7 @@
                                 <button class="btn-primary" onclick={handleNext}>Créer Prédéclaration &rarr;</button>
                             </template>
 
-                            <template lwc:elseif={isStep11}>
+                            <template lwc:elseif={isStep12}>
                                 <button class="btn-primary" onclick={handleNext}>Ouvrir Sinistre &rarr;</button>
                             </template>
 
@@ -481,6 +487,13 @@
                     <div class={step11Class}>
                         <div class="icon-column">
                             <div class={step11IconClass}></div>
+                            <div class="line"></div>
+                        </div>
+                        <div class="label-column">Garanties de la police</div>
+                    </div>
+                    <div class={step12Class}>
+                        <div class="icon-column">
+                            <div class={step12IconClass}></div>
                             <div class="line"></div>
                         </div>
                         <div class="label-column">Récapitulatif</div>

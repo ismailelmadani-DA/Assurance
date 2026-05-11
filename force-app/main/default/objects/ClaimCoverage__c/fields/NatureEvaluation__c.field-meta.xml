@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>NatureEvaluation__c</fullName>
+    <label>Nature d&apos;évaluation</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Indemnité principale</fullName>
+                <default>false</default>
+                <label>Indemnité principale</label>
+            </value>
+            <value>
+                <fullName>Honoraires expert</fullName>
+                <default>false</default>
+                <label>Honoraires expert</label>
+            </value>
+            <value>
+                <fullName>Honoraires avocat</fullName>
+                <default>false</default>
+                <label>Honoraires avocat</label>
+            </value>
+            <value>
+                <fullName>honoraires Médecin</fullName>
+                <default>false</default>
+                <label>honoraires Médecin</label>
+            </value>
+            <value>
+                <fullName>Honoraire enquêteur</fullName>
+                <default>false</default>
+                <label>Honoraire enquêteur</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,71 @@
+<template>
+    <div class="header-summary-box slds-m-bottom_medium">
+        <div class="slds-grid slds-wrap">
+            <div class="slds-col slds-size_1-of-4 summary-item">Date Survenance: <strong>{claimSummary.dateSurvenance}</strong></div>
+            <div class="slds-col slds-size_1-of-4 summary-item">N&deg; Police: <strong>{claimSummary.policyNumber}</strong></div>
+            <div class="slds-col slds-size_1-of-4 summary-item">N&deg; Immat: <strong>{claimSummary.registrationNumber}</strong></div>
+            <div class="slds-col slds-size_1-of-4 summary-item">N&deg; D&eacute;claration: <strong>{claimSummary.caseNumber}</strong></div>
+        </div>
+    </div>
+
+    <h2 class="main-title slds-m-bottom_medium">Garanties de la police</h2>
+    <p class="subtitle slds-m-bottom_medium">S&eacute;lectionnez les garanties touch&eacute;es par le sinistre. {totalLabel} disponible(s).</p>
+
+    <template if:true={isLoading}>
+        <div class="slds-align_absolute-center slds-p-around_large">
+            <lightning-spinner alternative-text="Chargement..." size="medium"></lightning-spinner>
+        </div>
+    </template>
+
+    <template if:true={error}>
+        <div class="slds-box error-box slds-m-bottom_medium">
+            <lightning-icon icon-name="utility:error" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+            {error}
+        </div>
+    </template>
+
+    <template if:false={isLoading}>
+        <template if:true={hasCoverages}>
+            <div class="slds-box white-box">
+                <table class="garantie-table">
+                    <thead>
+                        <tr>
+                            <th class="th-center">Touch&eacute;e</th>
+                            <th>Code</th>
+                            <th>Nom de la garantie</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={coverages} for:item="cov">
+                            <tr key={cov.Id} class={cov.rowClass}>
+                                <td class="td-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={cov.isChecked}
+                                        disabled={cov.isDisabled}
+                                        data-id={cov.Id}
+                                        onchange={handleCheckboxChange}
+                                        class="garantie-checkbox"
+                                    />
+                                </td>
+                                <td class="td-code">{cov.CodeGarantie__c}</td>
+                                <td class="td-name">{cov.NomDeLaGarantie__c}</td>
+                                <td>{cov.TypeGarantie__c}</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+
+        <template if:false={hasCoverages}>
+            <template if:false={error}>
+                <div class="slds-box white-box slds-text-align_center slds-p-around_large">
+                    <lightning-icon icon-name="standard:entitlement" size="large" class="slds-m-bottom_small empty-icon"></lightning-icon>
+                    <p class="empty-text">Aucune garantie trouv&eacute;e pour cette police.</p>
+                </div>
+            </template>
+        </template>
+    </template>
+</template>

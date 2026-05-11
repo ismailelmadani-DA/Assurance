@@ -119,7 +119,11 @@ public with sharing class DA_AutrePartieAdverseController {
             return new List<Map<String, String>>();
         }
         try {
-            List<SObject> results = DA_Utility.search('Id, Name', 'Account', 'Name', searchTerm, null, 10);
+            Id compagnieRtId = DA_Utility.getRecordTypeId('Account', 'Company');
+            String conditions = compagnieRtId != null
+                ? 'RecordTypeId = \'' + String.escapeSingleQuotes(String.valueOf(compagnieRtId)) + '\''
+                : null;
+            List<SObject> results = DA_Utility.search('Id, Name', 'Account', 'Name', searchTerm, conditions, 10);
             List<Map<String, String>> options = new List<Map<String, String>>();
             for (SObject acc : results) {
                 options.add(new Map<String, String>{

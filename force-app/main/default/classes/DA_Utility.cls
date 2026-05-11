@@ -267,4 +267,19 @@ public with sharing class DA_Utility {
         }
         return result;
     }
+
+    /**
+ * @description      :   Compte le nombre d'enregistrements selon des conditions optionnelles
+ * @Author           :   D&A Technologies
+ * @param sObjectName:   Nom de l'objet (ex: 'Evenement__c')
+ * @param conditions :   Clause WHERE sans le mot-clé WHERE, ou null pour tout compter
+ * @return           :   Integer — nombre d'enregistrements correspondants
+ **/
+public static Integer count(String sObjectName, String conditions) {
+    String soql = 'SELECT COUNT() FROM ' + sObjectName;
+    if (String.isNotBlank(conditions)) {
+        soql += ' WHERE ' + conditions;
+    }
+    return Database.countQuery(soql);
+}
 }

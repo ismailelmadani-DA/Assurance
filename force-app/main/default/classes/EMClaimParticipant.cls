@@ -91,6 +91,10 @@ public with sharing class EMClaimParticipant {
         return p;
     }
 
+    public static void upsertParticipant(ClaimParticipant__c participant) {
+        upsert participant;
+    }
+
     public static void deleteParticipant(Id participantId) {
         delete new ClaimParticipant__c(Id = participantId);
     }

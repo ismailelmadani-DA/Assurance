@@ -146,8 +146,9 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
     get isStep9() { return this.currentStep === 9; }
     get isStep10() { return this.currentStep === 10; }
     get isStep11() { return this.currentStep === 11; }
+    get isStep12() { return this.currentStep === 12; }
 
-    get showFooter() { return this.currentStep <= 11; }
+    get showFooter() { return this.currentStep <= 12; }
     get showPrecedent() { return this.currentStep > 1; }
 
     get isOuiSelected() { return this.isPoliceConnu === 'Oui'; }
@@ -189,6 +190,8 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
     get step10IconClass() { return this.currentStep === 10 ? 'circle-ring' : (this.currentStep > 10 ? 'circle-check' : 'square-gray'); }
     get step11Class() { return this.currentStep === 11 ? 'step active' : (this.currentStep > 11 ? 'step completed' : 'step'); }
     get step11IconClass() { return this.currentStep === 11 ? 'circle-ring' : (this.currentStep > 11 ? 'circle-check' : 'square-gray'); }
+    get step12Class() { return this.currentStep === 12 ? 'step active' : (this.currentStep > 12 ? 'step completed' : 'step'); }
+    get step12IconClass() { return this.currentStep === 12 ? 'circle-ring' : (this.currentStep > 12 ? 'circle-check' : 'square-gray'); }
 
     // --- Données pour composants enfants ---
     get summaryForChild() {
@@ -550,9 +553,20 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
             }
 
             // -----------------------------------------------
-            // ÉTAPE 11 : Finalisation et création du Sinistre
+            // ÉTAPE 11 : Garanties de la police
             // -----------------------------------------------
             else if (this.currentStep === 11) {
+                const garantiesChild = this.template.querySelector('c-lwc015_-garanties-police');
+                if (garantiesChild) {
+                    await garantiesChild.saveCoverages();
+                }
+                this.currentStep = 12;
+            }
+
+            // -----------------------------------------------
+            // ÉTAPE 12 : Finalisation et création du Sinistre
+            // -----------------------------------------------
+            else if (this.currentStep === 12) {
                 this.isLoading = true;
                 try {
                     const finalClaimId = await finalizeClaimProcess({
