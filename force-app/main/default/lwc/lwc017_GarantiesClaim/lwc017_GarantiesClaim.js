@@ -1,14 +1,14 @@
 import { LightningElement, api, wire } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getObjectInfo, getPicklistValues } from 'lightning/uiObjectInfoApi';
-import getCoverages from '@salesforce/apex/DA_InsurancePolicyCoverageController.getCoveragesCatalog';
-import saveCoverages from '@salesforce/apex/DA_InsurancePolicyCoverageController.saveCoverages';
+import getClaimCoveragesCatalog from '@salesforce/apex/DA_ClaimCoverageController.getClaimCoveragesCatalog';
+import saveClaimCoverages from '@salesforce/apex/DA_ClaimCoverageController.saveClaimCoverages';
 import COVERAGE_OBJECT from '@salesforce/schema/InsurancePolicyCoverage__c';
 import TYPE_FIELD from '@salesforce/schema/InsurancePolicyCoverage__c.TypeGarantie__c';
 
 const RC_CODE = '001';
 
-export default class DA_lwc024_GarantiesPolice extends LightningElement {
+export default class Lwc017_GarantiesClaim extends LightningElement {
     @api recordId;
 
     _rawData = [];
@@ -41,7 +41,7 @@ export default class DA_lwc024_GarantiesPolice extends LightningElement {
 
     loadCoverages() {
         this.error = undefined;
-        getCoverages({ policyId: this.recordId })
+        getClaimCoveragesCatalog({ claimId: this.recordId })
             .then((data) => {
                 this._rawData = data;
                 this._localState = new Map();
@@ -101,7 +101,7 @@ export default class DA_lwc024_GarantiesPolice extends LightningElement {
             if (checked) selectedCodes.push(code);
         });
 
-        saveCoverages({ policyId: this.recordId, selectedCodes })
+        saveClaimCoverages({ claimId: this.recordId, selectedCodes })
             .then(() => {
                 this.dispatchEvent(new ShowToastEvent({
                     title: 'Succès',

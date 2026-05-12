@@ -1,6 +1,7 @@
 import { LightningElement, api, track } from 'lwc';
 import getCoverages from '@salesforce/apex/DA_InsurancePolicyCoverageController.getCoverages';
 import saveCaseCoverages from '@salesforce/apex/DA_CaseCoverageController.saveCaseCoverages';
+import getSelectedCoverageIds from '@salesforce/apex/DA_CaseCoverageController.getSelectedCoverageIds';
 
 export default class Lwc015_GarantiesPolice extends LightningElement {
 
@@ -21,10 +22,14 @@ export default class Lwc015_GarantiesPolice extends LightningElement {
         this.isLoading = true;
         this.error = undefined;
         try {
-            const data = await getCoverages({ policyId: this.policyId });
+            const [data, selectedIds] = await Promise.all([
+                getCoverages({ policyId: this.policyId }),
+                this.caseId ? getSelectedCoverageIds({ caseId: this.caseId }) : Promise.resolve([])
+            ]);
+            const selectedSet = new Set(selectedIds || []);
             this.coverages = data.map(cov => ({
                 ...cov,
-                isChecked: false,
+                isChecked: selectedSet.has(cov.Id),
                 isDisabled: false,
                 rowClass: ''
             }));
@@ -57,8 +62,6 @@ export default class Lwc015_GarantiesPolice extends LightningElement {
         const selectedIds = this.coverages
             .filter(c => c.isChecked)
             .map(c => c.Id);
-
-        if (selectedIds.length === 0) return;
 
         await saveCaseCoverages({
             caseId: this.caseId,

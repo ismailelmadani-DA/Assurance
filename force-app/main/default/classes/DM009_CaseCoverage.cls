@@ -1,7 +1,7 @@
 public with sharing class DM009_CaseCoverage {
 
     private static final String OBJ = 'CaseCoverage__c';
-    private static final String FIELDS = 'Id, Name, CodeGarantie__c, Case__c';
+    private static final String FIELDS = 'Id, Name, CodeGarantie__c, Case__c, Insurance_Policy_Coverage__c';
 
     public static List<CaseCoverage__c> getByCaseId(String fields, Id caseId) {
         String queryFields = String.isNotBlank(fields) ? fields : FIELDS;

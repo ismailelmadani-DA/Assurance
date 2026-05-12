@@ -115,6 +115,40 @@
                 </div>
             </div>
 
+            <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                <div class="recap-card">
+                    <h3 class="recap-header">
+                        <lightning-icon icon-name="standard:entitlement" size="small" class="slds-m-right_small"></lightning-icon>
+                        Garanties s&eacute;lectionn&eacute;es
+                    </h3>
+                    <div class="recap-content">
+                        <template if:true={hasCoverages}>
+                            <table class="garantie-table">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Nom de la garantie</th>
+                                        <th>Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={coverages} for:item="cov">
+                                        <tr key={cov.key}>
+                                            <td>{cov.code}</td>
+                                            <td>{cov.name}</td>
+                                            <td>{cov.type}</td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </template>
+                        <template if:false={hasCoverages}>
+                            <p class="empty-state">Aucune garantie s&eacute;lectionn&eacute;e.</p>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </template>

@@ -1,0 +1,71 @@
+<template>
+    <div class="pm-card">
+        <div class="pm-header">
+            <div class="pm-header__left">
+                <div class="pm-header__icon-wrap">
+                    <lightning-icon icon-name="standard:entitlement" size="small" variant="inverse"></lightning-icon>
+                </div>
+                <div>
+                    <h2 class="pm-header__title">Garanties du sinistre</h2>
+                    <span class="pm-header__subtitle">{totalLabel}</span>
+                </div>
+            </div>
+            <div class="pm-header__actions">
+                <button class="pm-btn pm-btn--icon" onclick={handleRefresh} title="Actualiser">
+                    <lightning-icon icon-name="utility:refresh" size="xx-small"></lightning-icon>
+                </button>
+            </div>
+        </div>
+
+        <div class="pm-body">
+            <template if:true={isLoading}>
+                <div class="slds-align_absolute-center slds-p-around_medium">
+                    <lightning-spinner alternative-text="Chargement..." size="small"></lightning-spinner>
+                </div>
+            </template>
+
+            <template if:true={error}>
+                <div class="pm-alert pm-alert--error" role="alert">
+                    <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                    <span>{error}</span>
+                </div>
+            </template>
+
+            <template if:false={isLoading}>
+                <template if:true={hasCoverages}>
+                    <div class="pm-table-wrap">
+                        <table class="pm-table" aria-label="Liste des garanties">
+                            <thead>
+                                <tr>
+                                    <th class="pm-th" scope="col">Code de la garantie</th>
+                                    <th class="pm-th" scope="col">Nom de la garantie</th>
+                                    <th class="pm-th" scope="col">Type de la garantie</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={coverages} for:item="cov">
+                                    <tr key={cov.key}>
+                                        <td class="pm-td pm-td--mono">{cov.code}</td>
+                                        <td class="pm-td pm-td--name">{cov.name}</td>
+                                        <td class="pm-td">{cov.type}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+
+                <template if:false={hasCoverages}>
+                    <template if:false={error}>
+                        <div class="pm-empty">
+                            <div class="pm-empty__icon">
+                                <lightning-icon icon-name="standard:entitlement" size="large"></lightning-icon>
+                            </div>
+                            <p class="pm-empty__text">Aucune garantie associ&eacute;e &agrave; ce sinistre.</p>
+                        </div>
+                    </template>
+                </template>
+            </template>
+        </div>
+    </div>
+</template>

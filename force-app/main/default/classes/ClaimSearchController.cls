@@ -686,7 +686,7 @@ public with sharing class ClaimSearchController {
 
            
             // Copy CaseCoverage to ClaimCoverage
-            List<CaseCoverage__c> caseCoverages = DM009_CaseCoverage.getByCaseId('Id, Name, CodeGarantie__c', caseId);
+            List<CaseCoverage__c> caseCoverages = DM009_CaseCoverage.getByCaseId('Id, Name, CodeGarantie__c, Insurance_Policy_Coverage__c', caseId);
 
             if (!caseCoverages.isEmpty()) {
                 List<ClaimCoverage__c> claimCoverages = new List<ClaimCoverage__c>();
@@ -694,7 +694,8 @@ public with sharing class ClaimSearchController {
                     claimCoverages.add(new ClaimCoverage__c(
                         Claim__c = newClaim.Id,
                         Name = cc.Name,
-                        CodeGarantie__c = cc.CodeGarantie__c
+                        CodeGarantie__c = cc.CodeGarantie__c,
+                        Insurance_Policy_Coverage__c = cc.Insurance_Policy_Coverage__c
                     ));
                 }
                 insert claimCoverages;

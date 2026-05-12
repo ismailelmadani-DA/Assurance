@@ -1,16 +1,12 @@
 <template>
-
-    <!-- CARTE PRINCIPALE -->
     <div class="pm-card">
-
-        <!-- HEADER -->
         <div class="pm-header">
             <div class="pm-header__left">
                 <div class="pm-header__icon-wrap">
                     <lightning-icon icon-name="standard:entitlement" size="small" variant="inverse"></lightning-icon>
                 </div>
                 <div>
-                    <h2 class="pm-header__title">Garanties</h2>
+                    <h2 class="pm-header__title">Garanties du sinistre</h2>
                     <span class="pm-header__subtitle">{totalLabel}</span>
                 </div>
             </div>
@@ -21,10 +17,7 @@
             </div>
         </div>
 
-        <!-- CONTENU -->
         <div class="pm-body">
-
-            <!-- ERREUR -->
             <template if:true={error}>
                 <div class="pm-alert pm-alert--error" role="alert">
                     <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
@@ -32,7 +25,6 @@
                 </div>
             </template>
 
-            <!-- TABLE -->
             <template if:true={hasCoverages}>
                 <div class="pm-table-wrap">
                     <table class="pm-table" aria-label="Liste des garanties">
@@ -67,7 +59,6 @@
                 </div>
             </template>
 
-            <!-- ETAT VIDE -->
             <template if:false={hasCoverages}>
                 <template if:false={error}>
                     <div class="pm-empty">
@@ -78,10 +69,8 @@
                     </div>
                 </template>
             </template>
-
         </div>
 
-        <!-- FOOTER - Bouton Enregistrer -->
         <template if:true={hasChanges}>
             <div class="pm-footer">
                 <button class="pm-btn pm-btn--save" onclick={handleSave} disabled={isSaving}>
@@ -94,7 +83,5 @@
                 </button>
             </div>
         </template>
-
     </div>
-
 </template>
