@@ -13,17 +13,9 @@ public with sharing class EM_Garantie {
         Boolean active = (Boolean) data.get('isActive');
         String code = (String) data.get('code');
 
-        if (String.isBlank(code)) {
-               code = generateNextCode();
-    }
-       
-
         validateRequiredFields(label, code, type);
         validateDuplicateCode(code, devName);
 
-        if (String.isBlank(devName)) {
-            devName = generateDeveloperName(label);
-        }
 
         Metadata.CustomMetadata cmd = new Metadata.CustomMetadata();
         cmd.fullName = MDT_PREFIX + devName;
@@ -62,46 +54,6 @@ public with sharing class EM_Garantie {
             }
         }
     }
-
-    private static String generateDeveloperName(String label) {
-
-        String devName = label
-            .trim()
-            .replaceAll('[^a-zA-Z0-9]', '_')
-            .replaceAll('_+', '_');
-
-        if (devName.endsWith('_')) {
-            devName = devName.left(devName.length() - 1);
-        }
-
-        return devName;
-    }
-
-    private static String generateNextCode() {
-    Integer maxCode = 0;
-
-    for (GarantieAssurance__mdt g : DM_Garantie.getAllGarantiesForCodeGeneration()) {
-        if (String.isNotBlank(g.CodeGarantie__c) && Pattern.matches('^\\d+$', g.CodeGarantie__c)) {
-            Integer currentCode = Integer.valueOf(g.CodeGarantie__c);
-
-            if (currentCode > maxCode) {
-                maxCode = currentCode;
-            }
-        }
-    }
-
-    Integer nextCode = maxCode + 1;
-
-    if (nextCode < 10) {
-        return '00' + String.valueOf(nextCode);
-    }
-
-    if (nextCode < 100) {
-        return '0' + String.valueOf(nextCode);
-    }
-
-    return String.valueOf(nextCode);
-}
 
     private static Metadata.CustomMetadataValue buildValue(String fieldName, Object value) {
         Metadata.CustomMetadataValue fieldValue = new Metadata.CustomMetadataValue();

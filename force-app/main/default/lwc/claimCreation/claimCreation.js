@@ -48,6 +48,21 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
 
     @track caseAlreadyCreated = false;
 
+    // --- Decision modal (étape 4) ---
+    @track showDecisionModal = false;
+    @track decisionChoice = '';
+    @track motifRejet = '';
+    @track motifRejetError = '';
+
+    decisionOptions = [
+        { label: 'Poursuivre la déclaration', value: 'continue' },
+        { label: 'Rejeter la déclaration', value: 'reject' }
+    ];
+
+    get isRejectChoice() { return this.decisionChoice === 'reject'; }
+    get isContinueChoice() { return this.decisionChoice === 'continue'; }
+    get isDecisionConfirmDisabled() { return !this.decisionChoice; }
+
     // Date du jour dynamique
     @track todayDate = new Date().toISOString().split('T')[0];
 
@@ -417,32 +432,19 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
                     .reduce((v, i) => { i.reportValidity(); return v && i.checkValidity(); }, true);
                 if (!allValid) { this.isLoading = false; return; }
 
-                // ✅ CORRECTION 4 : Si le Case a déjà été créé (retour arrière), on ne recrée pas
+                // ✅ Si le Case a déjà été créé (retour arrière), on ne recrée pas
                 if (this.caseAlreadyCreated) {
                     this.currentStep = 5;
                     this.isLoading = false;
                     return;
                 }
 
-                const payload = {
-                    ...this.caseData,
-                    policyId: this.selectedPolicyId,
-                    vehicleId: this.selectedPolicyRecord.vehicleId,
-                    dateSurvenance: this.dateSurvenance,
-                    insuredIsContact: this.insuredIsContact
-                };
-
-                const result = await createCase({ payload: JSON.stringify(payload) });
-                console.log('🔍 RETOUR APEX BRUT :', JSON.stringify(result));
-
-                this.createdCaseId = result.id;
-                this.createdCaseNumber = result.caseNumber;
-                console.log('📌 NUMÉRO ENREGISTRÉ DANS JS :', this.createdCaseNumber);
-
-                this.caseAlreadyCreated = true; 
-
-                this.showToast('Succès', 'Déclaration initialisée', 'success');
-                this.currentStep = 5;
+                this.decisionChoice = '';
+                this.motifRejet = '';
+                this.motifRejetError = '';
+                this.showDecisionModal = true;
+                this.isLoading = false;
+                return;
             }
 
             // -----------------------------------------------
@@ -597,11 +599,104 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
         }
     }
 
-    
+    handleDecisionChange(event) {
+        this.decisionChoice = event.target.value;
+        this.motifRejetError = '';
+    }
+
+    handleMotifRejetChange(event) {
+        this.motifRejet = event.target.value;
+        if (this.motifRejet && this.motifRejet.trim()) {
+            this.motifRejetError = '';
+        }
+    }
+
+    handleCancelDecision() {
+        this.showDecisionModal = false;
+        this.decisionChoice = '';
+        this.motifRejet = '';
+        this.motifRejetError = '';
+    }
+
+    async handleConfirmDecision() {
+        if (!this.decisionChoice) return;
+
+        if (this.decisionChoice === 'reject' && !this.motifRejet.trim()) {
+            this.motifRejetError = 'Le motif de rejet est obligatoire.';
+            return;
+        }
+
+        this.isLoading = true;
+        try {
+            const payload = {
+                ...this.caseData,
+                policyId: this.selectedPolicyId,
+                vehicleId: this.selectedPolicyRecord.vehicleId,
+                dateSurvenance: this.dateSurvenance,
+                insuredIsContact: this.insuredIsContact
+            };
+            if (this.decisionChoice === 'reject') {
+                payload.rejectMotif = this.motifRejet.trim();
+            }
+
+            const result = await createCase({ payload: JSON.stringify(payload) });
+            this.createdCaseId = result.id;
+            this.createdCaseNumber = result.caseNumber;
+            this.caseAlreadyCreated = true;
+            this.showDecisionModal = false;
+
+            if (this.decisionChoice === 'reject') {
+                this.showToast('Succès', 'Déclaration rejetée.', 'success');
+                this.resetWizard();
+            } else {
+                this.showToast('Succès', 'Déclaration initialisée', 'success');
+                this.currentStep = 5;
+            }
+        } catch (error) {
+            this.showToast('Erreur', error.body?.message || error.message, 'error');
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
     handlePrecedent() {
         if (this.currentStep > 1) {
             this.currentStep -= 1;
         }
+    }
+
+    resetWizard() {
+        this.currentStep = 1;
+        this.step1Data = { police: '', immat: '', dateSurvenance: '', heureSurvenance: '', critere: '' };
+        this.searchResults = [];
+        this.isPoliceConnu = undefined;
+        this.searchType = undefined;
+        this.isFileUploaded = false;
+        this.caseAlreadyCreated = false;
+        this.selectedPolicyId = undefined;
+        this.dateSurvenance = undefined;
+        this.selectedPolicyRecord = undefined;
+        this.IdPolice = undefined;
+        this.PoliceValue = undefined;
+        this.adverseVehicleData = [];
+        this.otherPartiesData = [];
+        this.createdCaseId = undefined;
+        this.createdCaseNumber = undefined;
+        this.caseData = {
+            country: '', city: '', address: '', dateDepot: '', declarant: '',
+            pvConstat: '', commentaire: '', nomContact: '', telContact: '',
+            mailContact: '', moyenNotification: ''
+        };
+        this.isSameAsInsured = false;
+        this.files = [];
+        this.uploadedDocumentIds = [];
+        this.circumstancesData = {};
+        this.driverData = {};
+        this.passengersData = [];
+        this.showDecisionModal = false;
+        this.decisionChoice = '';
+        this.motifRejet = '';
+        this.motifRejetError = '';
     }
 
     // =========================================================

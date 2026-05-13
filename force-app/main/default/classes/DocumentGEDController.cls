@@ -1,60 +1,94 @@
 public with sharing class DocumentGEDController {
 
-    /**
-     * Point d'entrée unique pour le LWC.
-     * Orchestre l'upload GED et la sauvegarde Salesforce.
-     */
     @AuraEnabled
-    public static String saveDocumentWithGED(
-        Id recordId, 
-        String base64Data, 
-        String fileName, 
-        String mimeType,
-        String directory,
-        String typeDocument,
-        String natureDocument,
-        Id numeroDeclarationId,
-        Id sinistreId,
-        Id policeId,
-        String registrationNumber,
-        Date occurrenceDate,
-        Date dateOfReceipt,
-        String issuer
-    ) {
+    public static String saveDocumentWithGED(Id recordId, String base64Data, String fileName, String mimeType, String formDataJSON) {
+        
+        String googleFileId;
+
         try {
-            // 1. Appel du service externe (Traitement GED isolé)
-            String googleFileId = GoogleDriveService.uploadFile(base64Data, fileName, mimeType);
             
-            // 2. Traitement des données Salesforce
+            googleFileId = GoogleDriveService.uploadFile(base64Data, fileName, mimeType);
+        } catch (Exception e) {
+            throw new AuraHandledException('Erreur Google Drive : ' + e.getMessage());
+        }
+
+        Savepoint sp = Database.setSavepoint();
+        
+        try {
             Document__c doc = new Document__c();
-            
-            if (recordId != null && recordId.getSObjectType() == Document__c.SObjectType) {
-                doc.Id = recordId;
+            if (String.isNotBlank(formDataJSON)) {
+                doc = (Document__c) JSON.deserialize(formDataJSON, Document__c.class);
             }
             
-            // Assignation des champs
-            doc.Directory__c = directory;
-            doc.Type_de_document__c = typeDocument;
-            doc.Nature__c = natureDocument;
-            doc.NumeroDeclaration__c = numeroDeclarationId;
-            doc.Sinistre__c = sinistreId;
-            doc.Police__c = policeId;
-            doc.RegistrationNumber__c = registrationNumber;
-            doc.OccurrenceDate__c = occurrenceDate;
-            doc.dateOfReceipt__c = dateOfReceipt;
-            doc.Issuer__c = issuer;
-            
-            // Enregistrement de la référence GED externe
             doc.IdDocument__c = googleFileId; 
             
-            // 3. Sauvegarde en base de données
-            upsert doc;
+            insert doc; 
+            
+            Document_Link__c docLink = new Document_Link__c();
+            docLink.Document__c = doc.Id; 
+            
+            docLink.Sinistre__c = doc.Sinistre__c;
+            docLink.Case__c = doc.NumeroDeclaration__c; 
+            
+            if (docLink.Sinistre__c != null || docLink.Case__c != null) {
+                insert docLink;
+            }
             
             return googleFileId;
 
         } catch (Exception e) {
-            // Remonte l'erreur proprement au LWC
-            throw new AuraHandledException('Erreur lors du traitement : ' + e.getMessage());
+            Database.rollback(sp);
+            throw new AuraHandledException('Erreur d\'enregistrement Salesforce : ' + e.getMessage());
+        }
+    }
+   // @AuraEnabled(cacheable=true)
+   // public static List<Document__c> getDocumentsBySinistre(Id sinistreId) {
+     //    return [
+   //         SELECT Id, Name, Directory__c, Type_de_document__c, dateOfReceipt__c, Statut__c
+    //        FROM Document__c 
+     //       WHERE Sinistre__c = :sinistreId 
+   //         ORDER BY CreatedDate DESC
+     //   ];
+   // }
+
+     @AuraEnabled(cacheable=true)
+    public static Case getCaseDetails(Id caseId) {
+        return [SELECT Id, Claim__c, Police__c, Num_ro_d_immatriculation__c, DateOfOccurrence__c
+                FROM Case WHERE Id = :caseId LIMIT 1];
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static Case getCaseBySinistre(Id sinistreId) {
+        List<Case> cases = [SELECT Id, Police__c, Num_ro_d_immatriculation__c,DateOfOccurrence__c
+                            FROM Case WHERE Claim__c = :sinistreId 
+                            ORDER BY CreatedDate DESC LIMIT 1];
+        return cases.isEmpty() ? null : cases[0];
+    }
+    @AuraEnabled
+    public static void deleteDocument(Id documentId) {
+        try {
+            List<Document_Link__c> linksToDelete = [SELECT Id FROM Document_Link__c WHERE Document__c = :documentId];
+            if (!linksToDelete.isEmpty()) { delete linksToDelete; }
+            delete new Document__c(Id = documentId);
+        } catch (Exception e) {
+            throw new AuraHandledException('Erreur : ' + e.getMessage());
+        }
+    }
+    @AuraEnabled(cacheable=true)
+    public static List<Document__c> getDocumentsBySinistre(Id sinistreId) {
+        try {
+            return [
+                SELECT Id, Name, Directory__c, Type_de_document__c, dateOfReceipt__c, Issuer__c, IdDocument__c
+                FROM Document__c 
+                WHERE Id IN (
+                    SELECT Document__c 
+                    FROM Document_Link__c 
+                    WHERE Sinistre__c = :sinistreId
+                )
+                ORDER BY CreatedDate DESC
+            ];
+        } catch (Exception e) {
+            throw new AuraHandledException('Erreur de récupération : ' + e.getMessage());
         }
     }
 }

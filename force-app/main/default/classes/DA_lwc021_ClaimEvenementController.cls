@@ -1,10 +1,8 @@
-/**
- * DA_lwc021_ClaimEvenementController
- * Façade AuraEnabled — délègue à DM006 (lecture) et EM006 (écriture).
- */
 public with sharing class DA_lwc021_ClaimEvenementController {
 
-    @AuraEnabled(cacheable=true)
+    /* ── LECTURE ─────────────────────────────────────────────────────── */
+
+    @AuraEnabled(cacheable=false)
     public static List<Evenement__c> getMatchingEvenements(Id claimId) {
         if (claimId == null) throw new AuraHandledException('L\'identifiant du sinistre est requis.');
         try {
@@ -22,17 +20,35 @@ public with sharing class DA_lwc021_ClaimEvenementController {
           catch (Exception e)            { throw new AuraHandledException(e.getMessage()); }
     }
 
-    @AuraEnabled
-    public static Map<String, Object> associerEvenement(Id claimId, Id evenementId) {
-        if (claimId     == null) return errorResponse('L\'identifiant du sinistre est requis.');
-        if (evenementId == null) return errorResponse('L\'identifiant de l\'événement est requis.');
+    @AuraEnabled(cacheable=false)
+    public static Boolean isPopupEvenementVu(Id claimId) {
+        if (claimId == null) return true;
         try {
-            return EM006_Evenement.associerEvenement(claimId, evenementId);
-        } catch (AuraHandledException ae) { throw ae; }
-          catch (Exception e)            { return errorResponse(e.getMessage()); }
+            return DM006_Evenement.isPopupEvenementVu(claimId);
+        } catch (Exception e) {
+            System.debug('Erreur isPopupEvenementVu : ' + e.getMessage());
+            return true;
+        }
     }
 
-    private static Map<String, Object> errorResponse(String message) {
-        return new Map<String, Object>{ 'success' => false, 'message' => message };
+    /* ── ÉCRITURE ────────────────────────────────────────────────────── */
+
+    @AuraEnabled
+    public static void associerEvenement(Id claimId, Id evenementId) {
+        if (claimId     == null) throw new AuraHandledException('L\'identifiant du sinistre est requis.');
+        if (evenementId == null) throw new AuraHandledException('L\'identifiant de l\'événement est requis.');
+        try {
+            EM006_Evenement.associerEvenement(claimId, evenementId);
+        } catch (AuraHandledException ae) { throw ae; }
+          catch (Exception e)            { throw new AuraHandledException(e.getMessage()); }
+    }
+
+    @AuraEnabled
+    public static void marquerPopupVu(Id claimId) {
+        if (claimId == null) throw new AuraHandledException('L\'identifiant du sinistre est requis.');
+        try {
+            EM006_Evenement.marquerPopupVu(claimId);
+        } catch (AuraHandledException ae) { throw ae; }
+          catch (Exception e)            { throw new AuraHandledException(e.getMessage()); }
     }
 }

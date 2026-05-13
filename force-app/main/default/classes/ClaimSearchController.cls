@@ -131,9 +131,15 @@ public with sharing class ClaimSearchController {
                 finalAccountId = newAcc.Id;
             }
 
-            newCase.AccountId = finalAccountId; 
+            newCase.AccountId = finalAccountId;
 
-            newCase.Status = 'En cours';
+            String rejectMotif = (String) data.get('rejectMotif');
+            if (String.isNotBlank(rejectMotif)) {
+                newCase.Status = 'Rejetée';
+                newCase.MotifRejet__c = rejectMotif;
+            } else {
+                newCase.Status = 'En cours';
+            }
             newCase.Origin = 'Gestionnaire';
             newCase.DateOfDeclarationCreation__c = Date.today();
             Id declarationRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName().get('Declaration').getRecordTypeId();
@@ -701,7 +707,7 @@ public with sharing class ClaimSearchController {
                 insert claimCoverages;
             }
 
-            currentCase.Status = 'En cours ';
+            currentCase.Status = 'En cours';
             currentCase.Claim__c = newClaim.Id;
             update currentCase;
 

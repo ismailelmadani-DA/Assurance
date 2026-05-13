@@ -2,9 +2,7 @@ public with sharing class GoogleDriveService {
     
     private static final Integer MAX_FILE_SIZE_BYTES = 4194304; 
 
-    /**
-     * Méthode générique pour uploader n'importe quel fichier vers Google Drive
-     */
+
     public static String uploadFile(String base64Data, String fileName, String mimeType) {
         Blob fileBlob = EncodingUtil.base64Decode(base64Data);
         
@@ -12,10 +10,8 @@ public with sharing class GoogleDriveService {
             throw new CalloutException('Le fichier dépasse la limite technique de 4 Mo.');
         }
         
-        // 1. Upload du flux binaire
         String googleFileId = executeUploadCallout(fileBlob, mimeType);
         
-        // 2. Renommage du fichier
         executeRenameCallout(googleFileId, fileName);
         
         return googleFileId;

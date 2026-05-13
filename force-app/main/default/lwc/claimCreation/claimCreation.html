@@ -385,6 +385,65 @@
                     </c-lwc014_-recapitulatif>
                 </template>
 
+                <!-- ===================== MODALE DE DÉCISION (Étape 4) ===================== -->
+                <template lwc:if={showDecisionModal}>
+                    <div class="dm-overlay" role="dialog" aria-modal="true" aria-labelledby="dm-title">
+                        <div class="dm-modal">
+                            <div class="dm-header">
+                                <div>
+                                    <h2 id="dm-title" class="dm-title">Choix de décision</h2>
+                                    <p class="dm-subtitle">Voulez-vous poursuivre ou rejeter cette déclaration&nbsp;?</p>
+                                </div>
+                            </div>
+
+                            <div class="dm-body">
+                                <div class="dm-options">
+                                    <label class="dm-option" data-selected={isContinueChoice}>
+                                        <input type="radio" name="decision" value="continue"
+                                            checked={isContinueChoice} onchange={handleDecisionChange} />
+                                        <span class="dm-option-text">
+                                            <span class="dm-option-title">Poursuivre la déclaration</span>
+                                            <span class="dm-option-desc">Continuer le parcours de création.</span>
+                                        </span>
+                                    </label>
+
+                                    <label class="dm-option dm-option--danger" data-selected={isRejectChoice}>
+                                        <input type="radio" name="decision" value="reject"
+                                            checked={isRejectChoice} onchange={handleDecisionChange} />
+                                        <span class="dm-option-text">
+                                            <span class="dm-option-title">Rejeter la déclaration</span>
+                                            <span class="dm-option-desc">Clôturer la déclaration avec un motif.</span>
+                                        </span>
+                                    </label>
+                                </div>
+
+                                <template lwc:if={isRejectChoice}>
+                                    <div class="dm-reject-panel">
+                                        <div class="dm-reject-question">
+                                            <span>Êtes-vous sûr de vouloir rejeter la déclaration&nbsp;?</span>
+                                        </div>
+                                        <label class="dm-textarea-label">Motif de rejet <span class="dm-required">*</span></label>
+                                        <textarea
+                                            class="dm-textarea"
+                                            placeholder="Saisissez le motif du rejet..."
+                                            value={motifRejet}
+                                            oninput={handleMotifRejetChange}
+                                            rows="4"></textarea>
+                                        <template lwc:if={motifRejetError}>
+                                            <p class="dm-error">{motifRejetError}</p>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="dm-footer">
+                                <button class="dm-btn dm-btn-secondary" onclick={handleCancelDecision}>Annuler</button>
+                                <button class="dm-btn dm-btn-primary" onclick={handleConfirmDecision} disabled={isDecisionConfirmDisabled}>Confirmer</button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
                 <!-- ===================== BOUTONS DE NAVIGATION ===================== -->
                 <div class="slds-m-top_xx-large slds-grid slds-grid_align-spread">
                     <div class="slds-col">

@@ -54,6 +54,24 @@ public with sharing class DM_Garantie {
         return result;
     }
     
+    public static List<GarantieAssurance__mdt> getActiveGaranties() {
+        List<GarantieAssurance__mdt> result = new List<GarantieAssurance__mdt>();
+
+        List<SObject> rows = DA_Utility.query(
+            'MasterLabel, CodeGarantie__c, TypeGarantie__c',
+            OBJECT_NAME,
+            'IsActive__c = true',
+            'MasterLabel ASC',
+            null
+        );
+
+        for (SObject row : rows) {
+            result.add((GarantieAssurance__mdt) row);
+        }
+
+        return result;
+    }
+
     public static List<GarantieAssurance__mdt> getAllGarantiesForCodeGeneration() {
     List<GarantieAssurance__mdt> result = new List<GarantieAssurance__mdt>();
 

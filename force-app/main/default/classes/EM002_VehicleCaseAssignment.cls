@@ -81,8 +81,8 @@ public with sharing class EM002_VehicleCaseAssignment {
     // ── Méthodes privées ────────────────────────────────────────────────────
 
     private static Account upsertProprietaire(Map<String, Object> formData) {
-        String nom   = (String) formData.get('nomCompletTiers');
-        String cin   = (String) formData.get('cniTiers');
+        String nom = (String) formData.get('nomCompletTiers');
+        String cin = (String) formData.get('cniTiers');
         if (String.isBlank(nom) && String.isBlank(cin)) return null;
 
         Account acc;
@@ -94,16 +94,28 @@ public with sharing class EM002_VehicleCaseAssignment {
             ];
             if (!existing.isEmpty()) acc = existing[0];
         }
-        if (acc == null) { acc = new Account(); acc.CIN__c = cin; }
+        if (acc == null) {
+        acc = new Account();
+        acc.CIN__c = cin;
+        Id passagerRtId = DA_Utility.getRecordTypeId('Account', 'Passager');
+        if (passagerRtId != null) acc.RecordTypeId = passagerRtId;
+        }
 
-        if (String.isNotBlank(nom))                                    acc.Name                 = nom;
-        if (String.isNotBlank((String) formData.get('adresse')))       acc.Adresse__c           = (String) formData.get('adresse');
-        if (String.isNotBlank((String) formData.get('ville')))         acc.Ville__c             = (String) formData.get('ville');
-        if (String.isNotBlank((String) formData.get('pays')))          acc.Pays__c              = (String) formData.get('pays');
-        if (String.isNotBlank((String) formData.get('moyenNotification'))) acc.MoyenNotification__c = (String) formData.get('moyenNotification');
-        if (String.isNotBlank((String) formData.get('telephone')))     acc.Phone                = (String) formData.get('telephone');
-        if (String.isNotBlank((String) formData.get('email')))         acc.Email__c             = (String) formData.get('email');
-        if (String.isNotBlank((String) formData.get('typePersonne')))  acc.TypePersonne__c      = (String) formData.get('typePersonne');
+        if (String.isNotBlank(nom))                                   acc.Name            = nom;
+        if (String.isNotBlank((String) formData.get('adresse')))      acc.Adresse__c      = (String) formData.get('adresse');
+        if (String.isNotBlank((String) formData.get('ville')))        acc.Ville__c        = (String) formData.get('ville');
+        if (String.isNotBlank((String) formData.get('pays')))         acc.Pays__c         = (String) formData.get('pays');
+        if (String.isNotBlank((String) formData.get('telephone')))    acc.Phone           = (String) formData.get('telephone');
+        if (String.isNotBlank((String) formData.get('email')))        acc.Email__c        = (String) formData.get('email');
+        if (String.isNotBlank((String) formData.get('typePersonne'))) acc.TypePersonne__c = (String) formData.get('typePersonne');
+
+        // ── Moyen de notification ──────────────────────────────────────────
+        // Les valeurs sont chargées directement depuis le picklist Salesforce
+        // via getPicklistValues(), donc elles correspondent déjà aux API Names exacts.
+        String moyenNotif = (String) formData.get('moyenNotification');
+        if (String.isNotBlank(moyenNotif)) {
+            acc.MoyenNotification__c = moyenNotif;
+        }
 
         upsert acc;
         return acc;
@@ -166,6 +178,8 @@ public with sharing class EM002_VehicleCaseAssignment {
         if (msg.contains('ENTITY_IS_DELETED'))          return 'L\'enregistrement a déjà été supprimé.';
         if (msg.contains('DELETE_FAILED'))              return 'La suppression a échoué. L\'enregistrement est peut-être utilisé par d\'autres éléments.';
         if (msg.contains('No such column'))             return 'Erreur de configuration : un champ est introuvable. Contactez votre administrateur.';
+        if (msg.contains('INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST'))
+                                                        return 'Valeur invalide pour un champ picklist restreint. Vérifiez les valeurs saisies.';
         return 'Une erreur est survenue lors du traitement. Veuillez réessayer. ' + msg;
     }
 }
