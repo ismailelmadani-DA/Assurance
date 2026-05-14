@@ -3,6 +3,8 @@ import getCoverages from '@salesforce/apex/DA_InsurancePolicyCoverageController.
 import saveCaseCoverages from '@salesforce/apex/DA_CaseCoverageController.saveCaseCoverages';
 import getSelectedCoverageIds from '@salesforce/apex/DA_CaseCoverageController.getSelectedCoverageIds';
 
+const RC_CODE = '001';
+
 export default class Lwc015_GarantiesPolice extends LightningElement {
 
     @api claimSummary;
@@ -27,12 +29,15 @@ export default class Lwc015_GarantiesPolice extends LightningElement {
                 this.caseId ? getSelectedCoverageIds({ caseId: this.caseId }) : Promise.resolve([])
             ]);
             const selectedSet = new Set(selectedIds || []);
-            this.coverages = data.map(cov => ({
-                ...cov,
-                isChecked: selectedSet.has(cov.Id),
-                isDisabled: false,
-                rowClass: ''
-            }));
+            this.coverages = data.map(cov => {
+                const isRC = cov.CodeGarantie__c === RC_CODE;
+                return {
+                    ...cov,
+                    isChecked: isRC ? true : selectedSet.has(cov.Id),
+                    isDisabled: isRC,
+                    rowClass: isRC ? 'ap-row--rc' : ''
+                };
+            });
         } catch (e) {
             this.error = e.body?.message || 'Erreur lors du chargement des garanties.';
         } finally {
@@ -53,14 +58,14 @@ export default class Lwc015_GarantiesPolice extends LightningElement {
         const covId = event.target.dataset.id;
         const checked = event.target.checked;
         this.coverages = this.coverages.map(c =>
-            c.Id === covId ? { ...c, isChecked: checked } : c
+            c.Id === covId && c.CodeGarantie__c !== RC_CODE ? { ...c, isChecked: checked } : c
         );
     }
 
     @api
     async saveCoverages() {
         const selectedIds = this.coverages
-            .filter(c => c.isChecked)
+            .filter(c => c.isChecked || c.CodeGarantie__c === RC_CODE)
             .map(c => c.Id);
 
         await saveCaseCoverages({

@@ -1,7 +1,7 @@
 /* --- BANDEAU RÉCAPITULATIF (HEADER) --- */
 .header-summary-box {
     background-color: #F3F3F3 !important;
-    color: #1A0273 !important;
+    color: #006233 !important;
     font-weight: bold !important;
     padding: 12px !important;
     border: 1px solid #EAEAEA;
@@ -10,13 +10,13 @@
 }
 
 .summary-item strong { 
-    color: #1A0273; 
+    color: #006233; 
     margin-left: 5px; 
 }
 
 /* --- TITRES --- */
 .main-title {
-    color: #00008F;
+    color: #006233;
     font-size: 1.4rem;
     font-weight: bold;
 }
@@ -30,7 +30,7 @@
 }
 
 .section-header {
-    color: #00008F;
+    color: #006233;
     font-weight: bold;
     border-bottom: 1px solid #EAEAEA;
     padding-bottom: 8px;
@@ -41,24 +41,24 @@
 
 :host {
     --lwc-formLabelFontSize: 0.8rem;
-    --lwc-colorTextLabel: #1A0273;
+    --lwc-colorTextLabel: #006233;
     --lwc-fontWeightLabel: bold;
 }
 
 .vehicle-added-card {
-    border-left: 4px solid #00008F; 
+    border-left: 4px solid #006233; 
     background: #f9f9f9;
     margin-bottom: 12px;
     padding: 12px !important;
 }
 
 .vehicle-added-card strong {
-    color: #1A0273;
+    color: #006233;
 }
 
 /* --- BOUTONS --- */
 .btn-primary {
-    background-color: #00008F !important;
+    background-color: #006233 !important;
     color: white !important;
     padding: 8px 32px !important;
     border-radius: 4px !important;
@@ -69,8 +69,8 @@
 
 .btn-secondary {
     background-color: white !important;
-    color: #00008F !important;
-    border: 1px solid #00008F !important;
+    color: #006233 !important;
+    border: 1px solid #006233 !important;
     padding: 8px 32px !important;
     border-radius: 4px !important;
     font-weight: bold !important;
@@ -79,8 +79,8 @@
 
 .btn-outline {
     background: white !important;
-    color: #1A0273 !important;
-    border: 2px solid #1A0273 !important;
+    color: #006233 !important;
+    border: 2px solid #006233 !important;
     padding: 6px 18px !important;
     border-radius: 4px !important;
     font-weight: bold !important;
@@ -89,7 +89,7 @@
 }
 
 .btn-outline:hover {
-    background: #1A0273 !important;
+    background: #006233 !important;
     color: white !important;
 }
 

@@ -1,6 +1,6 @@
 /* --- TITRE --- */
 .main-title {
-    color: #00008F; /* Bleu profond professionnel identique à la mère */
+    color: #006233; /* Bleu profond professionnel identique à la mère */
     font-size: 1.4rem;
     font-weight: 700;
 }
@@ -8,7 +8,7 @@
 /* --- BANDEAU RÉCAPITULATIF (HEADER) --- */
 .header-summary-box {
     background-color: #F3F3F3 !important;
-    color: #1A0273 !important;
+    color: #006233 !important;
     font-weight: bold !important;
     padding: 12px !important;
     border: 1px solid #EAEAEA;
@@ -22,7 +22,7 @@
 }
 
 .summary-item strong {
-    color: #1A0273; /* Valeurs en bleu pour cohérence */
+    color: #006233; /* Valeurs en bleu pour cohérence */
     margin-left: 5px;
 }
 
@@ -30,7 +30,7 @@
 /* Style spécifique pour le titre de la section "Points de choc" */
 .section-header {
     background-color: #F3F3F3 !important;
-    color: #1A0273 !important;
+    color: #006233 !important;
     font-weight: bold !important;
     padding: 8px 12px !important;
     border-radius: 4px;
@@ -42,7 +42,7 @@
 
 /* --- ÉLÉMENTS DE FORMULAIRE --- */
 .slds-form-element__label {
-    color: #1A0273 !important;
+    color: #006233 !important;
     font-weight: bold !important;
 }
 
