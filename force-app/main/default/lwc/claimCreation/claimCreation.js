@@ -2,6 +2,7 @@ import { LightningElement, track, wire, api } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
 import { NavigationMixin } from 'lightning/navigation';
+import { IsConsoleNavigation, getFocusedTabInfo, closeTab } from 'lightning/platformWorkspaceApi';
 
 // Import des objets et champs pour Picklists dynamiques
 import CASE_OBJECT from '@salesforce/schema/Case';
@@ -24,6 +25,8 @@ import saveOtherParties from '@salesforce/apex/ClaimSearchController.saveOtherPa
 import finalizeClaimProcess from '@salesforce/apex/ClaimSearchController.finalizeClaimProcess';
 
 export default class ClaimCreationWizard extends NavigationMixin(LightningElement) {
+
+    @wire(IsConsoleNavigation) isConsoleNavigation;
 
     // =========================================================
     // ÉTATS ET FLAGS
@@ -53,6 +56,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
     @track decisionChoice = '';
     @track motifRejet = '';
     @track motifRejetError = '';
+    @track isConfirmingDecision = false;
 
     decisionOptions = [
         { label: 'Poursuivre la déclaration', value: 'continue' },
@@ -61,7 +65,8 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
 
     get isRejectChoice() { return this.decisionChoice === 'reject'; }
     get isContinueChoice() { return this.decisionChoice === 'continue'; }
-    get isDecisionConfirmDisabled() { return !this.decisionChoice; }
+    get isDecisionConfirmDisabled() { return !this.decisionChoice || this.isConfirmingDecision; }
+    get confirmLabel() { return this.isConfirmingDecision ? 'Traitement...' : 'Confirmer'; }
 
     // Date du jour dynamique
     @track todayDate = new Date().toISOString().split('T')[0];
@@ -616,9 +621,11 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
         this.decisionChoice = '';
         this.motifRejet = '';
         this.motifRejetError = '';
+        this.isConfirmingDecision = false;
     }
 
     async handleConfirmDecision() {
+        if (this.isConfirmingDecision) return;
         if (!this.decisionChoice) return;
 
         if (this.decisionChoice === 'reject' && !this.motifRejet.trim()) {
@@ -626,6 +633,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
             return;
         }
 
+        this.isConfirmingDecision = true;
         this.isLoading = true;
         try {
             const payload = {
@@ -647,7 +655,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
 
             if (this.decisionChoice === 'reject') {
                 this.showToast('Succès', 'Déclaration rejetée.', 'success');
-                this.resetWizard();
+                this.redirectToCase(this.createdCaseId);
             } else {
                 this.showToast('Succès', 'Déclaration initialisée', 'success');
                 this.currentStep = 5;
@@ -656,6 +664,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
             this.showToast('Erreur', error.body?.message || error.message, 'error');
         } finally {
             this.isLoading = false;
+            this.isConfirmingDecision = false;
         }
     }
 
@@ -665,38 +674,29 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
         }
     }
 
-    resetWizard() {
-        this.currentStep = 1;
-        this.step1Data = { police: '', immat: '', dateSurvenance: '', heureSurvenance: '', critere: '' };
-        this.searchResults = [];
-        this.isPoliceConnu = undefined;
-        this.searchType = undefined;
-        this.isFileUploaded = false;
-        this.caseAlreadyCreated = false;
-        this.selectedPolicyId = undefined;
-        this.dateSurvenance = undefined;
-        this.selectedPolicyRecord = undefined;
-        this.IdPolice = undefined;
-        this.PoliceValue = undefined;
-        this.adverseVehicleData = [];
-        this.otherPartiesData = [];
-        this.createdCaseId = undefined;
-        this.createdCaseNumber = undefined;
-        this.caseData = {
-            country: '', city: '', address: '', dateDepot: '', declarant: '',
-            pvConstat: '', commentaire: '', nomContact: '', telContact: '',
-            mailContact: '', moyenNotification: ''
-        };
-        this.isSameAsInsured = false;
-        this.files = [];
-        this.uploadedDocumentIds = [];
-        this.circumstancesData = {};
-        this.driverData = {};
-        this.passengersData = [];
-        this.showDecisionModal = false;
-        this.decisionChoice = '';
-        this.motifRejet = '';
-        this.motifRejetError = '';
+    redirectToCase(caseId) {
+        if (!caseId) return;
+        this[NavigationMixin.Navigate]({
+            type: 'standard__recordPage',
+            attributes: {
+                recordId: caseId,
+                objectApiName: 'Case',
+                actionName: 'view'
+            }
+        });
+        if (this.isConsoleNavigation) {
+            // eslint-disable-next-line @lwc/lwc/no-async-operation
+            setTimeout(async () => {
+                try {
+                    const focused = await getFocusedTabInfo();
+                    if (focused && focused.tabId) {
+                        await closeTab(focused.tabId);
+                    }
+                } catch (e) {
+                    // ignore — not in a Console workspace
+                }
+            }, 400);
+        }
     }
 
     // =========================================================

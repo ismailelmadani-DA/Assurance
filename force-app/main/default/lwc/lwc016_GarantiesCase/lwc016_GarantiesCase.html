@@ -37,6 +37,7 @@
                         <table class="pm-table" aria-label="Liste des garanties">
                             <thead>
                                 <tr>
+                                    <th class="pm-th pm-th--center" scope="col">Garantie touch&eacute;e</th>
                                     <th class="pm-th" scope="col">Code de la garantie</th>
                                     <th class="pm-th" scope="col">Nom de la garantie</th>
                                     <th class="pm-th" scope="col">Type de la garantie</th>
@@ -44,10 +45,18 @@
                             </thead>
                             <tbody>
                                 <template for:each={coverages} for:item="cov">
-                                    <tr key={cov.key}>
-                                        <td class="pm-td pm-td--mono">{cov.code}</td>
-                                        <td class="pm-td pm-td--name">{cov.name}</td>
-                                        <td class="pm-td">{cov.type}</td>
+                                    <tr key={cov.CodeGarantie__c}>
+                                        <td class="pm-td pm-td--center">
+                                            <input
+                                                type="checkbox"
+                                                checked={cov.isChecked}
+                                                disabled
+                                                class="pm-checkbox pm-checkbox--disabled"
+                                            />
+                                        </td>
+                                        <td class="pm-td pm-td--mono">{cov.CodeGarantie__c}</td>
+                                        <td class="pm-td pm-td--name">{cov.NomDeLaGarantie__c}</td>
+                                        <td class="pm-td">{cov.typeLabel}</td>
                                     </tr>
                                 </template>
                             </tbody>
@@ -61,7 +70,7 @@
                             <div class="pm-empty__icon">
                                 <lightning-icon icon-name="standard:entitlement" size="large"></lightning-icon>
                             </div>
-                            <p class="pm-empty__text">Aucune garantie associ&eacute;e &agrave; ce sinistre.</p>
+                            <p class="pm-empty__text">Aucune garantie disponible pour ce sinistre.</p>
                         </div>
                     </template>
                 </template>

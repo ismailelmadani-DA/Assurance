@@ -5,33 +5,41 @@ public with sharing class DA_ClaimCoverageController {
     @AuraEnabled(cacheable=false)
     public static List<Map<String, Object>> getClaimCoveragesCatalog(Id claimId) {
         try {
-            List<GarantieAssurance__mdt> mdtList = DM010_GarantieAssurance.getActive();
+            if (claimId == null) return new List<Map<String, Object>>();
+
+            Claim__c claim = DM006_Claim.getById('Id, PolicyNumber__c', claimId);
+            Id policyId = claim == null ? null : claim.PolicyNumber__c;
+
+            List<InsurancePolicyCoverage__c> policyCoverages = new List<InsurancePolicyCoverage__c>();
+            if (policyId != null) {
+                policyCoverages = DM008_InsurancePolicyCoverage.getByPolicyId(
+                    'Id, CodeGarantie__c, NomDeLaGarantie__c, TypeGarantie__c, GarantieUsed__c',
+                    policyId
+                );
+            }
 
             Map<String, ClaimCoverage__c> existingByCode = new Map<String, ClaimCoverage__c>();
-            if (claimId != null) {
-                for (ClaimCoverage__c c : [
-                    SELECT Id, Name, CodeGarantie__c, Insurance_Policy_Coverage__c
-                    FROM ClaimCoverage__c
-                    WHERE Claim__c = :claimId
-                ]) {
-                    if (c.CodeGarantie__c != null) existingByCode.put(c.CodeGarantie__c, c);
-                }
+            for (ClaimCoverage__c c : DM011_ClaimCoverage.getByClaimId(
+                'Id, Name, CodeGarantie__c, Insurance_Policy_Coverage__c', claimId
+            )) {
+                if (c.CodeGarantie__c != null) existingByCode.put(c.CodeGarantie__c, c);
             }
 
             Map<String, Object> rcEntry = null;
             List<Map<String, Object>> selected = new List<Map<String, Object>>();
             List<Map<String, Object>> unselected = new List<Map<String, Object>>();
-            for (GarantieAssurance__mdt g : mdtList) {
-                ClaimCoverage__c match = existingByCode.get(g.CodeGarantie__c);
-                Boolean isUsed = match != null || g.CodeGarantie__c == RC_CODE;
+            for (InsurancePolicyCoverage__c pc : policyCoverages) {
+                if (pc.GarantieUsed__c != true) continue;
+                ClaimCoverage__c match = existingByCode.get(pc.CodeGarantie__c);
+                Boolean isUsed = match != null || pc.CodeGarantie__c == RC_CODE;
                 Map<String, Object> entry = new Map<String, Object>{
-                    'Id'                 => match != null ? (Object) match.Id : (Object) g.CodeGarantie__c,
-                    'CodeGarantie__c'    => g.CodeGarantie__c,
-                    'NomDeLaGarantie__c' => g.MasterLabel,
-                    'TypeGarantie__c'    => g.TypeGarantie__c,
+                    'Id'                 => match != null ? (Object) match.Id : (Object) pc.CodeGarantie__c,
+                    'CodeGarantie__c'    => pc.CodeGarantie__c,
+                    'NomDeLaGarantie__c' => pc.NomDeLaGarantie__c,
+                    'TypeGarantie__c'    => pc.TypeGarantie__c,
                     'GarantieUsed__c'    => isUsed
                 };
-                if (g.CodeGarantie__c == RC_CODE) {
+                if (pc.CodeGarantie__c == RC_CODE) {
                     rcEntry = entry;
                 } else if (isUsed) {
                     selected.add(entry);
@@ -57,32 +65,41 @@ public with sharing class DA_ClaimCoverageController {
         try {
             if (claimId == null) return;
 
-            Map<String, GarantieAssurance__mdt> mdtByCode = DM010_GarantieAssurance.getActiveByCode();
+            Claim__c claim = DM006_Claim.getById('Id, PolicyNumber__c', claimId);
+            Id policyId = claim == null ? null : claim.PolicyNumber__c;
+
+            Map<String, InsurancePolicyCoverage__c> policyByCode = new Map<String, InsurancePolicyCoverage__c>();
+            if (policyId != null) {
+                for (InsurancePolicyCoverage__c pc : DM008_InsurancePolicyCoverage.getByPolicyId(
+                    'Id, CodeGarantie__c, NomDeLaGarantie__c, GarantieUsed__c', policyId
+                )) {
+                    if (pc.GarantieUsed__c == true && pc.CodeGarantie__c != null) {
+                        policyByCode.put(pc.CodeGarantie__c, pc);
+                    }
+                }
+            }
 
             Map<String, ClaimCoverage__c> existingByCode = new Map<String, ClaimCoverage__c>();
-            for (ClaimCoverage__c c : [
-                SELECT Id, CodeGarantie__c
-                FROM ClaimCoverage__c
-                WHERE Claim__c = :claimId
-            ]) {
+            for (ClaimCoverage__c c : DM011_ClaimCoverage.getByClaimId('Id, CodeGarantie__c', claimId)) {
                 if (c.CodeGarantie__c != null) existingByCode.put(c.CodeGarantie__c, c);
             }
 
             Set<String> selectedSet = new Set<String>(selectedCodes == null ? new List<String>() : selectedCodes);
-            selectedSet.add(RC_CODE);
+            if (policyByCode.containsKey(RC_CODE)) selectedSet.add(RC_CODE);
 
             List<ClaimCoverage__c> toInsert = new List<ClaimCoverage__c>();
             List<ClaimCoverage__c> toDelete = new List<ClaimCoverage__c>();
 
-            for (String code : mdtByCode.keySet()) {
+            for (String code : policyByCode.keySet()) {
                 Boolean shouldBeChecked = selectedSet.contains(code);
                 ClaimCoverage__c rec = existingByCode.get(code);
                 if (rec == null && shouldBeChecked) {
-                    GarantieAssurance__mdt g = mdtByCode.get(code);
+                    InsurancePolicyCoverage__c pc = policyByCode.get(code);
                     toInsert.add(new ClaimCoverage__c(
-                        Claim__c        = claimId,
-                        Name            = g.MasterLabel,
-                        CodeGarantie__c = code
+                        Claim__c                     = claimId,
+                        Name                         = pc.NomDeLaGarantie__c,
+                        CodeGarantie__c              = code,
+                        Insurance_Policy_Coverage__c = pc.Id
                     ));
                 } else if (rec != null && !shouldBeChecked) {
                     toDelete.add(rec);

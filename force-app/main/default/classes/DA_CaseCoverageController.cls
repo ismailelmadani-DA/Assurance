@@ -1,5 +1,62 @@
 public with sharing class DA_CaseCoverageController {
 
+    private static final String RC_CODE = '001';
+
+    @AuraEnabled(cacheable=false)
+    public static List<Map<String, Object>> getCaseCoveragesCatalog(Id caseId) {
+        try {
+            if (caseId == null) return new List<Map<String, Object>>();
+
+            Case caseRec = DM_Case.getById('Id, Police__c', caseId);
+            Id policyId = caseRec == null ? null : caseRec.Police__c;
+
+            List<InsurancePolicyCoverage__c> policyCoverages = new List<InsurancePolicyCoverage__c>();
+            if (policyId != null) {
+                policyCoverages = DM008_InsurancePolicyCoverage.getByPolicyId(
+                    'Id, CodeGarantie__c, NomDeLaGarantie__c, TypeGarantie__c, GarantieUsed__c',
+                    policyId
+                );
+            }
+
+            Set<String> selectedCodes = new Set<String>();
+            for (CaseCoverage__c cc : DM009_CaseCoverage.getByCaseId('Id, CodeGarantie__c', caseId)) {
+                if (cc.CodeGarantie__c != null) selectedCodes.add(cc.CodeGarantie__c);
+            }
+
+            Map<String, Object> rcEntry = null;
+            List<Map<String, Object>> selected = new List<Map<String, Object>>();
+            List<Map<String, Object>> unselected = new List<Map<String, Object>>();
+            for (InsurancePolicyCoverage__c pc : policyCoverages) {
+                if (pc.GarantieUsed__c != true) continue;
+                Boolean isUsed = selectedCodes.contains(pc.CodeGarantie__c) || pc.CodeGarantie__c == RC_CODE;
+                Map<String, Object> entry = new Map<String, Object>{
+                    'Id'                 => pc.Id,
+                    'CodeGarantie__c'    => pc.CodeGarantie__c,
+                    'NomDeLaGarantie__c' => pc.NomDeLaGarantie__c,
+                    'TypeGarantie__c'    => pc.TypeGarantie__c,
+                    'GarantieUsed__c'    => isUsed
+                };
+                if (pc.CodeGarantie__c == RC_CODE) {
+                    rcEntry = entry;
+                } else if (isUsed) {
+                    selected.add(entry);
+                } else {
+                    unselected.add(entry);
+                }
+            }
+
+            List<Map<String, Object>> result = new List<Map<String, Object>>();
+            if (rcEntry != null) result.add(rcEntry);
+            result.addAll(selected);
+            result.addAll(unselected);
+            return result;
+        } catch (Exception e) {
+            throw new AuraHandledException(
+                'Erreur lors du chargement des garanties : ' + e.getMessage()
+            );
+        }
+    }
+
     @AuraEnabled(cacheable=false)
     public static List<CaseCoverage__c> getCaseCoverages(Id caseId) {
         if (caseId == null) return new List<CaseCoverage__c>();

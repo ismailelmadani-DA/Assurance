@@ -11,6 +11,11 @@ public with sharing class DM_Case {
     private static final String FIELDS_MISSIONS =
         'Id, CaseNumber, NatureMission__c, Status, CreatedDate, CreatedById, CreatedBy.Name';
 
+    public static Case getById(String fields, Id caseId) {
+        if (caseId == null) return null;
+        return (Case) DA_Utility.getById(fields, OBJ, caseId);
+    }
+
     /**
      * Retourne les missions (Cases de type Mission) liées à un compte.
      */
