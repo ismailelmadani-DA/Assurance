@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CompactLayout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Claim_Compact_Layout_Default</fullName>
+    <fields>Name</fields>
+    <fields>Account__c</fields>
+    <fields>RegistrationNumber__c</fields>
+    <fields>NumeroPolice__c</fields>
+    <fields>DateOfOccurrence__c</fields>
+    <fields>EvenementAssocie__c</fields>
+    <label>Claim Compact Layout Default</label>
+</CompactLayout>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TriggeringEventOfClaim__c</fullName>
+    <label>Evénement déclencheur de sinistre</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Évènement Catastrophe/ climatique &amp; naturel</fullName>
+                <default>false</default>
+                <label>Évènement Catastrophe/ climatique &amp; naturel</label>
+            </value>
+            <value>
+                <fullName>Incendie</fullName>
+                <default>false</default>
+                <label>Incendie</label>
+            </value>
+            <value>
+                <fullName>Vol</fullName>
+                <default>false</default>
+                <label>Vol</label>
+            </value>
+            <value>
+                <fullName>Bris de glace</fullName>
+                <default>false</default>
+                <label>Bris de glace</label>
+            </value>
+            <value>
+                <fullName>Accident</fullName>
+                <default>false</default>
+                <label>Accident</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

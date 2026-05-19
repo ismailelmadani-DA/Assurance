@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>RegistrationNumber__c</fullName>
+    <externalId>false</externalId>
+    <formula>HYPERLINK(
+    Vehicule__c,
+    Vehicule__r.RegistrationNumber__c,
+    &quot;_blank&quot;
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>Numéro d’immatriculation</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

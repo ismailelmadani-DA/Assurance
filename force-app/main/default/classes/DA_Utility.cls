@@ -282,4 +282,19 @@ public static Integer count(String sObjectName, String conditions) {
     }
     return Database.countQuery(soql);
 }
+public static List<SObject> queryWithBinds(
+    String fields,
+    String sObjectName,
+    String conditions,
+    String orderBy,
+    Integer limitCount,
+    Map<String, Object> binds
+) {
+    String soql = 'SELECT ' + fields + ' FROM ' + sObjectName;
+    if (String.isNotBlank(conditions)) soql += ' WHERE ' + conditions;
+    if (String.isNotBlank(orderBy))    soql += ' ORDER BY ' + orderBy;
+    if (limitCount != null && limitCount > 0) soql += ' LIMIT ' + limitCount;
+
+    return Database.queryWithBinds(soql, binds, AccessLevel.USER_MODE);
+}
 }
