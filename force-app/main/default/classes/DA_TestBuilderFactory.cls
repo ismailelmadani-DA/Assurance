@@ -159,10 +159,10 @@ public class DA_TestBuilderFactory {
     // BUILDER METHODS — PASSENGERS
     // ============================================================
 
-    public DA_TestBuilderFactory withPassengers(Integer count, Id caseId, Id accountId, Id vehiculeId, Map<String, Object> params) {
+    public DA_TestBuilderFactory withPassengers(Integer count, Id caseId, Id accountId, Map<String, Object> params) {
         List<Passager__c> newPassengers = new List<Passager__c>();
         for (Integer i = 0; i < count; i++) {
-            newPassengers.add(DA_TestDataFactory.createTestPassenger(caseId, accountId, vehiculeId, params));
+            newPassengers.add(DA_TestDataFactory.createTestPassenger(caseId, accountId, params));
         }
         insert newPassengers;
         passengers.addAll(newPassengers);
@@ -246,12 +246,11 @@ public class DA_TestBuilderFactory {
     public DA_TestBuilderFactory withScenarios(Map<String, String> scenarios) {
         Account acc = accounts[accounts.size() - 1];
         InsurancePolicy__c pol = policies[policies.size() - 1];
-        Vehicule__c veh = vehicles[vehicles.size() - 1];
 
         List<String> keys = new List<String>(scenarios.keySet());
         List<Case> newCases = new List<Case>();
         for (String key : keys) {
-            newCases.add(DA_TestDataFactory.createTestCase(acc.Id, pol.Id, veh.Id, key, null));
+            newCases.add(DA_TestDataFactory.createTestCase(acc.Id, pol.Id, key, null));
         }
         insert newCases;
         cases.addAll(newCases);
@@ -260,7 +259,6 @@ public class DA_TestBuilderFactory {
         for (Integer i = 0; i < keys.size(); i++) {
             newClaims.add(DA_TestDataFactory.createTestClaim(
                 newCases[i].Id,
-                veh.Id,
                 new Map<String, Object>{ 'Flags__c' => scenarios.get(keys[i]) }
             ));
         }

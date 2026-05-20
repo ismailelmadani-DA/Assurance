@@ -29,13 +29,12 @@ private class DA_FlagSinistreControllerTest {
     private static Claim__c addClaim(DA_TestBuilderFactory b, String subject, String flags) {
         Account acc = b.getAccounts()[0];
         InsurancePolicy__c pol = b.getPolicies()[0];
-        Vehicule__c veh = b.getVehicles()[0];
 
-        b.withCases(1, acc.Id, pol.Id, veh.Id, subject, null);
+        b.withCases(1, acc.Id, pol.Id, subject, null);
         Case c = b.getCases()[b.getCases().size() - 1];
 
         Map<String, Object> claimParams = (flags == null) ? null : new Map<String, Object>{ 'Flags__c' => flags };
-        b.withClaims(1, c.Id, veh.Id, claimParams);
+        b.withClaims(1, c.Id, claimParams);
         return b.getClaims()[b.getClaims().size() - 1];
     }
 

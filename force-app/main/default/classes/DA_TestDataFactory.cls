@@ -111,13 +111,12 @@ public class DA_TestDataFactory {
         return claim;
     }
 
-    public static Passager__c createTestPassenger(Id caseId, Id accountId, Id vehiculeId, Map<String, Object> params) {
+    public static Passager__c createTestPassenger(Id caseId, Id accountId, Map<String, Object> params) {
         Passager__c p = new Passager__c(
-            Case__c     = caseId,
-            Compte__c   = accountId,
-            Vehicule__c = vehiculeId,
-            Roles__c    = 'Passager assuré',
-            CIN__c      = 'CIN' + uniqueSuffix()
+            Case__c   = caseId,
+            Compte__c = accountId,
+            Roles__c  = 'Passager assuré',
+            CIN__c    = 'CIN' + uniqueSuffix()
         );
         if (params != null) {
             for (String fieldName : params.keySet()) {
