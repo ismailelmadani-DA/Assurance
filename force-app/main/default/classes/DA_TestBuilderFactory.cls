@@ -1,140 +1,351 @@
+/**
+ * @description       : Builder de données de test utilisant le pattern Builder/Fluent pour chaîner la création de jeux de données complexes (utilisateurs, comptes, polices, véhicules, cases, sinistres, passagers, demandes d'approbation) via DA_TestDataFactory. Chaque méthode withXxx loop, construit une liste locale, fait un bulk insert, puis l'ajoute à la collection interne accessible via getXxx().
+ * @author            : D&A Technologies
+ * @group             : Utilities
+ * @last modified on  : 20-05-2026
+ * @last modified by  : D&A Technologies
+ **/
 @isTest
 public class DA_TestBuilderFactory {
+
+    // ============================================================
+    // COLLECTIONS PAR TYPE D'OBJET
+    // ============================================================
+
+    private List<User> users = new List<User>();
+    private List<Account> accounts = new List<Account>();
+    private List<InsurancePolicy__c> policies = new List<InsurancePolicy__c>();
+    private List<Vehicule__c> vehicles = new List<Vehicule__c>();
+    private List<Case> cases = new List<Case>();
+    private List<Claim__c> claims = new List<Claim__c>();
+    private List<Passager__c> passengers = new List<Passager__c>();
+    private List<RequestApproval__c> requestApprovals = new List<RequestApproval__c>();
+    private List<InsurancePolicyCoverage__c> insurancePolicyCoverages = new List<InsurancePolicyCoverage__c>();
+    private List<ClaimCoverage__c> claimCoverages = new List<ClaimCoverage__c>();
+    private List<CaseCoverage__c> caseCoverages = new List<CaseCoverage__c>();
+    private List<ClaimParticipant__c> claimParticipants = new List<ClaimParticipant__c>();
+
+    private Map<String, User> usersByAlias = new Map<String, User>();
+    private Map<String, Claim__c> claimsByKey = new Map<String, Claim__c>();
+
+    // ============================================================
+    // CONSTRUCTEUR
+    // ============================================================
+
+    public DA_TestBuilderFactory() {
+    }
+
+    // ============================================================
+    // HELPER STATIQUE — INSERTION BULK
+    // ============================================================
 
     public static void insertAll(List<SObject> records) {
         insert records;
     }
 
-    public static User getUserByAlias(String alias) {
-        return [SELECT Id, ManagerId FROM User WHERE Alias = :alias LIMIT 1];
-    }
+    // ============================================================
+    // BUILDER METHODS — USERS
+    // ============================================================
 
-    public static List<User> getUsersByAliasPrefix(String prefix) {
-        String pattern = prefix + '%';
-        return [SELECT Id, Alias, ManagerId FROM User WHERE Alias LIKE :pattern];
+    public DA_TestBuilderFactory withCustomUsers(Integer count, String alias, String lastName, Map<String, Object> params) {
+        List<User> newUsers = new List<User>();
+        for (Integer i = 0; i < count; i++) {
+            String a = count == 1 ? alias : alias + (i + 1);
+            newUsers.add(DA_TestDataFactory.createTestUser(a, lastName, params));
+        }
+        insert newUsers;
+        users.addAll(newUsers);
+        for (User u : newUsers) {
+            usersByAlias.put(u.Alias, u);
+        }
+        return this;
     }
-
-    public static List<User> getAllTestUsers() {
-        return [SELECT Id, Alias, ManagerId FROM User WHERE Username LIKE '%@test.assurance.factory'];
-    }
-
-    public static Claim__c getClaimByScenario(String scenarioKey) {
-        return [SELECT Id, Flags__c FROM Claim__c WHERE Case__r.Subject = :scenarioKey LIMIT 1];
-    }
-
-    public static List<Claim__c> getAllClaims() {
-        return [SELECT Id, Flags__c, Case__c FROM Claim__c];
-    }
-
-    public static List<Case> getAllCases() {
-        return [SELECT Id, Subject, AccountId FROM Case];
-    }
-
-    public static List<Account> getAllAccounts() {
-        return [SELECT Id, Name FROM Account];
-    }
-
-    public static List<RequestApproval__c> getAllRequestApprovals() {
-        return [
-            SELECT Id, Flag__c, Status__c, Sinistre__c, Submitter__c, NextApprover__c
-            FROM RequestApproval__c
-        ];
-    }
-
-    public static List<RequestApproval__c> getRequestApprovalsForClaim(Id claimId) {
-        return [
-            SELECT Id, Flag__c, Status__c, Submitter__c, NextApprover__c
-            FROM RequestApproval__c
-            WHERE Sinistre__c = :claimId
-        ];
-    }
-
-    private Account account;
-    private Map<String, User> usersByAlias       = new Map<String, User>();
-    private Map<String, Claim__c> claimsByKey    = new Map<String, Claim__c>();
 
     public DA_TestBuilderFactory withUser(String alias, String lastName) {
-        User u = DA_TestDataFactory.createTestUser(alias, lastName);
-        insert u;
-        usersByAlias.put(alias, u);
-        return this;
-    }
-
-    public DA_TestBuilderFactory withUser(String alias, String lastName, Integer count) {
-        List<User> users = new List<User>();
-        for (Integer i = 0; i < count; i++) {
-            users.add(DA_TestDataFactory.createTestUser(alias + (i + 1), lastName));
-        }
-        insertAll(users);
-        for (Integer i = 0; i < users.size(); i++) {
-            usersByAlias.put(alias + (i + 1), users[i]);
-        }
-        return this;
+        return withCustomUsers(1, alias, lastName, null);
     }
 
     public DA_TestBuilderFactory withUserAndManager(String alias, String lastName, String managerAlias) {
         User mgr = usersByAlias.get(managerAlias);
-        User u = DA_TestDataFactory.createTestUserWithManager(alias, lastName, mgr.Id);
-        insert u;
-        usersByAlias.put(alias, u);
-        return this;
+        return withCustomUsers(1, alias, lastName, new Map<String, Object>{
+            'ManagerId' => mgr.Id
+        });
     }
 
-    public DA_TestBuilderFactory withUserAndManager(String alias, String lastName, String managerAlias, Integer count) {
-        User mgr = usersByAlias.get(managerAlias);
-        List<User> users = new List<User>();
+    // ============================================================
+    // BUILDER METHODS — ACCOUNTS
+    // ============================================================
+
+    public DA_TestBuilderFactory withCustomAccounts(Integer count, Map<String, Object> params) {
+        List<Account> newAccounts = new List<Account>();
         for (Integer i = 0; i < count; i++) {
-            users.add(DA_TestDataFactory.createTestUserWithManager(alias + (i + 1), lastName, mgr.Id));
+            newAccounts.add(DA_TestDataFactory.createTestAccount(params));
         }
-        insertAll(users);
-        for (Integer i = 0; i < users.size(); i++) {
-            usersByAlias.put(alias + (i + 1), users[i]);
-        }
+        insert newAccounts;
+        accounts.addAll(newAccounts);
         return this;
     }
 
     public DA_TestBuilderFactory withAccount() {
-        account = DA_TestDataFactory.createTestAccount();
-        insert account;
+        return withCustomAccounts(1, null);
+    }
+
+    // ============================================================
+    // BUILDER METHODS — POLICIES
+    // ============================================================
+
+    public DA_TestBuilderFactory withCustomPolicies(Integer count, Id accountId, Map<String, Object> params) {
+        List<InsurancePolicy__c> newPolicies = new List<InsurancePolicy__c>();
+        for (Integer i = 0; i < count; i++) {
+            newPolicies.add(DA_TestDataFactory.createTestPolicy(accountId, params));
+        }
+        insert newPolicies;
+        policies.addAll(newPolicies);
         return this;
     }
+
+    public DA_TestBuilderFactory withPolicy() {
+        return withCustomPolicies(1, accounts[accounts.size() - 1].Id, null);
+    }
+
+    // ============================================================
+    // BUILDER METHODS — VEHICLES
+    // ============================================================
+
+    public DA_TestBuilderFactory withCustomVehicles(Integer count, Id policyId, Map<String, Object> params) {
+        List<Vehicule__c> newVehicles = new List<Vehicule__c>();
+        for (Integer i = 0; i < count; i++) {
+            newVehicles.add(DA_TestDataFactory.createTestVehicle(policyId, params));
+        }
+        insert newVehicles;
+        vehicles.addAll(newVehicles);
+        return this;
+    }
+
+    public DA_TestBuilderFactory withVehicle() {
+        return withCustomVehicles(1, policies[policies.size() - 1].Id, null);
+    }
+
+    // ============================================================
+    // BUILDER METHODS — CASES
+    // ============================================================
+
+    public DA_TestBuilderFactory withCases(Integer count, Id accountId, Id policyId, String subject, Map<String, Object> params) {
+        List<Case> newCases = new List<Case>();
+        for (Integer i = 0; i < count; i++) {
+            String subj = count == 1 ? subject : subject + ' ' + (i + 1);
+            newCases.add(DA_TestDataFactory.createTestCase(accountId, policyId,subj, params));
+        }
+        insert newCases;
+        cases.addAll(newCases);
+        return this;
+    }
+
+    // ============================================================
+    // BUILDER METHODS — CLAIMS
+    // ============================================================
+
+    public DA_TestBuilderFactory withClaims(Integer count, Id caseId, Map<String, Object> params) {
+        List<Claim__c> newClaims = new List<Claim__c>();
+        for (Integer i = 0; i < count; i++) {
+            newClaims.add(DA_TestDataFactory.createTestClaim(caseId, params));
+        }
+        insert newClaims;
+        claims.addAll(newClaims);
+        return this;
+    }
+
+    // ============================================================
+    // BUILDER METHODS — PASSENGERS
+    // ============================================================
+
+    public DA_TestBuilderFactory withPassengers(Integer count, Id caseId, Id accountId, Id vehiculeId, Map<String, Object> params) {
+        List<Passager__c> newPassengers = new List<Passager__c>();
+        for (Integer i = 0; i < count; i++) {
+            newPassengers.add(DA_TestDataFactory.createTestPassenger(caseId, accountId, vehiculeId, params));
+        }
+        insert newPassengers;
+        passengers.addAll(newPassengers);
+        return this;
+    }
+
+    // ============================================================
+    // BUILDER METHODS — REQUEST APPROVALS
+    // ============================================================
+
+    public DA_TestBuilderFactory withRequestApprovals(Integer count, Id claimId, Id submitterId, Id approverId, Map<String, Object> params) {
+        List<RequestApproval__c> newRequests = new List<RequestApproval__c>();
+        for (Integer i = 0; i < count; i++) {
+            newRequests.add(DA_TestDataFactory.createTestRequestApproval(claimId, submitterId, approverId, params));
+        }
+        insert newRequests;
+        requestApprovals.addAll(newRequests);
+        return this;
+    }
+
+    // ============================================================
+    // BUILDER METHODS — INSURANCE POLICY COVERAGES (GARANTIES)
+    // ============================================================
+
+    public DA_TestBuilderFactory withInsurancePolicyCoverages(Integer count, Id policyId, Map<String, Object> params) {
+        List<InsurancePolicyCoverage__c> newCovs = new List<InsurancePolicyCoverage__c>();
+        for (Integer i = 0; i < count; i++) {
+            newCovs.add(DA_TestDataFactory.createTestInsurancePolicyCoverage(policyId, params));
+        }
+        insert newCovs;
+        insurancePolicyCoverages.addAll(newCovs);
+        return this;
+    }
+
+    // ============================================================
+    // BUILDER METHODS — CLAIM COVERAGES
+    // ============================================================
+
+    public DA_TestBuilderFactory withClaimCoverages(Integer count, Id claimId, Id policyCoverageId, Map<String, Object> params) {
+        List<ClaimCoverage__c> newCovs = new List<ClaimCoverage__c>();
+        for (Integer i = 0; i < count; i++) {
+            newCovs.add(DA_TestDataFactory.createTestClaimCoverage(claimId, policyCoverageId, params));
+        }
+        insert newCovs;
+        claimCoverages.addAll(newCovs);
+        return this;
+    }
+
+    // ============================================================
+    // BUILDER METHODS — CASE COVERAGES
+    // ============================================================
+
+    public DA_TestBuilderFactory withCaseCoverages(Integer count, Id caseId, Id policyCoverageId, Map<String, Object> params) {
+        List<CaseCoverage__c> newCovs = new List<CaseCoverage__c>();
+        for (Integer i = 0; i < count; i++) {
+            newCovs.add(DA_TestDataFactory.createTestCaseCoverage(caseId, policyCoverageId, params));
+        }
+        insert newCovs;
+        caseCoverages.addAll(newCovs);
+        return this;
+    }
+
+    // ============================================================
+    // BUILDER METHODS — CLAIM PARTICIPANTS
+    // ============================================================
+
+    public DA_TestBuilderFactory withClaimParticipants(Integer count, Id claimId, Id accountId, Map<String, Object> params) {
+        List<ClaimParticipant__c> newParticipants = new List<ClaimParticipant__c>();
+        for (Integer i = 0; i < count; i++) {
+            newParticipants.add(DA_TestDataFactory.createTestClaimParticipant(claimId, accountId, params));
+        }
+        insert newParticipants;
+        claimParticipants.addAll(newParticipants);
+        return this;
+    }
+
+    // ============================================================
+    // BUILDER METHODS — SCÉNARIOS (compat tests scénarisés)
+    // ============================================================
 
     public DA_TestBuilderFactory withScenarios(Map<String, String> scenarios) {
+        Account acc = accounts[accounts.size() - 1];
+        InsurancePolicy__c pol = policies[policies.size() - 1];
+        Vehicule__c veh = vehicles[vehicles.size() - 1];
+
         List<String> keys = new List<String>(scenarios.keySet());
-
-        List<Case> cases = new List<Case>();
+        List<Case> newCases = new List<Case>();
         for (String key : keys) {
-            cases.add(DA_TestDataFactory.createTestCase(account.Id, key));
+            newCases.add(DA_TestDataFactory.createTestCase(acc.Id, pol.Id, veh.Id, key, null));
         }
-        insertAll(cases);
+        insert newCases;
+        cases.addAll(newCases);
 
-        List<Claim__c> claims = new List<Claim__c>();
+        List<Claim__c> newClaims = new List<Claim__c>();
         for (Integer i = 0; i < keys.size(); i++) {
-            claims.add(DA_TestDataFactory.createTestClaim(cases[i].Id, scenarios.get(keys[i])));
+            newClaims.add(DA_TestDataFactory.createTestClaim(
+                newCases[i].Id,
+                veh.Id,
+                new Map<String, Object>{ 'Flags__c' => scenarios.get(keys[i]) }
+            ));
         }
-        insertAll(claims);
+        insert newClaims;
+        claims.addAll(newClaims);
 
         for (Integer i = 0; i < keys.size(); i++) {
-            claimsByKey.put(keys[i], claims[i]);
+            claimsByKey.put(keys[i], newClaims[i]);
         }
         return this;
     }
 
-    public DA_TestBuilderFactory withPendingApproval(
-        String scenarioKey, String flag, String submitterAlias, String approverAlias
-    ) {
+    public DA_TestBuilderFactory withPendingApproval(String scenarioKey, String flag, String submitterAlias, String approverAlias) {
         RequestApproval__c r = DA_TestDataFactory.createTestRequestApproval(
             claimsByKey.get(scenarioKey).Id,
-            flag,
             usersByAlias.get(submitterAlias).Id,
-            usersByAlias.get(approverAlias).Id
+            usersByAlias.get(approverAlias).Id,
+            new Map<String, Object>{ 'Flag__c' => flag }
         );
         insert r;
+        requestApprovals.add(r);
         return this;
     }
 
-    public User getUser(String alias)                       { return usersByAlias.get(alias); }
-    public Account getAccount()                             { return account; }
-    public Claim__c getClaim(String scenarioKey)            { return claimsByKey.get(scenarioKey); }
-    public Map<String, Claim__c> getScenarioClaims()        { return claimsByKey; }
+    // ============================================================
+    // ACCESSEURS — RETOURNENT LES LISTES INTERNES
+    // ============================================================
+
+    public List<User> getUsers() {
+        return users;
+    }
+
+    public List<Account> getAccounts() {
+        return accounts;
+    }
+
+    public List<InsurancePolicy__c> getPolicies() {
+        return policies;
+    }
+
+    public List<Vehicule__c> getVehicles() {
+        return vehicles;
+    }
+
+    public List<Case> getCases() {
+        return cases;
+    }
+
+    public List<Claim__c> getClaims() {
+        return claims;
+    }
+
+    public List<Passager__c> getPassengers() {
+        return passengers;
+    }
+
+    public List<RequestApproval__c> getRequestApprovals() {
+        return requestApprovals;
+    }
+
+    public List<InsurancePolicyCoverage__c> getInsurancePolicyCoverages() {
+        return insurancePolicyCoverages;
+    }
+
+    public List<ClaimCoverage__c> getClaimCoverages() {
+        return claimCoverages;
+    }
+
+    public List<CaseCoverage__c> getCaseCoverages() {
+        return caseCoverages;
+    }
+
+    public List<ClaimParticipant__c> getClaimParticipants() {
+        return claimParticipants;
+    }
+
+    public User getUser(String alias) {
+        return usersByAlias.get(alias);
+    }
+
+    public Claim__c getClaim(String scenarioKey) {
+        return claimsByKey.get(scenarioKey);
+    }
+
+    public Map<String, Claim__c> getScenarioClaims() {
+        return claimsByKey;
+    }
 }
