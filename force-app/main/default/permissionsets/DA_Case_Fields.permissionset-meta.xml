@@ -3,9 +3,18 @@
     <description>Grants read/edit access to Case custom fields used by the assurance LWC components.</description>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Case.LastWizardStep__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Case.MotifRejet__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <hasActivationRequired>false</hasActivationRequired>
     <label>DA Case Fields</label>
+    <tabSettings>
+        <tab>Poursuivre_Declaration</tab>
+        <visibility>Available</visibility>
+    </tabSettings>
 </PermissionSet>

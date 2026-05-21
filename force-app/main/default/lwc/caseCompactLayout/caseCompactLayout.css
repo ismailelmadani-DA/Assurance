@@ -1,0 +1,136 @@
+/* ── Conteneur principal ── */
+.ccl-container {
+    background: #ffffff;
+    padding: 0.75rem 1.25rem !important;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+/* ── Record type (sous-titre) ── */
+.ccl-record-type {
+    font-size: 0.75rem;
+    color: #444444;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ── Boutons d'action ── */
+.ccl-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-left: auto;
+}
+
+/* ── Badge demande de réaffectation en cours ── */
+.ccl-badge-reaffectation {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background-color: #fff3cd;
+    border: 1px solid #f0c040;
+    border-radius: 1rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #7a5c00;
+    white-space: nowrap;
+    margin-right: 0.5rem;
+}
+
+.ccl-badge-reaffectation lightning-icon {
+    --sds-c-icon-color-foreground-default: #f0a500;
+}
+
+/* ── Ligne des champs ── */
+.ccl-fields-row {
+    margin-top: 0.2rem !important;
+    margin-bottom: 0 !important;
+}
+
+/* ── Grille des champs ── */
+.ccl-fields-grid {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    flex-direction: row !important;
+    row-gap: 0 !important;
+    column-gap: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none;
+    width: 100%;
+}
+
+/* ── Item individuel ── */
+.ccl-field-item {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    padding-right: 0.75rem !important;
+    margin: 0 !important;
+}
+
+/* ── Label du champ ── */
+.ccl-field-label {
+    font-size: 0.6875rem !important;
+    color: #6b6d70 !important;
+    line-height: 1.1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* ── Valeur du champ ── */
+.ccl-field-value {
+    font-size: 0.8125rem !important;
+    color: #181818 !important;
+    font-weight: 500 !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* ── Valeur vide ── */
+.ccl-field-empty {
+    font-size: 0.8125rem !important;
+    color: #aeaeae !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* ── Lien lookup ── */
+.ccl-link {
+    color: #0176d3 !important;
+    text-decoration: none !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.ccl-link:hover {
+    text-decoration: underline !important;
+}
+
+/* ── Overrides SLDS ── */
+.ccl-container .slds-page-header__col-details {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    width: 100% !important;
+}
+
+.ccl-container .slds-grid {
+    margin: 0 !important;
+}
+
+.ccl-container .slds-col {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.ccl-container p {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}

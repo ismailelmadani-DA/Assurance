@@ -7,7 +7,7 @@ public with sharing class ClaimSearchController {
         String attestationNumber,  
         String chassisNumber
     ) {
-        String query = 'SELECT Id, PolicyNumber__c, AccountName__r.Name, PolicyCategory__c, Status__c, ' +
+        String query = 'SELECT Id, PolicyNumber__c, AccountName__r.Name, AccountName__r.Email__c, AccountName__r.Phone, PolicyCategory__c, Status__c, ' +
                        'SituationPolice__c, SituationPrime__c, DateEffet__c, DateExpiration__c, QuotePartCoass__c, ' +
                        '(SELECT Id, RegistrationNumber__c, ChassisNumber__c, Brand__c, AttestationNumber__c, DateOfFirstRegistration__c FROM vehicle__r LIMIT 1) ' +
                        'FROM InsurancePolicy__c WHERE ';
@@ -50,6 +50,8 @@ public with sharing class ClaimSearchController {
                 'Id' => ip.Id,
                 'PolicyNumber' => ip.PolicyNumber__c,
                 'InsuredName' => ip.AccountName__r != null ? ip.AccountName__r.Name : 'N/A',
+                'InsuredEmail' => ip.AccountName__r != null ? ip.AccountName__r.Email__c : null,
+                'InsuredPhone' => ip.AccountName__r != null ? ip.AccountName__r.Phone : null,
                 'Category' => ip.PolicyCategory__c,
                 'Status' => ip.Status__c,
                 'SituationPolice' => ip.SituationPolice__c,
@@ -144,6 +146,8 @@ public with sharing class ClaimSearchController {
             newCase.DateOfDeclarationCreation__c = Date.today();
             Id declarationRecordTypeId = Schema.SObjectType.Case.getRecordTypeInfosByDeveloperName().get('Declaration').getRecordTypeId();
             newCase.RecordTypeId = declarationRecordTypeId;
+
+            newCase.LastWizardStep__c = 5;
 
             insert newCase;
 
@@ -709,13 +713,184 @@ public with sharing class ClaimSearchController {
 
             currentCase.Status = 'En cours';
             currentCase.Claim__c = newClaim.Id;
+            currentCase.LastWizardStep__c = null;
             update currentCase;
 
             return newClaim.Id;
 
         } catch (Exception e) {
-            Database.rollback(sp); 
+            Database.rollback(sp);
             throw new AuraHandledException('Erreur lors de la création du sinistre : ' + e.getMessage() + ' (Ligne ' + e.getLineNumber() + ')');
+        }
+    }
+
+    @AuraEnabled
+    public static void updateWizardStep(Id caseId, Integer step) {
+        try {
+            if (caseId == null || step == null) return;
+            update new Case(Id = caseId, LastWizardStep__c = step);
+        } catch (Exception e) {
+            throw new AuraHandledException('Erreur sauvegarde étape : ' + e.getMessage());
+        }
+    }
+
+    @AuraEnabled
+    public static Map<String, Object> getClaimProgressSnapshot(Id caseId) {
+        try {
+            Case c = [
+                SELECT Id, CaseNumber, Status, LastWizardStep__c,
+                       Police__c, Vehicule__c, AccountId,
+                       CountryOfOccurrence__c, CityOfOccurrence__c, AddressOfOccurrence__c,
+                       DateOfOccurrence__c, DateOfDeclarationSubmission__c,
+                       Claimant__c, IncidentReport__c, Commentaire__c,
+                       CausesAndCircumstances__c, TriggeringEventOfClaim__c, CausesOfClaim__c,
+                       OpposingParty__c, NumberOfVehiclesInvolved__c, AnyDamage__c,
+                       PointsDeChoc__c, PrecisionsDommages__c, VehicleIsDamaged__c, InsuredIsContact__c,
+                       Account.Name, Account.Phone, Account.Email__c, Account.MoyenNotification__c,
+                       Police__r.PolicyNumber__c, Police__r.PolicyCategory__c, Police__r.Status__c,
+                       Police__r.SituationPolice__c, Police__r.SituationPrime__c,
+                       Police__r.DateEffet__c, Police__r.DateExpiration__c, Police__r.QuotePartCoass__c,
+                       Police__r.AccountName__r.Name, Police__r.AccountName__r.Phone,
+                       Police__r.AccountName__r.Email__c,
+                       Vehicule__r.RegistrationNumber__c, Vehicule__r.ChassisNumber__c,
+                       Vehicule__r.Brand__c, Vehicule__r.AttestationNumber__c,
+                       Vehicule__r.DateOfFirstRegistration__c
+                FROM Case WHERE Id = :caseId LIMIT 1
+            ];
+
+            Map<String, Object> result = new Map<String, Object>();
+            result.put('caseId', c.Id);
+            result.put('caseNumber', c.CaseNumber);
+            result.put('lastStep', c.LastWizardStep__c != null ? Integer.valueOf(c.LastWizardStep__c) : 5);
+            result.put('dateSurvenance', c.DateOfOccurrence__c);
+            result.put('selectedPolicyId', c.Police__c);
+
+            Map<String, Object> caseData = new Map<String, Object>();
+            caseData.put('country', c.CountryOfOccurrence__c);
+            caseData.put('city', c.CityOfOccurrence__c);
+            caseData.put('address', c.AddressOfOccurrence__c);
+            caseData.put('dateDepot', c.DateOfDeclarationSubmission__c);
+            caseData.put('declarant', c.Claimant__c);
+            caseData.put('pvConstat', c.IncidentReport__c);
+            caseData.put('commentaire', c.Commentaire__c);
+            caseData.put('nomContact', c.Account != null ? c.Account.Name : null);
+            caseData.put('telContact', c.Account != null ? c.Account.Phone : null);
+            caseData.put('mailContact', c.Account != null ? c.Account.Email__c : null);
+            caseData.put('moyenNotification', c.Account != null ? c.Account.MoyenNotification__c : null);
+            result.put('caseData', caseData);
+            result.put('isSameAsInsured', c.InsuredIsContact__c == true);
+
+            if (c.Police__c != null) {
+                Map<String, Object> policy = new Map<String, Object>();
+                policy.put('Id', c.Police__c);
+                policy.put('PolicyNumber', c.Police__r.PolicyNumber__c);
+                policy.put('Category', c.Police__r.PolicyCategory__c);
+                policy.put('Status', c.Police__r.Status__c);
+                policy.put('SituationPolice', c.Police__r.SituationPolice__c);
+                policy.put('SituationPrime', c.Police__r.SituationPrime__c);
+                policy.put('DateEffet', c.Police__r.DateEffet__c);
+                policy.put('DateExpiration', c.Police__r.DateExpiration__c);
+                policy.put('QuotePart', c.Police__r.QuotePartCoass__c);
+                policy.put('InsuredName', c.Police__r.AccountName__r != null ? c.Police__r.AccountName__r.Name : null);
+                policy.put('InsuredPhone', c.Police__r.AccountName__r != null ? c.Police__r.AccountName__r.Phone : null);
+                policy.put('InsuredEmail', c.Police__r.AccountName__r != null ? c.Police__r.AccountName__r.Email__c : null);
+                if (c.Vehicule__c != null) {
+                    policy.put('vehicleId', c.Vehicule__c);
+                    policy.put('RegistrationNumber', c.Vehicule__r.RegistrationNumber__c);
+                    policy.put('ChassisNumber', c.Vehicule__r.ChassisNumber__c);
+                    policy.put('Brand', c.Vehicule__r.Brand__c);
+                    policy.put('AttestationNumber', c.Vehicule__r.AttestationNumber__c);
+                    policy.put('DateMiseCirculation', c.Vehicule__r.DateOfFirstRegistration__c);
+                }
+                result.put('selectedPolicyRecord', policy);
+            }
+
+            Map<String, Object> circ = new Map<String, Object>();
+            circ.put('CausesAndCircumstances__c', c.CausesAndCircumstances__c);
+            circ.put('TriggeringEventOfClaim__c', c.TriggeringEventOfClaim__c);
+            circ.put('CausesOfClaim__c', c.CausesOfClaim__c);
+            circ.put('OpposingParty__c', c.OpposingParty__c);
+            circ.put('NumberOfVehiclesInvolved__c', c.NumberOfVehiclesInvolved__c);
+            circ.put('AnyDamage__c', c.AnyDamage__c);
+            circ.put('PointsDeChoc__c', c.PointsDeChoc__c);
+            circ.put('PrecisionsDommages__c', c.PrecisionsDommages__c);
+            circ.put('VehicleIsDamaged__c', c.VehicleIsDamaged__c);
+            result.put('circumstancesData', circ);
+
+            List<Passager__c> passagers = [
+                SELECT Id, Name, Roles__c, Civilite__c, CIN__c, Pays__c, Ville__c, Adresse__c,
+                       BirthDay__c, MaritalStatus__c, StateOfPerson__c, Telephone__c, Email__c,
+                       MoyenNotification__c, Vehicule__c, Account__c, Compte__c
+                FROM Passager__c WHERE Case__c = :caseId
+            ];
+
+            List<Map<String, Object>> passengersInsured = new List<Map<String, Object>>();
+            List<Map<String, Object>> otherParties = new List<Map<String, Object>>();
+            Map<Id, List<Map<String, Object>>> advPassengersByVehicle = new Map<Id, List<Map<String, Object>>>();
+
+            for (Passager__c p : passagers) {
+                Map<String, Object> row = new Map<String, Object>{
+                    'Id' => p.Id,
+                    'Name__c' => p.Name,
+                    'Civilite__c' => p.Civilite__c,
+                    'CIN__c' => p.CIN__c,
+                    'Pays__c' => p.Pays__c,
+                    'Ville__c' => p.Ville__c,
+                    'Adresse__c' => p.Adresse__c,
+                    'BirthDay__c' => p.BirthDay__c,
+                    'MaritalStatus__c' => p.MaritalStatus__c,
+                    'StateOfPerson__c' => p.StateOfPerson__c,
+                    'Telephone__c' => p.Telephone__c,
+                    'Email__c' => p.Email__c,
+                    'MoyenNotification__c' => p.MoyenNotification__c,
+                    'CompagnieAdverse__c' => p.Account__c
+                };
+                if (p.Roles__c == 'Passager assuré') {
+                    passengersInsured.add(row);
+                } else if (p.Roles__c == 'Autres partie') {
+                    row.put('OpposingParty__c', c.OpposingParty__c);
+                    otherParties.add(row);
+                } else if (p.Roles__c == 'Passager adverse' && p.Vehicule__c != null) {
+                    if (!advPassengersByVehicle.containsKey(p.Vehicule__c)) {
+                        advPassengersByVehicle.put(p.Vehicule__c, new List<Map<String, Object>>());
+                    }
+                    advPassengersByVehicle.get(p.Vehicule__c).add(row);
+                }
+            }
+            result.put('passengersData', passengersInsured);
+            result.put('otherPartiesData', otherParties);
+
+            List<VehicleCaseAssignment__c> assignments = [
+                SELECT Id, Vehicule__c, AdversaireAssure__c, CompagnieAdverse__c, NbDePassagerBlesses__c,
+                       Vehicule__r.RegistrationNumber__c, Vehicule__r.Brand__c, Vehicule__r.TypeVehicule__c,
+                       Vehicule__r.NbDeContratDAssurance__c, Vehicule__r.DateOfFirstRegistration__c
+                FROM VehicleCaseAssignment__c WHERE Case__c = :caseId
+            ];
+            List<Map<String, Object>> adverseVehicles = new List<Map<String, Object>>();
+            for (VehicleCaseAssignment__c a : assignments) {
+                Map<String, Object> v = new Map<String, Object>{
+                    'Id' => a.Id,
+                    'Vehicule__c' => a.Vehicule__c,
+                    'RegistrationNumber__c' => a.Vehicule__r != null ? a.Vehicule__r.RegistrationNumber__c : null,
+                    'Marque__c' => a.Vehicule__r != null ? a.Vehicule__r.Brand__c : null,
+                    'TypeVehicule__c' => a.Vehicule__r != null ? a.Vehicule__r.TypeVehicule__c : null,
+                    'Numéro_de_contrat__c' => a.Vehicule__r != null ? a.Vehicule__r.NbDeContratDAssurance__c : null,
+                    'DateMiseEnCirculation__c' => a.Vehicule__r != null ? a.Vehicule__r.DateOfFirstRegistration__c : null,
+                    'Adversaire_Assure__c' => a.AdversaireAssure__c,
+                    'CompagnieAdverse__c' => a.CompagnieAdverse__c,
+                    'NbDePassagerBlesses__c' => a.NbDePassagerBlesses__c,
+                    'VehicleIsDamaged__c' => c.VehicleIsDamaged__c,
+                    'passengers' => advPassengersByVehicle.containsKey(a.Vehicule__c)
+                        ? advPassengersByVehicle.get(a.Vehicule__c)
+                        : new List<Map<String, Object>>()
+                };
+                adverseVehicles.add(v);
+            }
+            result.put('adverseVehicleData', adverseVehicles);
+
+            return result;
+        } catch (Exception e) {
+            throw new AuraHandledException('Erreur snapshot : ' + e.getMessage() + ' (Ligne ' + e.getLineNumber() + ')');
         }
     }
 }

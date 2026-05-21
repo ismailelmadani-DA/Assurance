@@ -1,7 +1,7 @@
 import { LightningElement, track, wire, api } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
-import { NavigationMixin } from 'lightning/navigation';
+import { NavigationMixin, CurrentPageReference } from 'lightning/navigation';
 import { IsConsoleNavigation, getFocusedTabInfo, closeTab } from 'lightning/platformWorkspaceApi';
 
 // Import des objets et champs pour Picklists dynamiques
@@ -23,10 +23,15 @@ import savePassengers from '@salesforce/apex/ClaimSearchController.savePassenger
 import saveAdverseVehicle from '@salesforce/apex/ClaimSearchController.saveAdverseVehicle';
 import saveOtherParties from '@salesforce/apex/ClaimSearchController.saveOtherParties';
 import finalizeClaimProcess from '@salesforce/apex/ClaimSearchController.finalizeClaimProcess';
+import updateWizardStep from '@salesforce/apex/ClaimSearchController.updateWizardStep';
+import getClaimProgressSnapshot from '@salesforce/apex/ClaimSearchController.getClaimProgressSnapshot';
 
 export default class ClaimCreationWizard extends NavigationMixin(LightningElement) {
 
     @wire(IsConsoleNavigation) isConsoleNavigation;
+
+    // recordId reçu via Quick Action "Poursuivre la déclaration"
+    @api recordId;
 
     // =========================================================
     // ÉTATS ET FLAGS
@@ -228,6 +233,73 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
     }
 
   
+    @wire(CurrentPageReference)
+    setPageReference(pageRef) {
+        if (!this.recordId && pageRef && pageRef.state) {
+            const fromState = pageRef.state.c__recordId || pageRef.state.recordId;
+            if (fromState) {
+                this.recordId = fromState;
+                this.hydrateFromCase(fromState);
+            }
+        }
+    }
+
+    connectedCallback() {
+        if (this.recordId) {
+            this.hydrateFromCase(this.recordId);
+        }
+    }
+
+    async hydrateFromCase(caseId) {
+        this.isLoading = true;
+        try {
+            const snap = await getClaimProgressSnapshot({ caseId });
+            if (!snap) return;
+
+            this.createdCaseId = snap.caseId;
+            this.createdCaseNumber = snap.caseNumber;
+            this.caseAlreadyCreated = true;
+            this.selectedPolicyId = snap.selectedPolicyId;
+            this.dateSurvenance = snap.dateSurvenance;
+            this.isSameAsInsured = snap.isSameAsInsured === true;
+
+            if (snap.selectedPolicyRecord) {
+                this.selectedPolicyRecord = snap.selectedPolicyRecord;
+            }
+            if (snap.caseData) {
+                this.caseData = { ...this.caseData, ...snap.caseData };
+            }
+            if (snap.circumstancesData) {
+                this.circumstancesData = snap.circumstancesData;
+            }
+            if (snap.passengersData) {
+                this.passengersData = snap.passengersData;
+            }
+            if (snap.adverseVehicleData) {
+                this.adverseVehicleData = snap.adverseVehicleData;
+            }
+            if (snap.otherPartiesData) {
+                this.otherPartiesData = snap.otherPartiesData;
+            }
+
+            const target = snap.lastStep && snap.lastStep >= 5 ? snap.lastStep : 5;
+            this.currentStep = target;
+        } catch (error) {
+            this.showToast('Erreur', error.body?.message || error.message, 'error');
+        } finally {
+            this.isLoading = false;
+        }
+    }
+
+    async persistStep(step) {
+        if (!this.createdCaseId || step == null) return;
+        try {
+            await updateWizardStep({ caseId: this.createdCaseId, step });
+        } catch (error) {
+            // silencieux : la sauvegarde de progression ne doit pas bloquer la navigation
+        }
+    }
+
     handleStep1Change(event) {
         const fieldId = event.target.dataset.id;
         this.step1Data = { ...this.step1Data, [fieldId]: event.target.value };
@@ -279,9 +351,19 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
     handleContactToggle(event) {
         this.isSameAsInsured = event.detail.value === 'true';
         if (this.isSameAsInsured && this.selectedPolicyRecord) {
-            this.caseData = { ...this.caseData, nomContact: this.selectedPolicyRecord.InsuredName };
+            this.caseData = {
+                ...this.caseData,
+                nomContact: this.selectedPolicyRecord.InsuredName,
+                telContact: this.selectedPolicyRecord.InsuredPhone || '',
+                mailContact: this.selectedPolicyRecord.InsuredEmail || ''
+            };
         } else {
-            this.caseData = { ...this.caseData, nomContact: '' };
+            this.caseData = {
+                ...this.caseData,
+                nomContact: '',
+                telContact: '',
+                mailContact: ''
+            };
         }
     }
 
@@ -457,6 +539,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
             // -----------------------------------------------
             else if (this.currentStep === 5) {
                 this.currentStep = 6;
+                this.persistStep(6);
             }
 
             // -----------------------------------------------
@@ -471,6 +554,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
                     });
                     this.showToast('Succès', 'Circonstances enregistrées', 'success');
                     this.currentStep = 7;
+                    this.persistStep(7);
                 }
             }
 
@@ -481,6 +565,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
                 const driverChild = this.template.querySelector('c-lwc007_-driver-info');
                 if (driverChild && driverChild.validate()) {
                     this.currentStep = 8;
+                    this.persistStep(8);
                 }
             }
 
@@ -497,6 +582,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
                         });
                     }
                     this.currentStep = 9;
+                    this.persistStep(9);
                 }
             }
 
@@ -510,6 +596,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
 
                     if (!dataFromChild || dataFromChild.length === 0) {
                         this.currentStep = 10;
+                        this.persistStep(10);
                         this.isLoading = false;
                         return;
                     }
@@ -521,6 +608,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
                         });
                         this.showToast('Succès', 'Informations du tiers enregistrées', 'success');
                         this.currentStep = 10;
+                        this.persistStep(10);
                     } catch (error) {
                         this.showToast('Erreur', error.body?.message || error.message, 'error');
                     } finally {
@@ -540,6 +628,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
                 if (partyChild && partyChild.validate()) {
                     if (!this.otherPartiesData || this.otherPartiesData.length === 0) {
                         this.currentStep = 11;
+                        this.persistStep(11);
                         return;
                     }
 
@@ -551,6 +640,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
                         });
                         this.showToast('Succès', 'Informations Tiers enregistrées', 'success');
                         this.currentStep = 11;
+                        this.persistStep(11);
                     } catch (error) {
                         this.showToast('Erreur', error.body?.message || error.message, 'error');
                     } finally {
@@ -568,6 +658,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
                     await garantiesChild.saveCoverages();
                 }
                 this.currentStep = 12;
+                this.persistStep(12);
             }
 
             // -----------------------------------------------
