@@ -1,8 +1,8 @@
 /**
- * @description       : Builder de données de test utilisant le pattern Builder/Fluent pour chaîner la création de jeux de données complexes (utilisateurs, comptes, polices, véhicules, cases, sinistres, passagers, demandes d'approbation) via DA_TestDataFactory. Chaque méthode withXxx loop, construit une liste locale, fait un bulk insert, puis l'ajoute à la collection interne accessible via getXxx().
+ * @description       : Builder de données de test utilisant le pattern Builder/Fluent pour chaîner la création de jeux de données complexes (utilisateurs, comptes, polices, véhicules, cases, sinistres, passagers, demandes d'approbation, événements) via DA_TestDataFactory. Chaque méthode withXxx loop, construit une liste locale, fait un bulk insert, puis l'ajoute à la collection interne accessible via getXxx().
  * @author            : D&A Technologies
  * @group             : Utilities
- * @last modified on  : 20-05-2026
+ * @last modified on  : 25-05-2026
  * @last modified by  : D&A Technologies
  **/
 @isTest
@@ -12,21 +12,26 @@ public class DA_TestBuilderFactory {
     // COLLECTIONS PAR TYPE D'OBJET
     // ============================================================
 
-    private List<User> users = new List<User>();
-    private List<Account> accounts = new List<Account>();
-    private List<InsurancePolicy__c> policies = new List<InsurancePolicy__c>();
-    private List<Vehicule__c> vehicles = new List<Vehicule__c>();
-    private List<Case> cases = new List<Case>();
-    private List<Claim__c> claims = new List<Claim__c>();
-    private List<Passager__c> passengers = new List<Passager__c>();
-    private List<RequestApproval__c> requestApprovals = new List<RequestApproval__c>();
+    private List<User>                       users                    = new List<User>();
+    private List<Account>                    accounts                 = new List<Account>();
+    private List<Account>                    prestataires             = new List<Account>();
+    private List<RIB__c>                     ribs                     = new List<RIB__c>();
+    private List<InsurancePolicy__c>         policies                 = new List<InsurancePolicy__c>();
+    private List<Vehicule__c>                vehicles                 = new List<Vehicule__c>();
+    private List<Case>                       cases                    = new List<Case>();
+    private List<Claim__c>                   claims                   = new List<Claim__c>();
+    private List<Passager__c>                passengers               = new List<Passager__c>();
+    private List<RequestApproval__c>         requestApprovals         = new List<RequestApproval__c>();
     private List<InsurancePolicyCoverage__c> insurancePolicyCoverages = new List<InsurancePolicyCoverage__c>();
-    private List<ClaimCoverage__c> claimCoverages = new List<ClaimCoverage__c>();
-    private List<CaseCoverage__c> caseCoverages = new List<CaseCoverage__c>();
-    private List<ClaimParticipant__c> claimParticipants = new List<ClaimParticipant__c>();
+    private List<ClaimCoverage__c>           claimCoverages           = new List<ClaimCoverage__c>();
+    private List<CaseCoverage__c>            caseCoverages            = new List<CaseCoverage__c>();
+    private List<ClaimParticipant__c>        claimParticipants        = new List<ClaimParticipant__c>();
+    private List<VehicleCaseAssignment__c>   vehicleCaseAssignments   = new List<VehicleCaseAssignment__c>();
+    private List<Evenement__c>               evenements               = new List<Evenement__c>();
 
-    private Map<String, User> usersByAlias = new Map<String, User>();
-    private Map<String, Claim__c> claimsByKey = new Map<String, Claim__c>();
+    private Map<String, User>         usersByAlias    = new Map<String, User>();
+    private Map<String, Claim__c>     claimsByKey     = new Map<String, Claim__c>();
+    private Map<String, Evenement__c> evenementsByKey = new Map<String, Evenement__c>();
 
     // ============================================================
     // CONSTRUCTEUR
@@ -91,6 +96,42 @@ public class DA_TestBuilderFactory {
     }
 
     // ============================================================
+    // BUILDER METHODS — PRESTATAIRES
+    // ============================================================
+
+    public DA_TestBuilderFactory withPrestataires(Integer count, String type, Map<String, Object> params) {
+        List<Account> newPrestataires = new List<Account>();
+        for (Integer i = 0; i < count; i++) {
+            newPrestataires.add(DA_TestDataFactory.createTestPrestataire(type, params));
+        }
+        insert newPrestataires;
+        prestataires.addAll(newPrestataires);
+        return this;
+    }
+
+    public DA_TestBuilderFactory withPrestataire(String type) {
+        return withPrestataires(1, type, null);
+    }
+
+    // ============================================================
+    // BUILDER METHODS — RIBS
+    // ============================================================
+
+    public DA_TestBuilderFactory withRibs(Integer count, Id accountId, Map<String, Object> params) {
+        List<RIB__c> newRibs = new List<RIB__c>();
+        for (Integer i = 0; i < count; i++) {
+            newRibs.add(DA_TestDataFactory.createTestRib(accountId, params));
+        }
+        insert newRibs;
+        ribs.addAll(newRibs);
+        return this;
+    }
+
+    public DA_TestBuilderFactory withRib(Id accountId) {
+        return withRibs(1, accountId, null);
+    }
+
+    // ============================================================
     // BUILDER METHODS — POLICIES
     // ============================================================
 
@@ -134,7 +175,7 @@ public class DA_TestBuilderFactory {
         List<Case> newCases = new List<Case>();
         for (Integer i = 0; i < count; i++) {
             String subj = count == 1 ? subject : subject + ' ' + (i + 1);
-            newCases.add(DA_TestDataFactory.createTestCase(accountId, policyId,subj, params));
+            newCases.add(DA_TestDataFactory.createTestCase(accountId, policyId, subj, params));
         }
         insert newCases;
         cases.addAll(newCases);
@@ -240,6 +281,61 @@ public class DA_TestBuilderFactory {
     }
 
     // ============================================================
+    // BUILDER METHODS — VEHICLE CASE ASSIGNMENTS
+    // ============================================================
+
+    public DA_TestBuilderFactory withVehicleCaseAssignments(Integer count, Id claimId, Id caseId, Boolean isOpposing, Map<String, Object> params) {
+        List<VehicleCaseAssignment__c> newAssignments = new List<VehicleCaseAssignment__c>();
+        for (Integer i = 0; i < count; i++) {
+            newAssignments.add(DA_TestDataFactory.createTestVehicleCaseAssignment(claimId, caseId, isOpposing, params));
+        }
+        insert newAssignments;
+        vehicleCaseAssignments.addAll(newAssignments);
+        return this;
+    }
+
+    // ============================================================
+    // BUILDER METHODS — EVENEMENTS
+    // ============================================================
+
+    public DA_TestBuilderFactory withCustomEvenements(Integer count, Map<String, Object> params) {
+        List<Evenement__c> newEvts = new List<Evenement__c>();
+        for (Integer i = 0; i < count; i++) {
+            newEvts.add(DA_TestDataFactory.createTestEvenement(params));
+        }
+        insert newEvts;
+        evenements.addAll(newEvts);
+        return this;
+    }
+
+    public DA_TestBuilderFactory withEvenement(Map<String, Object> params) {
+        return withCustomEvenements(1, params);
+    }
+
+    /**
+    * @description      :   Crée et insère un événement par scénario nommé, identifiable ensuite via getEvenement(key).
+    * @method Name      :   withScenarioEvenements
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-25
+    * @param            :   scenarios — map clé = nom du scénario, valeur = overrides de champs (null = valeurs par défaut)
+    * @return           :   DA_TestBuilderFactory
+    * -------------------------------------------------------------------------------------------------
+    */
+    public DA_TestBuilderFactory withScenarioEvenements(Map<String, Map<String, Object>> scenarios) {
+        List<String> keys = new List<String>(scenarios.keySet());
+        List<Evenement__c> newEvts = new List<Evenement__c>();
+        for (String key : keys) {
+            newEvts.add(DA_TestDataFactory.createTestEvenement(scenarios.get(key)));
+        }
+        insert newEvts;
+        evenements.addAll(newEvts);
+        for (Integer i = 0; i < keys.size(); i++) {
+            evenementsByKey.put(keys[i], newEvts[i]);
+        }
+        return this;
+    }
+
+    // ============================================================
     // BUILDER METHODS — SCÉNARIOS (compat tests scénarisés)
     // ============================================================
 
@@ -295,6 +391,14 @@ public class DA_TestBuilderFactory {
         return accounts;
     }
 
+    public List<Account> getPrestataires() {
+        return prestataires;
+    }
+
+    public List<RIB__c> getRibs() {
+        return ribs;
+    }
+
     public List<InsurancePolicy__c> getPolicies() {
         return policies;
     }
@@ -335,6 +439,14 @@ public class DA_TestBuilderFactory {
         return claimParticipants;
     }
 
+    public List<VehicleCaseAssignment__c> getVehicleCaseAssignments() {
+        return vehicleCaseAssignments;
+    }
+
+    public List<Evenement__c> getEvenements() {
+        return evenements;
+    }
+
     public User getUser(String alias) {
         return usersByAlias.get(alias);
     }
@@ -345,5 +457,13 @@ public class DA_TestBuilderFactory {
 
     public Map<String, Claim__c> getScenarioClaims() {
         return claimsByKey;
+    }
+
+    public Evenement__c getEvenement(String scenarioKey) {
+        return evenementsByKey.get(scenarioKey);
+    }
+
+    public Map<String, Evenement__c> getScenarioEvenements() {
+        return evenementsByKey;
     }
 }

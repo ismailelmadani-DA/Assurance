@@ -374,8 +374,24 @@
                                     <lightning-input label="Code banque" name="codeBanque" value={form.codeBanque} disabled></lightning-input>
                                 </div>
                                 <div class="pm-field pm-field--full">
-                                    <lightning-input label="RIB" name="rib" value={form.rib} onchange={handleFieldChange}  placeholder="24 caractères maximum"></lightning-input>
-                                </div>
+    <label class="pm-label">RIB</label>
+    <lightning-input 
+        name="rib" 
+        value={form.rib} 
+        onchange={handleFieldChange} 
+        onblur={handleFieldBlur}
+        placeholder="24 caractères maximum"
+        variant="label-hidden">
+    </lightning-input>
+    
+    <!-- Zone d'affichage de l'erreur -->
+    <template if:true={errors.rib}>
+        <div class="pm-error">{errors.rib}</div>
+    </template>
+    <template if:false={errors.rib}>
+        <div class="pm-field__error-placeholder"></div>
+    </template>
+</div>
                             </div>
                         </div>
 

@@ -72,7 +72,18 @@
 </template>
                                     </td>
                                     <!-- AFFICHAGE DU PROPRIÉTAIRE -->
-            <td class="pm-td">{rec.nomCompletTiers}</td>
+            <td class="pm-td">
+    <template if:true={rec.proprietaireId}>
+        <a class="pm-link" href="#"
+           data-id={rec.proprietaireId}
+           onclick={handleNavigateToProprietaire}>
+            {rec.nomCompletTiers}
+        </a>
+    </template>
+    <template if:false={rec.proprietaireId}>
+        {rec.nomCompletTiers}
+    </template>
+</td>
             <!-- AFFICHAGE DE LA DATE -->
             <td class="pm-td">{rec.dateMiseEnCirculation}</td>
                                     <td class="pm-td pm-td--center">{rec.NbDePassagerBlesses__c}</td>

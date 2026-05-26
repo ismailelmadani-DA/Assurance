@@ -1,0 +1,64 @@
+<template>
+    <div class="garanties-container">
+
+        <div class="table-header">
+            <span class="header-title">GARANTIES DU SINISTRE</span>
+            <span class="header-counter">
+                {nombreTouchees} touchée(s) / {garanties.length} au total
+            </span>
+        </div>
+
+        <template lwc:if={isLoading}>
+            <div class="loading-wrapper">
+                <lightning-spinner
+                    alternative-text="Chargement..."
+                    size="small">
+                </lightning-spinner>
+            </div>
+        </template>
+
+        <template lwc:elseif={hasError}>
+            <div class="error-box">
+                <svg class="error-icon" viewBox="0 0 24 24" width="20" height="20">
+                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <text x="12" y="16" text-anchor="middle" font-weight="bold" fill="currentColor">!</text>
+                </svg>
+                {error}
+            </div>
+        </template>
+
+        <template lwc:elseif={hasGaranties}>
+            <div class="table-wrapper">
+                <table class="garanties-table">
+                    <thead>
+                        <tr>
+                            <th class="col-code">CODE</th>
+                            <th class="col-name">NOM DE LA GARANTIE</th>
+                            <th class="col-type">TYPE</th>
+                            <th class="col-touched">TOUCHÉE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={garanties} for:item="g">
+                            <c-garantie-row
+                                key={g.id}
+                                garantie={g}>
+                            </c-garantie-row>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+
+        <template lwc:else>
+            <div class="empty-box">
+                <svg class="empty-icon" viewBox="0 0 24 24" width="32" height="32">
+                    <rect x="3" y="3" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" rx="2"/>
+                    <path d="M3 9h18" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <p>Aucune garantie trouvée.</p>
+            </div>
+        </template>
+
+    </div>
+</template>

@@ -36,6 +36,7 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
     @track currentUserProfileName;
     @track userCurrencyCode = CURRENCY;
     @track fieldsList = [];
+    @track traversedClickableFields = new Set();
 
     // Sorting properties
     @track sortedBy = '';
@@ -66,7 +67,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
 
     @track showExport = false;
 
-    // Computed properties for UI states
     get disableSObjectSelection() {
         return this.isLoading;
     }
@@ -76,7 +76,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
     }
 
     get disableSearch() {
-       
         return this.isLoading || (!this.data.length && !this.searchTerm);
     }
 
@@ -96,7 +95,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
         return this.isMyRecordsView;
     }
 
-    // Pagination info display
     get paginationInfo() {
         if (this.totalRecords === 0) return 'Aucun enregistrement';
         const start = (this.currentPage - 1) * this.pageSize + 1;
@@ -104,7 +102,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
         return `${start} - ${end} sur ${this.totalRecords}`;
     }
 
-    // Page size options for dropdown
     get pageSizeOptions() {
         return [
             { label: '10', value: 10 },
@@ -115,7 +112,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
         ];
     }
 
-    // Get the list of available SObjects from metadata
     @wire(getAvailableSObjects)
     wiredSObjects({ data, error }) {
         this.isLoading = true;
@@ -126,7 +122,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
                 value: sObject
             }));
 
-            // Process and store metadata for later use
             data.forEach(item => {
                 const key = `${item.sobjectName__c}_${item.listViewName__c}`;
                 this.metadataByListView.set(key, item);
@@ -143,7 +138,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
         }
     }
 
-    // Get list views when SObject is selected
     @wire(getListViewsForSObject, { sObjectName: '$selectedSObject' })
     wiredListViews({ data, error }) {
         if (this.selectedSObject) {
@@ -176,7 +170,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
                 this.paginatedData = [];
                 this.totalRecords = 0;
                 this.totalPages = 0;
-                // this.isLoading = false;
             }
         } else if (error) {
             console.error('Error loading list views:', error);
@@ -185,7 +178,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
         }
     }
 
-    // Update logo based on selected SObject and List View
     updateLogoFromMetadata(sObjectName, listViewName) {
         const key = `${sObjectName}_${listViewName}`;
         const metadata = this.metadataByListView.get(key);
@@ -223,7 +215,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
         console.log('Final logo set to: ' + this.objectLogo);
     }
 
-    // Handle changes in selected SObject
     handleSObjectChange(event) {
         this.selectedSObject = event.detail.value;
         this.selectedListView = '';
@@ -242,19 +233,17 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
         }
     }
 
-    // Handle changes in selected List View
     handleListViewChange(event) {
-    console.log('Selected list view changed to: ' + event.detail.value);
-    this.selectedListView = event.detail.value;
-    this.searchTerm = ''; // Clear search when changing view
-    this.currentPage = 1;
-    
-    this.updateLogoFromMetadata(this.selectedSObject, this.selectedListView);
-    
-    this.loadRecords(); // Always use normal load when changing view
-}
+        console.log('Selected list view changed to: ' + event.detail.value);
+        this.selectedListView = event.detail.value;
+        this.searchTerm = '';
+        this.currentPage = 1;
+        
+        this.updateLogoFromMetadata(this.selectedSObject, this.selectedListView);
+        
+        this.loadRecords();
+    }
 
-    // Toggle between "My" records and all records
     toggleMyRecords() {
         if (this.isMyRecordsView) {
             const regularView = this.listViewOptions.find(view => !view.isMyView);
@@ -276,19 +265,14 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
         this.loadRecords();
     }
 
-    // MAIN METHOD: Load records with server-side pagination
     loadRecords() {
         if (!this.selectedSObject || !this.selectedListView) {
             return Promise.reject(new Error('No SObject or ListView selected'));
         }
 
         this.isLoading = true;
-        // this.data = [];
-        // this.filteredData = [];
-        // this.paginatedData = [];
 
         return new Promise((resolve, reject) => {
-            // First get the fields for this list view
             getFieldsForListView({
                 sObjectName: this.selectedSObject,
                 listViewName: this.selectedListView
@@ -303,13 +287,11 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
                     console.log('Fields metadata:', JSON.stringify(this.fieldsMetadata));
                     console.log('Lookup fields:', JSON.stringify(this.lookupFields));
                     console.log('Lookup info:', JSON.stringify(this.lookupInfo));
-                    console.log('Is "My Records" view:', this.isMyRecordsView);
 
-                    // Create columns for the table
+                    // ✅ CREATE COLUMNS - THIS IS CRITICAL
                     this.columns = this.createModernColumns(this.fieldsList);
-                    console.log('ColumnsVal:', JSON.stringify(this.columns));
+                    console.log('Columns created:', JSON.stringify(this.columns.map(c => ({fieldName: c.fieldName, isUrl: c.isUrl, label: c.label}))));
 
-                    // Get paginated records from server
                     return getRecordsForListViewPaginated({
                         sObjectName: this.selectedSObject,
                         listViewName: this.selectedListView,
@@ -321,14 +303,12 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
                 .then(result => {
                     console.log('Paginated result:', JSON.stringify(result));
 
-                    // Process records to add URL fields and format data for display
                     const recordsWithFormattedData = this.processRecords(result.records);
 
                     this.data = recordsWithFormattedData;
                     this.filteredData = recordsWithFormattedData;
                     this.paginatedData = recordsWithFormattedData;
 
-                    // Update pagination info from server response
                     this.totalRecords = result.totalRecords;
                     this.totalPages = result.totalPages;
                     this.currentPage = result.currentPage;
@@ -337,7 +317,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
 
                     this.isLoading = false;
 
-                    // Animation for a seamless entry
                     setTimeout(() => {
                         const tableContainer = this.template.querySelector('.table-container');
                         if (tableContainer) {
@@ -356,17 +335,17 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
         });
     }
 
-    // Process records to prepare for display
     processRecords(records) {
         if (!records || records.length === 0) return [];
 
         console.log('Sample record structure:', JSON.stringify(records[0]));
 
+        this.traversedClickableFields = new Set();
+
         return records.map(record => {
             const newRecord = { ...record };
             const recordKeys = Object.keys(newRecord);
 
-            // First pass: identify all relationship fields in the record
             const relationshipFields = new Set();
             recordKeys.forEach(key => {
                 if (newRecord[key] && typeof newRecord[key] === 'object' && newRecord[key].Id) {
@@ -376,32 +355,66 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
 
             console.log('Detected relationship fields:', Array.from(relationshipFields));
 
-            // Second pass: process all fields appropriately
+            // ✅ CREATE URL FOR ALL CLICKABLE FIELDS
+            newRecord['DeclarationUrl'] = '/' + newRecord.Id;
+
+            // ✅ CLEAN UP Num_ro_d_immatriculation__c - Remove ID part after / and line breaks
+            if (newRecord['Num_ro_d_immatriculation__c']) {
+                let value = newRecord['Num_ro_d_immatriculation__c'];
+                // Remove line breaks first
+                value = value.replace(/[\n\r]/g, ' ').trim();
+                // Then split by / and take only the first part
+                const cleanValue = value.split('/')[0].trim();
+                // CREATE A NEW CLEAN FIELD for display
+                newRecord['Num_ro_d_immatriculation_CLEAN'] = cleanValue;
+                console.log('✅ Created clean field - Num_ro_d_immatriculation_CLEAN:', cleanValue);
+            }
+
+            // ✅ HANDLE TRAVERSED FIELDS (Police__r.PolicyNumber__c)
+            console.log('--- PROCESSING TRAVERSED FIELDS ---');
+            this.fieldsList.forEach(listField => {
+                if (listField.includes('.')) {
+                    console.log(`Processing traversed field: ${listField}`);
+                    
+                    const parts = listField.split('.');
+                    const relationshipName = parts[0];
+                    const targetField = parts[1];
+                    
+                    if (newRecord[relationshipName] && typeof newRecord[relationshipName] === 'object') {
+                        const relObj = newRecord[relationshipName];
+                        const value = relObj[targetField];
+                        const flatKey = relationshipName.replace('__r', '') + '__r' + targetField;
+                        newRecord[flatKey] = value;
+                        
+                        // ✅ CREATE URL FOR TRAVERSED FIELD
+                        const flatKeyUrl = flatKey.replace('__c', '') + 'Url';
+                        newRecord[flatKeyUrl] = '/' + relObj.Id;
+                        
+                        this.traversedClickableFields.add(listField);
+                        
+                        console.log(`  ✅ Created: ${flatKey} = ${value}`);
+                        console.log(`  ✅ Created URL: ${flatKeyUrl} = ${newRecord[flatKeyUrl]}`);
+                    } else {
+                        console.log(`  ❌ Relationship object NOT found: ${relationshipName}`);
+                    }
+                }
+            });
+            console.log('--- END TRAVERSED FIELDS ---\n');
+
             recordKeys.forEach(field => {
                 const value = newRecord[field];
                 const fieldMetadata = this.fieldsMetadata[field] || {};
                 const fieldType = fieldMetadata.type;
 
-                if (fieldType === 'PICKLIST' || fieldType === 'MULTIPICKLIST') {
-                    console.log(`Processing ${fieldType} field:`, field, 'Value:', value);
-                }
-
                 if (field === 'Id') {
                     return;
                 }
 
-                // Check if field is a formula field with HTML or TEXT format
                 const isFormula = fieldMetadata.formula === true;
                 const isHtmlFormula = isFormula && fieldMetadata.formulaType === 'HTML';
                 const isTextFormula = isFormula && fieldMetadata.formulaType === 'TEXT';
 
-                if (isHtmlFormula) {
-                    console.log('Processing HTML formula field:', field, value);
-                    return;
-                }
-
-                if (isTextFormula) {
-                    console.log('Processing Text formula field:', field, value);
+                if (isHtmlFormula || isTextFormula) {
                     return;
                 }
 
@@ -409,17 +422,14 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
                     newRecord[field + 'Url'] = '/' + newRecord.Id;
                 }
                 if (field === 'CaseNumber') {
-                    console.log('URLCaseNumber', newRecord.Id);
                     newRecord[field + 'Url'] = '/' + newRecord.Id;
                 }
 
-                // Handle relationship fields in dot notation (e.g., Account.Name)
                 if (field.includes('.')) {
                     this.processRelationshipField(newRecord, field, value);
                     return;
                 }
 
-                // Handle fields ending with Id which are lookups
                 if (field.endsWith('Id') && field !== 'Id') {
                     const relationshipName = field.substring(0, field.length - 2);
                     const relationshipField = relationshipName + '__r';
@@ -430,10 +440,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
                         this.processIdOnlyField(newRecord, relationshipName, value);
                     }
 
-                    console.log('newRecord' + value);
-                    console.log('relationshipName' + relationshipName);
-                    console.log('newRecord' + newRecord);
-
                     if (field === 'OwnerId' && value === this.currentUserId) {
                         newRecord.isOwnedByCurrentUser = true;
                     }
@@ -441,7 +447,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
                     return;
                 }
 
-                // Handle custom lookup fields (ending with __c and having __r relationship)
                 if (field.endsWith('__c')) {
                     const possibleRelationField = field.replace('__c', '__r');
                     if (relationshipFields.has(possibleRelationField)) {
@@ -451,7 +456,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
                     }
                 }
 
-                // Process direct relationship objects (fields ending with __r or relationship objects)
                 if (relationshipFields.has(field)) {
                     const relationshipName = field.endsWith('__r')
                         ? field.substring(0, field.length - 3)
@@ -461,7 +465,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
                     return;
                 }
 
-                // Format date fields
                 this.formatDateField(newRecord, field);
             });
 
@@ -470,7 +473,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
         });
     }
 
-    // Helper method to process relationship data
     processRelationshipData(record, relationshipName, relationshipObject, idValue) {
         if (!relationshipObject) return;
 
@@ -478,21 +480,15 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
 
         record[relationshipName + 'DisplayValue'] = displayValue || 'View';
         record[relationshipName + 'LookupUrl'] = '/' + (relationshipObject.Id || idValue);
-
-        console.log('relationshipObject' + JSON.stringify(relationshipObject));
     }
 
-    // Helper method to process ID-only lookup fields
     processIdOnlyField(record, relationshipName, idValue) {
         if (!idValue) return;
 
         record[relationshipName + 'DisplayValue'] = 'View ' + relationshipName;
         record[relationshipName + 'LookupUrl'] = '/' + idValue;
-
-        console.log('processIdOnlyField' + idValue);
     }
 
-    // Helper to find the best field to use as display value from a relationship object
     findBestDisplayField(obj) {
         if (!obj) return '';
 
@@ -516,7 +512,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
         return obj.Id ? String(obj.Id).substring(0, 8) : '';
     }
 
-    // Process a relationship field in dot notation (e.g., Account.Name)
     processRelationshipField(record, field, value) {
         const parts = field.split('.');
         if (parts.length !== 2) return;
@@ -524,10 +519,10 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
         const relationshipName = parts[0];
         const fieldName = parts[1];
 
-        record[relationshipName + fieldName + 'Formatted'] = value;
+        const flatKey = parts[0].replace('__r', '') + '__r' + parts[1];
+        record[flatKey] = value;
     }
 
-    // Format date fields
     formatDateField(record, field) {
         const fieldMetadata = this.fieldsMetadata[field] || {};
         const fieldType = fieldMetadata.type;
@@ -543,7 +538,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
 
                     record[field + 'Formatted'] = `${day}-${month}-${year}`;
                 }
-                console.log('record[field + Formatted]', record[field + 'Formatted']);
             } catch (error) {
                 console.error('Error formatting date:', error);
                 record[field + 'Formatted'] = value;
@@ -551,7 +545,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
         }
     }
 
-    // Check if a field is a date field
     isDateField(field, fieldType) {
         return fieldType === 'DATE' || fieldType === 'DATETIME' ||
             field.toLowerCase().includes('date') ||
@@ -559,26 +552,36 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
             field === 'EffectiveDate' || field === 'ExpirationDate';
     }
 
-    // Create column definitions for modern table
+    // ✅ MAIN COLUMN CREATION - CRITICAL LOGIC
     createModernColumns(fieldList) {
+        console.log('=== CREATING COLUMNS ===');
+        console.log('fieldList:', fieldList);
+
         return fieldList
             .filter(field => field !== 'Id')
             .map(field => {
                 const fieldMetadata = this.fieldsMetadata[field] || {};
                 const fieldType = fieldMetadata.type;
-                console.log('Field:', field, 'Type:', fieldType);
+                
+                // ✅ DEBUG LOG FOR EMAIL AND RECORDTYPE
+                if (field === 'Email__c' || field === 'RecordType.Name') {
+                    console.log(`\n⚠️ DEBUG ${field}:`, {
+                        fieldType: fieldType,
+                        fieldMetadata: JSON.stringify(fieldMetadata),
+                        hasMetadata: !!fieldMetadata
+                    });
+                }
+                
+                console.log(`\n>>> Processing field: ${field} (type: ${fieldType})`);
 
-                // Check if this is a formula field
                 const isFormula = fieldMetadata.formula === true;
                 const formulaType = fieldMetadata.formulaType;
 
-                // Handle formula fields based on their return type
                 const isHtmlFormula = isFormula && formulaType === 'HTML';
                 const isTextFormula = isFormula && formulaType === 'TEXT';
                 const isCurrencyFormula = isFormula && (formulaType === 'CURRENCY');
                 const isNumberFormula = isFormula && (formulaType === 'DOUBLE' || formulaType === 'NUMBER' || formulaType === 'DECIMAL' || formulaType === 'PERCENT');
 
-                // Detect field types
                 const isPicklist = fieldType === 'PICKLIST';
                 const isMultiPicklist = fieldType === 'MULTIPICKLIST';
                 const isTextArea = fieldType === 'TEXTAREA';
@@ -591,23 +594,13 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
                 const isRelationshipField = field.includes('.');
                 const isDateFieldCheck = this.isDateField(field, fieldType);
                 const isBooleanField = fieldType === 'BOOLEAN' || formulaType === 'BOOLEAN';
+                const isEmailField = fieldType === 'EMAIL';
 
-                // Detect pure string fields
                 const isString = (fieldType === 'STRING' || fieldType === 'TEXT' || fieldType === 'ID') &&
                     !isReference && !isExplicitLookup && !isRelationshipField &&
                     !field.endsWith('Id') && !isNumberFormula && !isTextFormula && !isHtmlFormula && !isFormula &&
                     !field.endsWith('Name') && field !== 'Name' && field !== 'CaseNumber';
 
-                // Log special field types for debugging
-                if (isTextArea) {
-                    console.log('TextArea Field detected:', field, 'isRichText:', isRichText);
-                }
-
-                if (isString) {
-                    console.log('String Field detected:', field, 'Type:', fieldType);
-                }
-
-                // Base column configuration for modern table
                 const column = {
                     label: this.formatFieldLabel(field, fieldMetadata.label),
                     fieldName: field,
@@ -634,86 +627,151 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
                     cellClass: this.getCellClass(field, fieldType, isReference || isExplicitLookup, isFormula, formulaType)
                 };
 
-                // Configure column based on field type and pattern - ORDER MATTERS HERE
+                // ✅ RECORD TYPE SPECIAL CASE - NOT CLICKABLE
+                if (field === 'RecordType.Name') {
+                    column.isString = true;
+                    console.log(`  >> RECORD TYPE (not clickable)`);
+                    return column;
+                }
+
+                // ✅ SKIP lookups with traversed fields
+                if (field.endsWith('__c') && !field.endsWith('Number__c') && !field.endsWith('Date__c') && !field.startsWith('Date')) {
+                    const relationshipNameForCheck = field.substring(0, field.length - 3) + '__r';
+                    const hasTraversedField = this.fieldsList.some(f => f.startsWith(relationshipNameForCheck + '.'));
+                    if (hasTraversedField) {
+                        console.log(`  ✅ SKIP: ${field} has traversed field`);
+                        return null;
+                    }
+                }
+
+                // ✅ ORDER MATTERS - CHECK SPECIFIC FIELDS FIRST
+
+                // ✅ TRAVERSED CLICKABLE LOOKUP (ANY field with dot notation - Police, Véhicule, etc)
+                if (field.includes('.')) {
+                    const flatKey = field.replace('.', '');
+                    const flatKeyUrl = flatKey.replace('__c', '') + 'Url';
+                    column.fieldName = flatKeyUrl;
+                    column.isUrl = true;
+                    column.displayField = flatKey;
+                    console.log(`  ✅ CLICKABLE TRAVERSED: field=${field}, fieldName=${flatKeyUrl}, displayField=${flatKey}`);
+                    return column;
+                }
+
+                // 3️⃣ TEXT AREA
                 if (isTextArea) {
                     column.isTextArea = true;
-                    console.log('Setting TextArea for field:', field);
+                    console.log(`  >> TEXTAREA`);
+                    return column;
                 }
-                else if (isString) {
+
+                // 4️⃣ EMAIL FIELD ✅ FIXED
+                if (isEmailField) {
                     column.isString = true;
-                    console.log('Setting String for field:', field);
+                    console.log(`  >> EMAIL`);
+                    return column;
                 }
-                else if (isPicklist) {
+
+                // 5️⃣ STRING
+                if (isString) {
+                    column.isString = true;
+                    console.log(`  >> STRING`);
+                    return column;
+                }
+
+                // 6️⃣ PICKLIST
+                if (isPicklist) {
                     column.isPicklist = true;
-                    console.log('Setting Picklist for field:', field);
+                    console.log(`  >> PICKLIST`);
+                    return column;
                 }
-                else if (isMultiPicklist) {
+
+                // 7️⃣ MULTI-PICKLIST
+                if (isMultiPicklist) {
                     column.isMultiPicklist = true;
-                    console.log('Setting MultiPicklist for field:', field);
+                    console.log(`  >> MULTI-PICKLIST`);
+                    return column;
                 }
-                else if (isHtmlFormula) {
+
+                // 8️⃣ HTML FORMULA
+                if (isHtmlFormula) {
                     column.isHtmlFormula = true;
-                    console.log('Setting HTML Formula for field:', field);
+                    console.log(`  >> HTML FORMULA`);
+                    return column;
                 }
-                else if (isTextFormula) {
+
+                // 9️⃣ TEXT FORMULA
+                if (isTextFormula) {
                     column.isTextFormula = true;
-                    console.log('Setting Text Formula for field:', field);
+                    console.log(`  >> TEXT FORMULA`);
+                    return column;
                 }
-                else if (isCurrency) {
+
+                // 🔟 CURRENCY
+                if (isCurrency) {
                     column.isCurrency = true;
-                    console.log('Setting Currency for field:', field);
+                    console.log(`  >> CURRENCY`);
+                    return column;
                 }
-                else if (isNumber) {
+
+                // 1️⃣1️⃣ NUMBER
+                if (isNumber) {
                     column.isNumber = true;
-                    console.log('Setting Number for field:', field);
+                    console.log(`  >> NUMBER`);
+                    return column;
                 }
-                else if (isDateFieldCheck) {
-                    console.log('Date field:', field);
-                    console.log('Date field type:', fieldType);
-                    console.log('Date field metadata:', fieldMetadata);
+
+                // 1️⃣2️⃣ DATE
+                if (isDateFieldCheck) {
                     column.isDate = true;
                     column.fieldName = field + 'Formatted';
-                    console.log('Setting Date for field:', field);
+                    console.log(`  >> DATE`);
+                    return column;
                 }
-                else if (isBooleanField) {
+
+                // 1️⃣3️⃣ BOOLEAN
+                if (isBooleanField) {
                     column.isBoolean = true;
-                    console.log('Setting Boolean for field:', field);
+                    console.log(`  >> BOOLEAN`);
+                    return column;
                 }
-                else if (field === 'Name' || field.endsWith('Name') || field === 'CaseNumber') {
+
+                // 1️⃣4️⃣ CASE NUMBER / NAME (standard clickable)
+                if (field === 'Name' || field.endsWith('Name') || field === 'CaseNumber') {
                     column.fieldName = field + 'Url';
                     column.isUrl = true;
                     column.displayField = field;
-                    console.log('Setting Name URL for field:', field);
+                    console.log(`  ✅ CLICKABLE NAME/CASE: fieldName=${field}Url`);
+                    return column;
                 }
-                else if (isRelationshipField) {
-                    column.fieldName = field.replace('.', '') + 'Formatted';
-                    column.isText = true;
-                    console.log('Setting Relationship for field:', field);
-                }
-                else if (field.endsWith('__c') && !field.endsWith('Number__c') && !field.endsWith('Date__c') && !field.startsWith('Date')) {
+
+                // 1️⃣5️⃣ REGULAR LOOKUPS
+                if (field.endsWith('__c') && !field.endsWith('Number__c') && !field.endsWith('Date__c') && !field.startsWith('Date')) {
                     const relationshipName = field.substring(0, field.length - 3);
                     column.fieldName = relationshipName + 'LookupUrl';
                     column.isUrl = true;
                     column.displayField = relationshipName + 'DisplayValue';
-                    console.log('Setting Custom Lookup for field:', field);
+                    console.log(`  ✅ CLICKABLE LOOKUP: fieldName=${relationshipName}LookupUrl`);
+                    return column;
                 }
-                else if (isReference || field.endsWith('Id') || isExplicitLookup) {
+
+                // 1️⃣6️⃣ REFERENCE/LOOKUP FIELDS
+                if (isReference || field.endsWith('Id') || isExplicitLookup) {
                     const relationshipName = field.endsWith('Id') ? field.substring(0, field.length - 2) : field;
                     column.fieldName = relationshipName + 'LookupUrl';
                     column.isUrl = true;
                     column.displayField = relationshipName + 'DisplayValue';
-                    console.log('Setting Reference Lookup for field:', field);
-                }
-                else {
-                    column.isText = true;
-                    console.log('Setting Text (default) for field:', field);
+                    console.log(`  ✅ CLICKABLE REFERENCE: fieldName=${relationshipName}LookupUrl`);
+                    return column;
                 }
 
+                // 1️⃣7️⃣ DEFAULT TEXT
+                column.isText = true;
+                console.log(`  >> TEXT (default)`);
                 return column;
-            });
+            })
+            .filter(col => col !== null);
     }
 
-    // Get header class for styling
     getHeaderClass(fieldType, isFormula, formulaType) {
         let classes = '';
 
@@ -737,7 +795,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
         return classes.trim();
     }
 
-    // Get cell class for styling
     getCellClass(field, fieldType, isLookup, isFormula, formulaType) {
         let classes = '';
 
@@ -765,7 +822,6 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
         return classes.trim();
     }
 
-    // Format the field API name to a more readable label
     formatFieldLabel(fieldName, metadataLabel) {
         if (metadataLabel) {
             return metadataLabel;
@@ -797,78 +853,67 @@ export default class Lwc0_TableListViewParent extends NavigationMixin(LightningE
             .trim();
     }
 
-    // Handle search input - client-side filtering of current page only
     handleSearchChange(event) {
-    this.searchTerm = event.detail.value.toLowerCase();
-    this.currentPage = 1; // Reset to first page on search
-    
-    // Clear any existing timeout
-    if (this.searchTimeout) {
-        clearTimeout(this.searchTimeout);
+        this.searchTerm = event.detail.value.toLowerCase();
+        this.currentPage = 1;
+        
+        if (this.searchTimeout) {
+            clearTimeout(this.searchTimeout);
+        }
+        
+        this.searchTimeout = setTimeout(() => {
+            this.performBackendSearch();
+        }, 500);
     }
-    
-    // Debounce search - wait 500ms after user stops typing
-    this.searchTimeout = setTimeout(() => {
-        this.performBackendSearch();
-    }, 500);
-}
 
-
-performBackendSearch() {
-    if (!this.selectedSObject || !this.selectedListView) {
-        return;
+    performBackendSearch() {
+        if (!this.selectedSObject || !this.selectedListView) {
+            return;
+        }
+        
+        this.isLoading = true;
+        
+        if (this.searchTerm && this.searchTerm.trim().length > 0) {
+            getRecordsForListViewPaginatedWithSearch({
+                sObjectName: this.selectedSObject,
+                listViewName: this.selectedListView,
+                fields: this.fieldsList,
+                pageSize: this.pageSize,
+                pageNumber: this.currentPage,
+                searchTerm: this.searchTerm.trim()
+            })
+            .then(result => {
+                console.log('Search result:', JSON.stringify(result));
+                
+                const recordsWithFormattedData = this.processRecords(result.records);
+                
+                this.data = recordsWithFormattedData;
+                this.filteredData = recordsWithFormattedData;
+                this.paginatedData = recordsWithFormattedData;
+                
+                this.totalRecords = result.totalRecords;
+                this.totalPages = result.totalPages;
+                this.currentPage = result.currentPage;
+                this.hasNextPage = result.hasNextPage;
+                this.hasPreviousPage = result.hasPreviousPage;
+                
+                this.isLoading = false;
+                
+                if (recordsWithFormattedData.length === 0) {
+                } else {
+                    this.showToast('Success', `${result.totalRecords} résultat(s) trouvé(s)`, 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Error searching:', error);
+                this.showToast('Error', 'Erreur lors de la recherche : ' + (error.body?.message || error.message), 'error');
+                this.isLoading = false;
+            });
+        } else {
+            this.loadRecords();
+        }
     }
-    
-    this.isLoading = true;
-    
-    // Use backend search if there's a search term, otherwise use normal load
-    if (this.searchTerm && this.searchTerm.trim().length > 0) {
-        getRecordsForListViewPaginatedWithSearch({
-            sObjectName: this.selectedSObject,
-            listViewName: this.selectedListView,
-            fields: this.fieldsList,
-            pageSize: this.pageSize,
-            pageNumber: this.currentPage,
-            searchTerm: this.searchTerm.trim()
-        })
-        .then(result => {
-            console.log('Search result:', JSON.stringify(result));
-            
-            // Process records
-            const recordsWithFormattedData = this.processRecords(result.records);
-            
-            this.data = recordsWithFormattedData;
-            this.filteredData = recordsWithFormattedData;
-            this.paginatedData = recordsWithFormattedData;
-            
-            // Update pagination info
-            this.totalRecords = result.totalRecords;
-            this.totalPages = result.totalPages;
-            this.currentPage = result.currentPage;
-            this.hasNextPage = result.hasNextPage;
-            this.hasPreviousPage = result.hasPreviousPage;
-            
-            this.isLoading = false;
-            
-            // Show message if no results
-            if (recordsWithFormattedData.length === 0) {
-                // this.showToast('Info', `Aucun résultat trouvé pour "${this.searchTerm}"`, 'info');
-            } else {
-                this.showToast('Success', `${result.totalRecords} résultat(s) trouvé(s)`, 'success');
-            }
-        })
-        .catch(error => {
-            console.error('Error searching:', error);
-            this.showToast('Error', 'Erreur lors de la recherche : ' + (error.body?.message || error.message), 'error');
-            this.isLoading = false;
-        });
-    } else {
-        // No search term - load normally
-        this.loadRecords();
-    }
-}
 
-    // Handle column click for sorting
     handleColumnClick(event) {
         this.isLoading = true;
         const fieldName = event.currentTarget.dataset.field;
@@ -920,7 +965,6 @@ performBackendSearch() {
         this.isLoading = false;
     }
 
-    // Helper method to get sortable value
     getSortValue(value) {
         if (value === null || value === undefined) {
             return null;
@@ -961,7 +1005,6 @@ performBackendSearch() {
         return value;
     }
 
-    // Helper method to compare values for sorting
     compareValues(a, b, sortDirection) {
         if (a === null || a === undefined) {
             return sortDirection === 'asc' ? 1 : -1;
@@ -991,72 +1034,61 @@ performBackendSearch() {
         return 0;
     }
 
-    // Handle page size change - SERVER-SIDE
     handlePageSizeChange(event) {
-    this.pageSize = parseInt(event.target.value, 10);
-    this.currentPage = 1;
-    
-    // Use backend search if searching, otherwise normal load
-    if (this.searchTerm && this.searchTerm.trim().length > 0) {
-        this.performBackendSearch();
-    } else {
-        this.loadRecords();
-    }
-}
-
-
-    // Handle previous page button click - SERVER-SIDE
-    handlePrevious() {
-    if (this.currentPage > 1) {
-        this.currentPage = this.currentPage - 1;
+        this.pageSize = parseInt(event.target.value, 10);
+        this.currentPage = 1;
         
-        // Use backend search if searching, otherwise normal load
         if (this.searchTerm && this.searchTerm.trim().length > 0) {
             this.performBackendSearch();
         } else {
             this.loadRecords();
         }
     }
-}
+
+    handlePrevious() {
+        if (this.currentPage > 1) {
+            this.currentPage = this.currentPage - 1;
+            
+            if (this.searchTerm && this.searchTerm.trim().length > 0) {
+                this.performBackendSearch();
+            } else {
+                this.loadRecords();
+            }
+        }
+    }
 
     handleNext() {
-    if (this.currentPage < this.totalPages) {
-        this.currentPage = this.currentPage + 1;
-        
-        // Use backend search if searching, otherwise normal load
-        if (this.searchTerm && this.searchTerm.trim().length > 0) {
-            this.performBackendSearch();
-        } else {
-            this.loadRecords();
+        if (this.currentPage < this.totalPages) {
+            this.currentPage = this.currentPage + 1;
+            
+            if (this.searchTerm && this.searchTerm.trim().length > 0) {
+                this.performBackendSearch();
+            } else {
+                this.loadRecords();
+            }
         }
     }
-}
 
     handlePageClick(event) {
-    const selectedPage = parseInt(event.currentTarget.dataset.page, 10);
-    if (selectedPage !== this.currentPage) {
-        this.currentPage = selectedPage;
-        
-        // Use backend search if searching, otherwise normal load
-        if (this.searchTerm && this.searchTerm.trim().length > 0) {
-            this.performBackendSearch();
-        } else {
-            this.loadRecords();
+        const selectedPage = parseInt(event.currentTarget.dataset.page, 10);
+        if (selectedPage !== this.currentPage) {
+            this.currentPage = selectedPage;
+            
+            if (this.searchTerm && this.searchTerm.trim().length > 0) {
+                this.performBackendSearch();
+            } else {
+                this.loadRecords();
+            }
         }
     }
-}
-
 
     loadRecordsWithSearch() {
-    if (!this.searchTerm || this.searchTerm.trim().length === 0) {
-        // No search term - use normal pagination
-        this.loadRecords();
-    } else {
-        // Has search term - use backend search
-        this.performBackendSearch();
+        if (!this.searchTerm || this.searchTerm.trim().length === 0) {
+            this.loadRecords();
+        } else {
+            this.performBackendSearch();
+        }
     }
-}
-
 
     applyClientSideFilter() {
         if (!this.searchTerm) {
@@ -1083,7 +1115,6 @@ performBackendSearch() {
         this.paginatedData = this.filteredData;
     }
 
-    // Handle row click to navigate to record
     handleRowClick(event) {
         const recordId = event.currentTarget.dataset.id;
         if (recordId) {
@@ -1092,12 +1123,7 @@ performBackendSearch() {
         }
     }
 
-    // Handle cell link click (prevent propagation to row click)
     handleCellLinkClick(event) {
-        console.log('Cell link clicked:', JSON.stringify(event));
-        console.log('Cell link clicked:', JSON.stringify(event.detail));
-        console.log('Cell link clicked:', event.currentTarget.dataset.id);
-
         event.stopPropagation();
         const { recordId } = event.detail;
         if (recordId) {
@@ -1108,7 +1134,6 @@ performBackendSearch() {
         }
     }
 
-    // Navigate to record detail page
     navigateToRecordPage(recordId) {
         console.log('Navigating to record page:', recordId);
 
@@ -1131,7 +1156,6 @@ performBackendSearch() {
         }
     }
 
-    // Show toast message
     showToast(title, message, variant) {
         const event = new ShowToastEvent({
             title: title,
@@ -1142,7 +1166,6 @@ performBackendSearch() {
         this.dispatchEvent(event);
     }
 
-    // Export data to CSV
     exportToCSV() {
         if (!this.data || this.data.length === 0) {
             this.showToast('Info', 'Aucune donnée à exporter', 'info');
@@ -1202,7 +1225,6 @@ performBackendSearch() {
         }
     }
 
-    // Helper method to safely access nested properties
     getFieldValue(obj, path) {
         if (!obj || !path) {
             return null;
@@ -1217,7 +1239,6 @@ performBackendSearch() {
         return obj[path];
     }
 
-    // Refresh data with a visual indicator of success
     refreshWithFeedback() {
         if (!this.isLoading && this.selectedSObject && this.selectedListView) {
             this.isLoading = true;
@@ -1244,19 +1265,16 @@ performBackendSearch() {
         }
     }
 
-    // Refresh data
     refreshData() {
         if (!this.isLoading && this.selectedSObject && this.selectedListView) {
             this.loadRecords();
         }
     }
 
-    // Handle row selection for mass actions (future enhancement)
     handleRowSelection(event) {
         const selectedRow = event.currentTarget.dataset.id;
     }
 
-    // Toggle advanced filters panel (for future enhancement)
     toggleAdvancedFilters() {
         const filtersPanel = this.template.querySelector('.advanced-filters');
         if (filtersPanel) {
@@ -1264,14 +1282,12 @@ performBackendSearch() {
         }
     }
 
-    // Reset all filters to default values
     resetFilters() {
         this.searchTerm = '';
         this.currentPage = 1;
         this.loadRecords();
     }
 
-    // Add additional keyboard support for accessibility
     handleKeyDown(event) {
         if (event.key === 'Enter' && event.target.classList.contains('data-row')) {
             const recordId = event.target.dataset.id;
@@ -1281,19 +1297,16 @@ performBackendSearch() {
         }
     }
 
-    // Add method to enable future bulk actions
     performBulkAction(actionName) {
         this.showToast('Info', `L'action groupée ${actionName} n'est pas encore implémentée`, 'info');
     }
 
-    // Method to handle inline editing in future enhancement
     handleInlineEdit(event) {
         event.stopPropagation();
         const { field, value, recordId } = event.detail;
         this.showToast('Info', `L'édition en ligne n'est pas encore implémentée : ${field}=${value}`, 'info');
     }
 
-    // Handle settings menu actions
     handleSettingsAction(action) {
         switch (action) {
             case 'export':
@@ -1313,7 +1326,6 @@ performBackendSearch() {
         }
     }
 
-    // Enhanced formatter for number fields
     formatNumber(value, decimals = 2) {
         if (value === null || value === undefined) return '';
         return Number(value).toLocaleString('fr-FR', {
@@ -1322,7 +1334,6 @@ performBackendSearch() {
         });
     }
 
-    // Enhanced formatter for currency fields
     formatCurrency(value, currencyCode = 'EUR') {
         if (value === null || value === undefined) return '';
         return Number(value).toLocaleString('fr-FR', {
@@ -1331,18 +1342,15 @@ performBackendSearch() {
         });
     }
 
-    // Custom event handling for future child components
     handleCustomEvent(event) {
         const { action, data } = event.detail;
         console.log('Custom event received:', action, data);
     }
 
-    // Future enhancement for column customization
     customizeColumns() {
         this.showToast('Info', 'La fonctionnalité de personnalisation des colonnes sera disponible dans une future mise à jour.', 'info');
     }
 
-    // Computed properties for pagination
     get prevPageClass() {
         return this.currentPage <= 1 ? 'page-prev disabled' : 'page-prev';
     }
@@ -1351,7 +1359,6 @@ performBackendSearch() {
         return this.currentPage >= this.totalPages ? 'page-next disabled' : 'page-next';
     }
 
-    // Method to generate visible page numbers with their CSS classes
     get visiblePages() {
         if (!this.totalPages) return [];
 
@@ -1393,12 +1400,10 @@ performBackendSearch() {
         return pages;
     }
 
-    // Determine if we need to show the first page ellipsis
     get showFirstPageLink() {
         return this.totalPages > 6 && this.visiblePages.length > 0 && this.visiblePages[0].number > 1;
     }
 
-    // Determine if we need to show the last page ellipsis
     get showLastPageLink() {
         return this.totalPages > 6 && this.visiblePages.length > 0 &&
             this.visiblePages[this.visiblePages.length - 1].number < this.totalPages;

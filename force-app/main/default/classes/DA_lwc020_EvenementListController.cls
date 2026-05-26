@@ -59,8 +59,8 @@ public with sharing class DA_lwc020_EvenementListController {
     @AuraEnabled
     public static String saveEvenement(SaveRequest req) {
         try {
-            EM006_Evenement.validateEvenement(req);
-            Evenement__c evt = EM006_Evenement.mapRequestToEvenement(req);
+            validateEvenement(req);
+            Evenement__c evt = mapRequestToEvenement(req);
             EM006_Evenement.upsertEvenement(evt);
             return evt.Id;
         } catch (AuraHandledException e) {
@@ -119,22 +119,65 @@ public with sharing class DA_lwc020_EvenementListController {
     }
 
     /* ══════════════════════════════════════════════════════════════════════
+       PRIVATE — Validation des règles métier
+    ══════════════════════════════════════════════════════════════════════ */
+    private static void validateEvenement(SaveRequest req) {
+        if (String.isBlank(req.libelle)) {
+            throw new AuraHandledException('Le libellé de l\'événement est obligatoire.');
+        }
+        if (String.isBlank(req.categorie)) {
+            throw new AuraHandledException('La catégorie est obligatoire.');
+        }
+        if (String.isBlank(req.type)) {
+            throw new AuraHandledException('Le type est obligatoire.');
+        }
+        if (req.dateDebut == null) {
+            throw new AuraHandledException('La date de début est obligatoire.');
+        }
+        if (String.isBlank(req.pays)) {
+            throw new AuraHandledException('Le pays est obligatoire.');
+        }
+        if (String.isBlank(req.ville)) {
+            throw new AuraHandledException('La ville est obligatoire.');
+        }
+        if (req.dateFin != null && req.dateFin < req.dateDebut) {
+            throw new AuraHandledException('La date de fin doit être postérieure à la date de début.');
+        }
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
+       PRIVATE — Mapping SaveRequest → Evenement__c
+    ══════════════════════════════════════════════════════════════════════ */
+    private static Evenement__c mapRequestToEvenement(SaveRequest req) {
+        Evenement__c evt = new Evenement__c();
+        if (String.isNotBlank(req.id)) evt.Id = req.id;
+        evt.Libelle__c   = req.libelle;
+        evt.Categorie__c = req.categorie;
+        evt.Type__c      = req.type;
+        evt.DateDebut__c = req.dateDebut;
+        evt.DateFin__c   = req.dateFin;
+        evt.Ville__c     = req.ville;
+        evt.Pays__c      = req.pays;
+        return evt;
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════
        PRIVATE — Mapping Evenement__c → EvenementWrapper
     ══════════════════════════════════════════════════════════════════════ */
     private static EvenementWrapper mapToWrapper(Evenement__c evt) {
         EvenementWrapper w = new EvenementWrapper();
-        w.id               = evt.Id;
-        w.code             = evt.Name;
-        w.libelle          = evt.Libelle__c;
-        w.categorie        = evt.Categorie__c;
-        w.type             = evt.Type__c;
-        w.dateDebut        = evt.DateDebut__c != null ? String.valueOf(evt.DateDebut__c)       : null;
-        w.dateFin          = evt.DateFin__c   != null ? String.valueOf(evt.DateFin__c)         : null;
-        w.pays             = evt.Pays__c;
-        w.ville            = evt.Ville__c;
-        w.dateCreation     = evt.CreatedDate  != null ? String.valueOf(evt.CreatedDate.date()) : null;
-        w.createdById      = evt.CreatedById;
-        w.createdByName    = evt.CreatedBy?.Name;
+        w.id            = evt.Id;
+        w.code          = evt.Name;
+        w.libelle       = evt.Libelle__c;
+        w.categorie     = evt.Categorie__c;
+        w.type          = evt.Type__c;
+        w.dateDebut     = evt.DateDebut__c != null ? String.valueOf(evt.DateDebut__c)       : null;
+        w.dateFin       = evt.DateFin__c   != null ? String.valueOf(evt.DateFin__c)         : null;
+        w.pays          = evt.Pays__c;
+        w.ville         = evt.Ville__c;
+        w.dateCreation  = evt.CreatedDate  != null ? String.valueOf(evt.CreatedDate.date()) : null;
+        w.createdById   = evt.CreatedById;
+        w.createdByName = evt.CreatedBy?.Name;
         return w;
     }
 }

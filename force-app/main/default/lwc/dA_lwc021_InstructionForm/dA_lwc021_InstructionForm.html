@@ -1,305 +1,441 @@
 <template>
-    <div class="instruction-wrapper">
 
-        <!-- ══════════════════════════════════════════
-             HEADER
-        ══════════════════════════════════════════ -->
-        <div class="form-header">
-            <div class="header-icon">
-                <lightning-icon icon-name="standard:task" size="medium"></lightning-icon>
+    <!-- ════════════════════════════════════════
+         CARD PRINCIPALE
+    ════════════════════════════════════════ -->
+    <div class="pm-card">
+
+        <!-- HEADER -->
+        <div class="pm-header">
+            <div class="pm-header__left">
+                <div class="pm-header__icon-wrap">
+                    <lightning-icon icon-name="standard:task" size="small" alternative-text="Instructions"></lightning-icon>
+                </div>
+                <div>
+                    <h1 class="pm-header__title">Gestion des Instructions</h1>
+                    <span class="pm-header__subtitle">Instructions liées au sinistre</span>
+                </div>
             </div>
-            <div class="header-text">
-                <h1 class="form-title">Nouvelle Instruction</h1>
-                <p class="form-subtitle">Sinistre : {claimName} &nbsp;|&nbsp; Type de dégât :
-                    <span class={typeDegaTBadgeClass}>{typeDegat}</span>
-                </p>
+
+            <div class="pm-header__actions">
+                <button class="pm-btn pm-btn--add" type="button" onclick={handleNew}>
+                    <lightning-icon icon-name="utility:add" size="x-small" alternative-text="Ajouter"></lightning-icon>
+                    Ajouter
+                </button>
             </div>
         </div>
 
-        <!-- ══════════════════════════════════════════
-             STEP INDICATOR
-        ══════════════════════════════════════════ -->
-        <div class="step-indicator">
-            <div class={step1Class}>
-                <div class="step-circle">1</div>
-                <span class="step-label">Type d'instruction</span>
-            </div>
-            <div class="step-line"></div>
-            <div class={step2Class}>
-                <div class="step-circle">2</div>
-                <span class="step-label">
-                    <template if:true={isMateriel}>Véhicule</template>
-                    <template if:true={isCorporel}>Victime</template>
-                    <template if:false={hasDegat}>Contexte</template>
-                </span>
-            </div>
-            <div class="step-line"></div>
-            <div class={step3Class}>
-                <div class="step-circle">3</div>
-                <span class="step-label">Confirmation</span>
+        <!-- BODY -->
+        <div class="pm-body">
+
+            <!-- Spinner global -->
+            <template if:true={isLoading}>
+                <div class="pm-spinner-overlay">
+                    <lightning-spinner alternative-text="Chargement..." size="medium"></lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Tableau des instructions -->
+            <template if:true={hasInstructions}>
+                <div class="pm-table-wrap">
+                    <table class="pm-table">
+                        <thead>
+                            <tr>
+                                <th class="pm-th">Nom</th>
+                                <th class="pm-th">Type d'instruction</th>
+                                <th class="pm-th">Type de dégât</th>
+                                <th class="pm-th">Véhicule</th>
+                                <th class="pm-th">Victime</th>
+                                <th class="pm-th">Statut</th>
+                                <th class="pm-th">Date de création</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={instructions} for:item="row">
+                                <tr key={row.Id}>
+                                    <td class="pm-td pm-td--name">
+                                        <a href={row.nameUrl} class="pm-link" onclick={handleNameClick} data-id={row.Id}>
+                                            {row.Name}
+                                        </a>
+                                    </td>
+                                    <td class="pm-td">{row.InstructionType__c}</td>
+                                    <td class="pm-td">
+                                        <template if:true={row.isMateriel}>
+                                            <span class="pm-role pm-role--assure">{row.TypeDegat__c}</span>
+                                        </template>
+                                        <template if:false={row.isMateriel}>
+                                            <span class="pm-role pm-role--adverse">{row.TypeDegat__c}</span>
+                                        </template>
+                                    </td>
+                                    <td class="pm-td pm-td--mono">
+                                        <template if:true={row.hasVehicule}>
+                                            <a href={row.vehiculeUrl} class="pm-link" onclick={handleVehiculeNameClick} data-id={row.Vehicule__c}>
+                                                {row.VehiculeName}
+                                            </a>
+                                        </template>
+                                        <template if:false={row.hasVehicule}>
+                                            {row.VehiculeName}
+                                        </template>
+                                    </td>
+                                    <td class="pm-td pm-td--mono">
+                                        <template if:true={row.hasVictime}>
+                                            <a href={row.victimeUrl} class="pm-link" onclick={handleVictimeNameClick} data-id={row.Victimes__c}>
+                                                {row.VictimeName}
+                                            </a>
+                                        </template>
+                                        <template if:false={row.hasVictime}>
+                                            {row.VictimeName}
+                                        </template>
+                                    </td>
+                                    <td class="pm-td">
+                                        <span class={row.statutClass}>{row.Statut__c}</span>
+                                    </td>
+                                    <td class="pm-td pm-td--mono">{row.formattedDate}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+
+            <!-- État vide -->
+            <template if:false={hasInstructions}>
+                <div class="pm-empty">
+                    <div class="pm-empty__icon">
+                        <lightning-icon icon-name="utility:list" size="large" alternative-text="Vide"></lightning-icon>
+                    </div>
+                    <p class="pm-empty__text">Aucune instruction pour ce sinistre.</p>
+                    <button class="pm-btn pm-btn--outlined" type="button" onclick={handleNew}>
+                        <lightning-icon icon-name="utility:add" size="x-small" alternative-text="Ajouter"></lightning-icon>
+                        Créer la première instruction
+                    </button>
+                </div>
+            </template>
+
+        </div><!-- /pm-body -->
+    </div><!-- /pm-card -->
+
+
+    <!-- ════════════════════════════════════════
+         MODAL FORMULAIRE CRÉATION / MODIFICATION
+    ════════════════════════════════════════ -->
+    <template if:true={showFormModal}>
+        <div class="pm-modal-overlay">
+            <div class="pm-modal">
+
+                <!-- Header modal -->
+                <div class="pm-modal__header">
+                    <div class="pm-modal__header-inner">
+                        <lightning-icon icon-name="utility:note" size="x-small" alternative-text="Instruction"></lightning-icon>
+                        <h2 class="pm-modal__title">{formTitle}</h2>
+                    </div>
+                    <button class="pm-modal__close" type="button" onclick={handleCancel} title="Fermer">
+                        <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Fermer"></lightning-icon>
+                    </button>
+                </div>
+
+                <!-- Body modal -->
+                <div class="pm-modal__body">
+
+                    <!-- Section 1 : Informations générales -->
+                    <div class="pm-section">
+                        <div class="pm-section__title">
+                            <span class="pm-section__num">1</span>
+                            Informations générales
+                        </div>
+                        <div class="pm-grid">
+
+                            <!-- Type d'instruction -->
+                            <div class="pm-field">
+                                <lightning-combobox
+                                    label="Type d'instruction"
+                                    value={formData.InstructionType__c}
+                                    options={typeInstructionOptions}
+                                    placeholder="Sélectionner le type d'instruction"
+                                    required
+                                    onchange={handleFieldChange}
+                                    data-field="InstructionType__c">
+                                </lightning-combobox>
+                            </div>
+
+                            <!-- Type de dégât -->
+                            <div class="pm-field">
+                                <lightning-combobox
+                                    label="Type de dégât"
+                                    value={formData.TypeDegat__c}
+                                    options={typeDogatOptions}
+                                    placeholder="Sélectionner le type de dégât"
+                                    required
+                                    onchange={handleDegatChange}
+                                    data-field="TypeDegat__c">
+                                </lightning-combobox>
+                            </div>
+
+                            <!-- Date de création (read-only) -->
+                            <div class="pm-field">
+                                <lightning-input
+                                    label="Date de création"
+                                    value={today}
+                                    type="date"
+                                    disabled>
+                                </lightning-input>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Section 2 : Véhicule (Type dégât = Matériel) -->
+                    <template if:true={showVehicule}>
+                        <div class="pm-section pm-field--animated">
+                            <div class="pm-section__title">
+                                <span class="pm-section__num">2</span>
+                                <lightning-icon icon-name="standard:vehicle" size="x-small" alternative-text="Véhicule"></lightning-icon>
+                                Sélectionner un véhicule&nbsp;<abbr title="required" style="color:#c0392b;">*</abbr>
+                            </div>
+
+                            <template if:true={isLoadingVehicules}>
+                                <div style="position:relative;min-height:80px;display:flex;align-items:center;justify-content:center;">
+                                    <lightning-spinner size="small" alternative-text="Chargement..."></lightning-spinner>
+                                </div>
+                            </template>
+
+                            <template if:false={isLoadingVehicules}>
+                                <template if:true={hasVehicules}>
+                                    <div class="pm-table-wrap" style="margin:0;border:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);">
+                                        <table class="pm-table">
+                                            <thead>
+                                                <tr>
+                                                    <th class="pm-th" style="width:3rem;"></th>
+                                                    <th class="pm-th">N° Véhicule</th>
+                                                    <th class="pm-th">Immatriculation</th>
+                                                    <th class="pm-th">Marque</th>
+                                                    <th class="pm-th">Modèle</th>
+                                                    <th class="pm-th">Type</th>
+                                                    <th class="pm-th">Propriétaire</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template for:each={vehiculeRows} for:item="v">
+                                                    <tr key={v.Id}
+                                                        class={v.rowClass}
+                                                        onclick={handleVehiculeSelect}
+                                                        data-id={v.Id}>
+                                                        <td class="pm-td pm-td--center">
+                                                            <template if:true={v.isSelected}>
+                                                                <span class="pm-badge pm-badge--driver">
+                                                                    <lightning-icon icon-name="utility:check" size="x-small" alternative-text="Sélectionné"></lightning-icon>
+                                                                </span>
+                                                            </template>
+                                                        </td>
+                                                        <td class="pm-td pm-td--name">{v.Name}</td>
+                                                        <td class="pm-td pm-td--mono">{v.RegistrationNumber__c}</td>
+                                                        <td class="pm-td">{v.Brand__c}</td>
+                                                        <td class="pm-td">{v.Modele__c}</td>
+                                                        <td class="pm-td">
+                                                            <span class="pm-role pm-role--assure">{v.TypeVehicule__c}</span>
+                                                        </td>
+                                                        <td class="pm-td">{v.ProprietaireName}</td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+                                <template if:false={hasVehicules}>
+                                    <div class="pm-empty" style="padding:1.5rem 1rem;">
+                                        <p class="pm-empty__text">Aucun véhicule lié à ce sinistre.</p>
+                                    </div>
+                                </template>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Section 2 : Victimes / Passagers (Type dégât = Corporel) -->
+                    <template if:true={showVictime}>
+                        <div class="pm-section pm-field--animated">
+                            <div class="pm-section__title">
+                                <span class="pm-section__num">2</span>
+                                <lightning-icon icon-name="standard:contact" size="x-small" alternative-text="Victime"></lightning-icon>
+                                Sélectionner une victime / passager&nbsp;<abbr title="required" style="color:#c0392b;">*</abbr>
+                            </div>
+
+                            <template if:true={isLoadingVictimes}>
+                                <div style="position:relative;min-height:80px;display:flex;align-items:center;justify-content:center;">
+                                    <lightning-spinner size="small" alternative-text="Chargement..."></lightning-spinner>
+                                </div>
+                            </template>
+
+                            <template if:false={isLoadingVictimes}>
+                                <template if:true={hasVictimes}>
+                                    <div class="pm-table-wrap" style="margin:0;border:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);">
+                                        <table class="pm-table">
+                                            <thead>
+                                                <tr>
+                                                    <th class="pm-th" style="width:3rem;"></th>
+                                                    <th class="pm-th">Nom et Prénom</th>
+                                                    <th class="pm-th">Rôle</th>
+                                                    <th class="pm-th">État</th>
+                                                    <th class="pm-th">Date Naissance</th>
+                                                    <th class="pm-th">Type Contact</th>
+                                                    <th class="pm-th pm-th--center">Conducteur</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template for:each={victimeRows} for:item="p">
+                                                    <tr key={p.Id}
+                                                        class={p.rowClass}
+                                                        onclick={handleVictimeSelect}
+                                                        data-id={p.Id}>
+                                                        <td class="pm-td pm-td--center">
+                                                            <template if:true={p.isSelected}>
+                                                                <span class="pm-badge pm-badge--driver">
+                                                                    <lightning-icon icon-name="utility:check" size="x-small" alternative-text="Sélectionné"></lightning-icon>
+                                                                </span>
+                                                            </template>
+                                                        </td>
+                                                        <td class="pm-td pm-td--name">{p.ParticipantName}</td>
+                                                        <td class="pm-td">
+                                                            <span class={p.roleClass}>{p.Roles__c}</span>
+                                                        </td>
+                                                        <td class="pm-td">
+                                                            <span class={p.stateClass}>{p.StateOfPerson__c}</span>
+                                                        </td>
+                                                        <td class="pm-td pm-td--mono">{p.BirthDay__c}</td>
+                                                        <td class="pm-td">{p.TypeContact__c}</td>
+                                                        <td class="pm-td pm-td--center">
+                                                            <template if:true={p.isDriver__c}>
+                                                                <span class="pm-badge pm-badge--driver">
+                                                                    <lightning-icon icon-name="utility:check" size="x-small" alternative-text="Conducteur"></lightning-icon>
+                                                                </span>
+                                                            </template>
+                                                            <template if:false={p.isDriver__c}>
+                                                                <span class="pm-badge pm-badge--no">—</span>
+                                                            </template>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+                                <template if:false={hasVictimes}>
+                                    <div class="pm-empty" style="padding:1.5rem 1rem;">
+                                        <p class="pm-empty__text">Aucune victime / passager lié à ce sinistre.</p>
+                                    </div>
+                                </template>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Section 3 : Garanties liées au sinistre -->
+                    <div class="pm-section pm-field--animated">
+                        <div class="pm-section__title">
+                            <span class="pm-section__num">3</span>
+                            <lightning-icon icon-name="standard:product_item" size="x-small" alternative-text="Garantie"></lightning-icon>
+                            Sélectionner une garantie&nbsp;<abbr title="required" style="color:#c0392b;">*</abbr>
+                        </div>
+
+                        <template if:true={isLoadingCoverages}>
+                            <div style="position:relative;min-height:80px;display:flex;align-items:center;justify-content:center;">
+                                <lightning-spinner size="small" alternative-text="Chargement..."></lightning-spinner>
+                            </div>
+                        </template>
+
+                        <template if:false={isLoadingCoverages}>
+                            <template if:true={hasCoverages}>
+                                <div class="pm-table-wrap" style="margin:0;border:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);">
+                                    <table class="pm-table">
+                                        <thead>
+                                            <tr>
+                                                <th class="pm-th" style="width:3rem;"></th>
+                                                <th class="pm-th">Nom</th>
+                                                <th class="pm-th">Code garantie</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template for:each={coverageRows} for:item="c">
+                                                <tr key={c.Id}
+                                                    class={c.rowClass}
+                                                    onclick={handleCoverageSelect}
+                                                    data-id={c.Id}>
+                                                    <td class="pm-td pm-td--center">
+                                                        <template if:true={c.isSelected}>
+                                                            <span class="pm-badge pm-badge--driver">
+                                                                <lightning-icon icon-name="utility:check" size="x-small" alternative-text="Sélectionné"></lightning-icon>
+                                                            </span>
+                                                        </template>
+                                                    </td>
+                                                    <td class="pm-td pm-td--name">{c.Name}</td>
+                                                    <td class="pm-td pm-td--mono">{c.CodeGarantie__c}</td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </template>
+                            <template if:false={hasCoverages}>
+                                <div class="pm-empty" style="padding:1.5rem 1rem;">
+                                    <p class="pm-empty__text">Aucune garantie liée à ce sinistre.</p>
+                                </div>
+                            </template>
+                        </template>
+                    </div>
+
+                </div><!-- /pm-modal__body -->
+
+                <!-- Footer modal -->
+                <div class="pm-modal__footer">
+                    <button class="pm-btn pm-btn--cancel pm-btn--fixed-width" type="button" onclick={handleCancel} disabled={isSaving}>
+                        Annuler
+                    </button>
+                    <button class="pm-btn pm-btn--save pm-btn--fixed-width" type="button" onclick={handleSave} disabled={isSaving}>
+                        <lightning-icon icon-name="utility:save" size="x-small" alternative-text="Enregistrer"></lightning-icon>
+                        {saveLabel}
+                    </button>
+                </div>
+
+            </div><!-- /pm-modal -->
+        </div><!-- /pm-modal-overlay -->
+    </template>
+
+
+    <!-- ════════════════════════════════════════
+         MODAL CONFIRMATION SUPPRESSION
+    ════════════════════════════════════════ -->
+    <template if:true={showDeleteModal}>
+        <div class="pm-modal-overlay">
+            <div class="pm-modal pm-modal--small">
+
+                <!-- Header -->
+                <div class="pm-modal__header pm-modal__header--danger">
+                    <div class="pm-modal__header-inner">
+                        <lightning-icon icon-name="utility:warning" size="x-small" alternative-text="Attention"></lightning-icon>
+                        <h2 class="pm-modal__title">Confirmer la suppression</h2>
+                    </div>
+                    <button class="pm-modal__close" type="button" onclick={handleCancelDelete} title="Fermer">
+                        <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Fermer"></lightning-icon>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="pm-modal__body pm-modal__body--confirm">
+                    <p>Êtes-vous sûr de vouloir supprimer cette instruction ?</p>
+                    <p class="pm-confirm__note">Cette action est irréversible.</p>
+                </div>
+
+                <!-- Footer -->
+                <div class="pm-modal__footer">
+                    <button class="pm-btn pm-btn--cancel pm-btn--fixed-width" type="button" onclick={handleCancelDelete}>
+                        Annuler
+                    </button>
+                    <button class="pm-btn pm-btn--danger pm-btn--fixed-width" type="button" onclick={handleConfirmDelete}>
+                        <lightning-icon icon-name="utility:delete" size="x-small" alternative-text="Supprimer"></lightning-icon>
+                        Supprimer
+                    </button>
+                </div>
+
             </div>
         </div>
+    </template>
 
-        <!-- ══════════════════════════════════════════
-             STEP 1 — TYPE D'INSTRUCTION
-        ══════════════════════════════════════════ -->
-        <template if:true={isStep1}>
-            <div class="form-card animate-in">
-                <h2 class="section-title">
-                    <lightning-icon icon-name="utility:settings" size="x-small" class="section-icon"></lightning-icon>
-                    Sélectionner le type d'instruction
-                </h2>
-
-                <div class="type-selector">
-                    <div class={pecCardClass} onclick={selectPEC} role="button" tabindex="0">
-                        <div class="type-card-icon">
-                            <lightning-icon icon-name="standard:approval" size="large"></lightning-icon>
-                        </div>
-                        <div class="type-card-content">
-                            <h3>PEC</h3>
-                            <p>Prise en Charge</p>
-                            <span class="type-card-desc">Autorisation de prise en charge des frais liés au sinistre</span>
-                        </div>
-                        <template if:true={isPEC}>
-                            <div class="type-card-check">
-                                <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
-                            </div>
-                        </template>
-                    </div>
-
-                    <div class={remboursementCardClass} onclick={selectRemboursement} role="button" tabindex="0">
-                        <div class="type-card-icon">
-                            <lightning-icon icon-name="standard:currency" size="large"></lightning-icon>
-                        </div>
-                        <div class="type-card-content">
-                            <h3>Remboursement</h3>
-                            <p>Indemnisation</p>
-                            <span class="type-card-desc">Remboursement des frais déjà engagés par l'assuré</span>
-                        </div>
-                        <template if:true={isRemboursement}>
-                            <div class="type-card-check">
-                                <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <lightning-button
-                        label="Suivant"
-                        variant="brand"
-                        icon-name="utility:forward"
-                        icon-position="right"
-                        onclick={goToStep2}
-                        disabled={isStep1NextDisabled}
-                        class="btn-next">
-                    </lightning-button>
-                </div>
-            </div>
-        </template>
-
-        <!-- ══════════════════════════════════════════
-             STEP 2 — VÉHICULE OU VICTIME
-        ══════════════════════════════════════════ -->
-        <template if:true={isStep2}>
-            <div class="form-card animate-in">
-
-                <!-- MATÉRIEL → liste véhicules -->
-                <template if:true={isMateriel}>
-                    <h2 class="section-title">
-                        <lightning-icon icon-name="standard:vehicle" size="x-small" class="section-icon"></lightning-icon>
-                        Sélectionner le véhicule concerné
-                    </h2>
-
-                    <template if:true={isLoadingVehicles}>
-                        <div class="loading-container">
-                            <lightning-spinner alternative-text="Chargement des véhicules..." size="medium"></lightning-spinner>
-                            <p class="loading-text">Chargement des véhicules liés au sinistre…</p>
-                        </div>
-                    </template>
-
-                    <template if:false={isLoadingVehicles}>
-                        <template if:true={hasVehicles}>
-                            <div class="entity-list">
-                                <template for:each={vehicles} for:item="v">
-                                    <div key={v.Id} class={v.cardClass} onclick={selectVehicle} data-id={v.Id} role="button" tabindex="0">
-                                        <div class="entity-icon">
-                                            <lightning-icon icon-name="standard:vehicle" size="small"></lightning-icon>
-                                        </div>
-                                        <div class="entity-info">
-                                            <span class="entity-name">{v.Name}</span>
-                                            <span class="entity-detail">{v.immat} &nbsp;·&nbsp; {v.marque}</span>
-                                        </div>
-                                        <template if:true={v.selected}>
-                                            <div class="entity-check">
-                                                <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </template>
-                            </div>
-                        </template>
-                        <template if:false={hasVehicles}>
-                            <div class="empty-state">
-                                <lightning-icon icon-name="utility:warning" size="medium" variant="warning"></lightning-icon>
-                                <p>Aucun véhicule trouvé pour ce sinistre.</p>
-                            </div>
-                        </template>
-                    </template>
-                </template>
-
-                <!-- CORPOREL → liste participants / victimes -->
-                <template if:true={isCorporel}>
-                    <h2 class="section-title">
-                        <lightning-icon icon-name="standard:person_account" size="x-small" class="section-icon"></lightning-icon>
-                        Sélectionner la victime / le participant
-                    </h2>
-
-                    <template if:true={isLoadingParticipants}>
-                        <div class="loading-container">
-                            <lightning-spinner alternative-text="Chargement des participants..." size="medium"></lightning-spinner>
-                            <p class="loading-text">Chargement des participants liés au sinistre…</p>
-                        </div>
-                    </template>
-
-                    <template if:false={isLoadingParticipants}>
-                        <template if:true={hasParticipants}>
-                            <div class="entity-list">
-                                <template for:each={participants} for:item="p">
-                                    <div key={p.Id} class={p.cardClass} onclick={selectParticipant} data-id={p.Id} role="button" tabindex="0">
-                                        <div class="entity-icon">
-                                            <lightning-icon icon-name="standard:person_account" size="small"></lightning-icon>
-                                        </div>
-                                        <div class="entity-info">
-                                            <span class="entity-name">{p.Name}</span>
-                                            <span class="entity-detail">{p.role} &nbsp;·&nbsp; {p.etat}</span>
-                                        </div>
-                                        <template if:true={p.selected}>
-                                            <div class="entity-check">
-                                                <lightning-icon icon-name="utility:check" size="x-small"></lightning-icon>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </template>
-                            </div>
-                        </template>
-                        <template if:false={hasParticipants}>
-                            <div class="empty-state">
-                                <lightning-icon icon-name="utility:warning" size="medium" variant="warning"></lightning-icon>
-                                <p>Aucun participant trouvé pour ce sinistre.</p>
-                            </div>
-                        </template>
-                    </template>
-                </template>
-
-                <div class="form-actions">
-                    <lightning-button label="Retour" variant="neutral" icon-name="utility:back" onclick={goToStep1} class="btn-back"></lightning-button>
-                    <lightning-button
-                        label="Suivant"
-                        variant="brand"
-                        icon-name="utility:forward"
-                        icon-position="right"
-                        onclick={goToStep3}
-                        disabled={isStep2NextDisabled}
-                        class="btn-next">
-                    </lightning-button>
-                </div>
-            </div>
-        </template>
-
-        <!-- ══════════════════════════════════════════
-             STEP 3 — RÉCAPITULATIF & CONFIRMATION
-        ══════════════════════════════════════════ -->
-        <template if:true={isStep3}>
-            <div class="form-card animate-in">
-                <h2 class="section-title">
-                    <lightning-icon icon-name="utility:preview" size="x-small" class="section-icon"></lightning-icon>
-                    Récapitulatif de l'instruction
-                </h2>
-
-                <div class="recap-grid">
-                    <div class="recap-item">
-                        <span class="recap-label">Sinistre</span>
-                        <span class="recap-value">{claimName}</span>
-                    </div>
-                    <div class="recap-item">
-                        <span class="recap-label">Type d'instruction</span>
-                        <span class={recapTypeBadgeClass}>{selectedInstructionType}</span>
-                    </div>
-                    <div class="recap-item">
-                        <span class="recap-label">Type de dégât</span>
-                        <span class={typeDegaTBadgeClass}>{typeDegat}</span>
-                    </div>
-                    <template if:true={isMateriel}>
-                        <div class="recap-item">
-                            <span class="recap-label">Véhicule</span>
-                            <span class="recap-value">{selectedVehicleName}</span>
-                        </div>
-                    </template>
-                    <template if:true={isCorporel}>
-                        <div class="recap-item">
-                            <span class="recap-label">Victime / Participant</span>
-                            <span class="recap-value">{selectedParticipantName}</span>
-                        </div>
-                    </template>
-                    <div class="recap-item">
-                        <span class="recap-label">Statut initial</span>
-                        <span class="recap-value status-badge">Instruction créée</span>
-                    </div>
-                    <div class="recap-item">
-                        <span class="recap-label">Étape de traitement</span>
-                        <span class="recap-value etape-badge">Étude de documents</span>
-                    </div>
-                </div>
-
-                <div class="confirmation-note">
-                    <lightning-icon icon-name="utility:info" size="x-small"></lightning-icon>
-                    <span>À la validation, l'instruction sera automatiquement créée avec le statut <strong>« Instruction créée »</strong> et positionnée à l'étape <strong>« Étude de documents »</strong>.</span>
-                </div>
-
-                <template if:true={saveError}>
-                    <div class="error-banner">
-                        <lightning-icon icon-name="utility:error" size="x-small" variant="error"></lightning-icon>
-                        <span>{saveError}</span>
-                    </div>
-                </template>
-
-                <div class="form-actions">
-                    <lightning-button label="Retour" variant="neutral" icon-name="utility:back" onclick={goToStep2} class="btn-back"></lightning-button>
-                    <lightning-button
-                        label="Valider l'instruction"
-                        variant="success"
-                        icon-name="utility:check"
-                        onclick={handleSave}
-                        disabled={isSaving}
-                        class="btn-save">
-                    </lightning-button>
-                </div>
-                <template if:true={isSaving}>
-                    <div class="saving-overlay">
-                        <lightning-spinner alternative-text="Enregistrement..." size="small"></lightning-spinner>
-                        <span>Enregistrement en cours…</span>
-                    </div>
-                </template>
-            </div>
-        </template>
-
-        <!-- ══════════════════════════════════════════
-             SUCCESS STATE
-        ══════════════════════════════════════════ -->
-        <template if:true={isSaved}>
-            <div class="form-card success-card animate-in">
-                <div class="success-icon">
-                    <lightning-icon icon-name="action:approval" size="large" variant="success"></lightning-icon>
-                </div>
-                <h2 class="success-title">Instruction créée avec succès !</h2>
-                <p class="success-msg">L'instruction <strong>{createdInstructionName}</strong> a été créée et positionnée à l'étape <em>Étude de documents</em>.</p>
-                <div class="form-actions center">
-                    <lightning-button label="Créer une autre instruction" variant="brand" icon-name="utility:add" onclick={resetForm}></lightning-button>
-                    <lightning-button label="Voir l'instruction" variant="neutral" icon-name="utility:preview" onclick={navigateToInstruction}></lightning-button>
-                </div>
-            </div>
-        </template>
-
-    </div>
 </template>

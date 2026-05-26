@@ -1,0 +1,167 @@
+/* garantieRow.css */
+
+:host {
+    display: contents;
+}
+
+.row {
+    transition: background-color 0.2s ease;
+}
+
+.row td {
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #333;
+    border-bottom: 1px solid #e8e8e8;
+    vertical-align: middle;
+}
+
+.row:hover {
+    background-color: #fafafa;
+    box-shadow: inset 4px 0 0 #2e7d32;
+}
+
+.row:last-child td {
+    border-bottom: none;
+}
+
+/* ========== ROW VARIANTS ========== */
+.row.row-touched {
+    background-color: #f1f8f4;
+}
+
+.row.row-touched:hover {
+    background-color: #e8f5f0;
+}
+
+.row.row-rc {
+    background-color: #e3f2fd;
+}
+
+.row.row-rc:hover {
+    background-color: #bbdefb;
+}
+
+/* ========== CELL CONTENT ========== */
+.cell-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.cell-content span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ========== CODE BADGE ========== */
+.code-badge {
+    font-family: 'Courier New', 'Monaco', monospace;
+    font-weight: 600;
+    color: #1b5e20;
+    background: #f1f8f4;
+    padding: 4px 8px;
+    border-radius: 3px;
+    display: inline-block;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.row:hover .code-badge {
+    background: #e8f5f0;
+}
+
+/* ========== TYPE LABEL ========== */
+.type-label {
+    color: #666;
+    font-size: 12px;
+    background: #f9f9f9;
+    padding: 3px 6px;
+    border-radius: 2px;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+/* ========== BADGES ========== */
+.badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.badge-oui {
+    background-color: #c8e6c9;
+    color: #1b5e20;
+}
+
+.badge-non {
+    background-color: #f3e5f5;
+    color: #6a1b9a;
+}
+
+/* ========== COLUMN WIDTHS ========== */
+td:nth-child(1) {
+    width: 100px;
+    min-width: 100px;
+}
+
+td:nth-child(2) {
+    flex: 1;
+}
+
+td:nth-child(3) {
+    width: 140px;
+    min-width: 140px;
+}
+
+td:nth-child(4) {
+    width: 100px;
+    min-width: 100px;
+    text-align: center;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+    .row td {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+
+    .code-badge {
+        font-size: 11px;
+    }
+
+    .type-label {
+        font-size: 11px;
+    }
+
+    .badge {
+        padding: 4px 10px;
+        font-size: 10px;
+    }
+
+    td:nth-child(1) {
+        width: 80px;
+        min-width: 80px;
+    }
+
+    td:nth-child(3) {
+        width: 120px;
+        min-width: 120px;
+    }
+}
+
+/* ========== ACCESSIBILITY ========== */
+.row:focus-within {
+    outline: 2px solid #1b5e20;
+    outline-offset: -2px;
+}

@@ -1,0 +1,77 @@
+<template>
+    <template if:true={isModalOpen}>
+        <div class="fs-modal-overlay">
+            <div class="fs-modal">
+                <div class="fs-modal__header">
+                    <div class="fs-modal__header-inner">
+                        <lightning-icon icon-name="utility:replace" size="small"></lightning-icon>
+                        <h2 class="fs-modal__title">Réaffecter la Déclaration</h2>
+                    </div>
+                    <button class="fs-modal__close" onclick={handleCloseModal}>
+                        <lightning-icon icon-name="utility:close" size="xx-small" variant="inverse"></lightning-icon>
+                    </button>
+                </div>
+
+                <div class="fs-modal__body">
+
+                    <!-- Section 1 : Utilisateur -->
+                    <div class="fs-section">
+                        <div class="fs-section__title">
+                            <span class="fs-section__num">1</span>Utilisateur
+                        </div>
+                        <div class="fs-section__content">
+                            <div class="fs-field">
+                                <label class="fs-label">
+                                    <abbr class="fs-required" title="obligatoire">* </abbr>
+                                    Sélectionner un utilisateur
+                                </label>
+                                <lightning-record-picker
+                                    label="Sélectionner un utilisateur"
+                                    variant="label-hidden"
+                                    object-api-name="User"
+                                    value={selectedUserId}
+                                    filter={userFilter}
+                                    onchange={handleUserChange}>
+                                </lightning-record-picker>
+                                <template if:true={errors.utilisateur}>
+                                    <div class="fs-error">{errors.utilisateur}</div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2 : Motif -->
+                    <div class="fs-section">
+                        <div class="fs-section__title">
+                            <span class="fs-section__num">2</span>Motif
+                        </div>
+                        <div class="fs-section__content">
+                            <div class="fs-field">
+                                <label class="fs-label">
+                                    <abbr class="fs-required" title="obligatoire">* </abbr>
+                                    Motif de réaffectation
+                                </label>
+                                <lightning-textarea
+                                    label="Motif"
+                                    variant="label-hidden"
+                                    value={motif}
+                                    onchange={handleMotifChange}
+                                    onblur={handleMotifBlur}>
+                                </lightning-textarea>
+                                <template if:true={errors.motif}>
+                                    <div class="fs-error">{errors.motif}</div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="fs-modal__footer">
+                    <button class="fs-btn fs-btn--cancel" onclick={handleCloseModal}>Annuler</button>
+                    <button class="fs-btn fs-btn--save" onclick={handleConfirm} disabled={isSaving}>Confirmer</button>
+                </div>
+            </div>
+        </div>
+    </template>
+</template>

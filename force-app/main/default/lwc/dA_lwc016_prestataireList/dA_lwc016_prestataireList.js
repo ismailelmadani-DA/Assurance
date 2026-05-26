@@ -56,10 +56,12 @@ const EMPTY_FORM = {
 // ── Messages d'erreur centralisés ──────────────────────
 const ERROR_MESSAGES = {
     name : 'Ce champ est obligatoire.',
+    rib  : 'Le RIB ne peut pas dépasser 24 caractères.'
 };
 
 const EMPTY_ERRORS = () => ({
     name : '',
+    rib  : ''
 });
 
 export default class DA_lwc016_prestataireList extends NavigationMixin(LightningElement) {
@@ -521,6 +523,12 @@ export default class DA_lwc016_prestataireList extends NavigationMixin(Lightning
             e.name = ERROR_MESSAGES.name;
             ok = false;
         }
+
+         // Validation Longueur RIB (Modification ici)
+        if (this.form.rib && this.form.rib.length > 24) {
+        e.rib = ERROR_MESSAGES.rib; // On affecte l'erreur à la clé rib
+        ok = false;
+       }
 
         this.errors = e;
 

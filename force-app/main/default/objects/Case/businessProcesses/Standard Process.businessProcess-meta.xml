@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BusinessProcess xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Standard Process</fullName>
+    <isActive>true</isActive>
+    <values>
+        <fullName>Annulée</fullName>
+        <default>false</default>
+    </values>
+    <values>
+        <fullName>Clôturé</fullName>
+        <default>false</default>
+    </values>
+    <values>
+        <fullName>En cours</fullName>
+        <default>false</default>
+    </values>
+    <values>
+        <fullName>Initiale</fullName>
+        <default>true</default>
+    </values>
+    <values>
+        <fullName>Nouveau</fullName>
+        <default>true</default>
+    </values>
+    <values>
+        <fullName>Rejetée</fullName>
+        <default>false</default>
+    </values>
+</BusinessProcess>

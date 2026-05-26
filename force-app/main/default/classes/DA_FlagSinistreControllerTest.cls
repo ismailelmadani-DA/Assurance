@@ -1,11 +1,24 @@
-
+/**
+ * @description       : Tests unitaires du controller de gestion des flags sinistre : lecture des flags, ajout/retrait de flags non restreints et restreints, déclenchement et annulation de demandes d'approbation
+ * @author            : D&A Technologies
+ * @group             : Test
+ * @last modified on  : 20-05-2026
+ */
 @isTest
 public class DA_FlagSinistreControllerTest {
 
     private static DA_TestBuilderFactory builder = new DA_TestBuilderFactory();
     private static final String PENDING = 'En attente d\'approbation';
 
-
+    /**
+    * @description      :   Configure les données de test : utilisateurs (mgr / usr / unm), compte, police, et 13 scénarios de sinistres + approbations pendantes pour 'READ_PENDING' et 'CANCELS'.
+    * @method Name      :   setupTestData
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-20
+    * @param            :   None
+    * @return           :   None
+    * -------------------------------------------------------------------------------------------------
+    */
     @TestSetup
     static void setupTestData() {
         builder
@@ -37,6 +50,15 @@ public class DA_FlagSinistreControllerTest {
         builder.withPendingApproval('CANCELS',      'Frauduleux', 'usr', 'mgr');
     }
 
+    /**
+    * @description      :   Vérifie que getClaimFlagData retourne les flags actuels du sinistre et une liste vide de demandes pendantes.
+    * @method Name      :   test_getClaimFlagData_returnsFlagsAndEmptyPending
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-20
+    * @param            :   None
+    * @return           :   None
+    * -------------------------------------------------------------------------------------------------
+    */
     @isTest
     static void test_getClaimFlagData_returnsFlagsAndEmptyPending() {
         User usr = [SELECT Id FROM User WHERE Alias = 'usr' LIMIT 1];
@@ -59,6 +81,15 @@ public class DA_FlagSinistreControllerTest {
         }
     }
 
+    /**
+    * @description      :   Vérifie que getClaimFlagData remonte les demandes d'approbation en attente sur le sinistre.
+    * @method Name      :   test_getClaimFlagData_returnsPendingRequests
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-20
+    * @param            :   None
+    * @return           :   None
+    * -------------------------------------------------------------------------------------------------
+    */
     @isTest
     static void test_getClaimFlagData_returnsPendingRequests() {
         User usr = [SELECT Id FROM User WHERE Alias = 'usr' LIMIT 1];
@@ -74,6 +105,15 @@ public class DA_FlagSinistreControllerTest {
         }
     }
 
+    /**
+    * @description      :   Vérifie que getClaimFlagData lève une AuraHandledException quand l'Id du sinistre est null.
+    * @method Name      :   test_getClaimFlagData_nullClaimId_throws
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-20
+    * @param            :   None
+    * @return           :   None
+    * -------------------------------------------------------------------------------------------------
+    */
     @isTest
     static void test_getClaimFlagData_nullClaimId_throws() {
         User usr = [SELECT Id FROM User WHERE Alias = 'usr' LIMIT 1];
@@ -90,6 +130,15 @@ public class DA_FlagSinistreControllerTest {
         }
     }
 
+    /**
+    * @description      :   Vérifie que getClaimFlagData retourne un résultat vide quand le sinistre a été supprimé.
+    * @method Name      :   test_getClaimFlagData_claimNotFound_returnsEmpty
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-20
+    * @param            :   None
+    * @return           :   None
+    * -------------------------------------------------------------------------------------------------
+    */
     @isTest
     static void test_getClaimFlagData_claimNotFound_returnsEmpty() {
         User usr = [SELECT Id FROM User WHERE Alias = 'usr' LIMIT 1];
@@ -108,6 +157,15 @@ public class DA_FlagSinistreControllerTest {
         }
     }
 
+    /**
+    * @description      :   Vérifie que saveFlags retourne un échec quand l'Id du sinistre est null.
+    * @method Name      :   test_saveFlags_nullClaimId
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-20
+    * @param            :   None
+    * @return           :   None
+    * -------------------------------------------------------------------------------------------------
+    */
     @isTest
     static void test_saveFlags_nullClaimId() {
         User usr = [SELECT Id FROM User WHERE Alias = 'usr' LIMIT 1];
@@ -124,6 +182,15 @@ public class DA_FlagSinistreControllerTest {
         }
     }
 
+    /**
+    * @description      :   Vérifie que saveFlags rejette un commentaire vide.
+    * @method Name      :   test_saveFlags_blankCommentaire
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-20
+    * @param            :   None
+    * @return           :   None
+    * -------------------------------------------------------------------------------------------------
+    */
     @isTest
     static void test_saveFlags_blankCommentaire() {
         User usr = [SELECT Id FROM User WHERE Alias = 'usr' LIMIT 1];
@@ -141,6 +208,15 @@ public class DA_FlagSinistreControllerTest {
         }
     }
 
+    /**
+    * @description      :   Vérifie que saveFlags rejette la combinaison Frauduleux + Douteux simultanés.
+    * @method Name      :   test_saveFlags_FrauduleuxAndDouteuxConflict
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-20
+    * @param            :   None
+    * @return           :   None
+    * -------------------------------------------------------------------------------------------------
+    */
     @isTest
     static void test_saveFlags_FrauduleuxAndDouteuxConflict() {
         User usr = [SELECT Id FROM User WHERE Alias = 'usr' LIMIT 1];
@@ -158,6 +234,15 @@ public class DA_FlagSinistreControllerTest {
         }
     }
 
+    /**
+    * @description      :   Vérifie que saveFlags applique directement les flags non restreints sans demande d'approbation.
+    * @method Name      :   test_saveFlags_unrestrictedOnly_updatesClaim
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-20
+    * @param            :   None
+    * @return           :   None
+    * -------------------------------------------------------------------------------------------------
+    */
     @isTest
     static void test_saveFlags_unrestrictedOnly_updatesClaim() {
         User usr = [SELECT Id FROM User WHERE Alias = 'usr' LIMIT 1];
@@ -181,6 +266,15 @@ public class DA_FlagSinistreControllerTest {
         }
     }
 
+    /**
+    * @description      :   Vérifie que saveFlags crée une demande d'approbation lors de l'ajout d'un flag Frauduleux.
+    * @method Name      :   test_saveFlags_addingFrauduleux_createsApprovalRequest
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-20
+    * @param            :   None
+    * @return           :   None
+    * -------------------------------------------------------------------------------------------------
+    */
     @isTest
     static void test_saveFlags_addingFrauduleux_createsApprovalRequest() {
         User usr = [SELECT Id FROM User WHERE Alias = 'usr' LIMIT 1];
@@ -211,6 +305,15 @@ public class DA_FlagSinistreControllerTest {
         }
     }
 
+    /**
+    * @description      :   Vérifie que saveFlags crée une demande d'approbation lors du retrait d'un flag Douteux existant.
+    * @method Name      :   test_saveFlags_removingExistingDouteux_createsApprovalRequest
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-20
+    * @param            :   None
+    * @return           :   None
+    * -------------------------------------------------------------------------------------------------
+    */
     @isTest
     static void test_saveFlags_removingExistingDouteux_createsApprovalRequest() {
         User usr = [SELECT Id FROM User WHERE Alias = 'usr' LIMIT 1];
@@ -234,6 +337,15 @@ public class DA_FlagSinistreControllerTest {
         }
     }
 
+    /**
+    * @description      :   Vérifie que saveFlags rejette la sélection et désélection simultanées d'un flag restreint.
+    * @method Name      :   test_saveFlags_simultaneousAddRemoveRestricted_rejected
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-20
+    * @param            :   None
+    * @return           :   None
+    * -------------------------------------------------------------------------------------------------
+    */
     @isTest
     static void test_saveFlags_simultaneousAddRemoveRestricted_rejected() {
         User usr = [SELECT Id FROM User WHERE Alias = 'usr' LIMIT 1];
@@ -251,6 +363,15 @@ public class DA_FlagSinistreControllerTest {
         }
     }
 
+    /**
+    * @description      :   Vérifie que saveFlags bloque la création d'une demande d'approbation si l'utilisateur n'a pas de manager.
+    * @method Name      :   test_saveFlags_noManager_blocks
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-20
+    * @param            :   None
+    * @return           :   None
+    * -------------------------------------------------------------------------------------------------
+    */
     @isTest
     static void test_saveFlags_noManager_blocks() {
         User unm = [SELECT Id FROM User WHERE Alias = 'unm' LIMIT 1];
@@ -268,6 +389,15 @@ public class DA_FlagSinistreControllerTest {
         }
     }
 
+    /**
+    * @description      :   Vérifie que saveFlags conserve un flag restreint déjà présent quand l'utilisateur le re-soumet, sans créer de demande.
+    * @method Name      :   test_saveFlags_keepingExistingRestricted_keepsClaim
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-20
+    * @param            :   None
+    * @return           :   None
+    * -------------------------------------------------------------------------------------------------
+    */
     @isTest
     static void test_saveFlags_keepingExistingRestricted_keepsClaim() {
         User usr = [SELECT Id FROM User WHERE Alias = 'usr' LIMIT 1];
@@ -290,6 +420,15 @@ public class DA_FlagSinistreControllerTest {
         }
     }
 
+    /**
+    * @description      :   Vérifie que saveFlags retourne une erreur 'Sinistre introuvable' quand le sinistre a été supprimé.
+    * @method Name      :   test_saveFlags_claimNotFound_returnsError
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-20
+    * @param            :   None
+    * @return           :   None
+    * -------------------------------------------------------------------------------------------------
+    */
     @isTest
     static void test_saveFlags_claimNotFound_returnsError() {
         User usr = [SELECT Id FROM User WHERE Alias = 'usr' LIMIT 1];
@@ -309,6 +448,15 @@ public class DA_FlagSinistreControllerTest {
         }
     }
 
+    /**
+    * @description      :   Vérifie que saveFlags annule les demandes pendantes existantes avant d'en créer une nouvelle.
+    * @method Name      :   test_saveFlags_cancelsExistingPendingRequests
+    * @Author           :   D&A Technologies
+    * @date             :   2026-05-20
+    * @param            :   None
+    * @return           :   None
+    * -------------------------------------------------------------------------------------------------
+    */
     @isTest
     static void test_saveFlags_cancelsExistingPendingRequests() {
         User usr = [SELECT Id FROM User WHERE Alias = 'usr' LIMIT 1];

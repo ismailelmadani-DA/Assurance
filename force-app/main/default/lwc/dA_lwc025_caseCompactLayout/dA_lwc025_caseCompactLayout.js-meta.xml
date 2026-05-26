@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>59.0</apiVersion>
+    <isExposed>true</isExposed>
+    <targets>
+        <target>lightning__RecordPage</target>
+    </targets>
+    <targetConfigs>
+        <targetConfig targets="lightning__RecordPage">
+            <objects>
+                <object>Case</object>
+            </objects>
+
+            <!-- ══ CHAMPS ACTIFS ══ -->
+            <property name="cardTitle"
+                      label="Titre du composant"
+                      type="String"
+                      default="Compact Layout"
+                      description="Titre affiché en haut du composant." />
+
+            <property name="defaultRecordType"
+                      label="Record Type"
+                      type="String"
+                      datasource="Declaration,Mission,Requete"
+                      description="Sélectionnez le Record Type de cet enregistrement." />
+
+            <property name="fields"
+                      label="Champs (CSV)"
+                      type="String"
+                      description="API names séparés par virgules. | Déclaration : ContactId,Police__c,Num_ro_d_immatriculation__c,DateOfOccurrence__c,Status | Mission : TypePrestataire__c,NatureMission__c,CreatedDate | Requête : NumeroRequete__c,CategorieRequete__c,TypeRequete__c,CreatedDate" />
+
+            <!-- ══ OBSOLÈTES — conservées pour compatibilité, ne pas modifier ══ -->
+            <property name="recordObjectApiName"
+                      label="[OBSOLÈTE] Object API Name"
+                      type="String"
+                      description="Obsolète. Ne plus utiliser." />
+
+            <property name="fieldsDeclaration"
+                      label="[OBSOLÈTE] Champs Déclaration"
+                      type="String"
+                      description="Obsolète. Ne plus utiliser." />
+
+            <property name="fieldsMission"
+                      label="[OBSOLÈTE] Champs Mission"
+                      type="String"
+                      description="Obsolète. Ne plus utiliser." />
+
+            <property name="fieldsRequete"
+                      label="[OBSOLÈTE] Champs Requête"
+                      type="String"
+                      description="Obsolète. Ne plus utiliser." />
+
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

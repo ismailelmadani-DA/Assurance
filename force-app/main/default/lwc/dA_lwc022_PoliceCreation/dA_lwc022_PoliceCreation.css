@@ -1279,3 +1279,266 @@ lightning-datatable { --lwc-colorBrand: var(--wafa-green); width: 100%; }
 .acc-item {
     overflow: visible;
 }
+
+/* --- TABLEAU CUSTOM GARANTIES --- */
+.gar-table-wrap {
+    margin-top: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--white);
+}
+
+.gar-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* En-tête */
+.gar-th {
+    background: #f8fafc;
+    padding: 0.75rem 1.1rem;
+    text-align: left;
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-light);
+    border-bottom: 1px solid var(--border);
+}
+
+.gar-th--sortable { cursor: pointer; user-select: none; }
+.gar-th--sortable:hover { background: #f1f5f9; color: var(--wafa-green); }
+
+.gar-th-inner { display: flex; align-items: center; gap: 6px; }
+
+.gar-sort-svg { width: 9px; height: 12px; opacity: 0.25; transition: opacity .15s; }
+.gar-th--sorted .gar-sort-svg { opacity: 0.8; }
+.gar-th--asc  .gar-sort-down { display: none; }
+.gar-th--desc .gar-sort-up   { display: none; }
+
+/* Lignes */
+.gar-tr {
+    border-bottom: 1px solid #f4f6f9;
+    cursor: pointer;
+    transition: background .15s;
+}
+
+.gar-tr:last-child { border-bottom: none; }
+
+.gar-tr:hover { background: var(--wafa-light-green); }
+
+/* Ligne sélectionnée : fond coloré uniquement, sans bordure latérale */
+.gar-tr--selected {
+    background: var(--wafa-light-green);
+}
+
+.gar-tr--locked { cursor: default; }
+
+/* Cellules — on retire tout border left/right résiduel */
+.gar-td {
+    padding: 0.7rem 1.1rem;
+    vertical-align: middle;
+    border: none;          /* ← supprime tous les traits entre colonnes */
+}
+
+/* Checkbox Custom SVG */
+.gar-custom-check {
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.gar-check-box {
+    fill: #fff;
+    stroke: #cbd5e1;
+    stroke-width: 1.5;
+    transition: all .2s ease;
+}
+
+.gar-check-mark {
+    stroke: #fff;
+    stroke-dasharray: 12;
+    stroke-dashoffset: 12;
+    transition: stroke-dashoffset .2s ease;
+}
+
+.gar-custom-check--checked .gar-check-box {
+    fill: var(--wafa-green);
+    stroke: var(--wafa-green);
+}
+
+.gar-custom-check--checked .gar-check-mark {
+    stroke-dashoffset: 0;
+}
+
+.gar-custom-check--locked .gar-check-box {
+    fill: #94a3b8;
+    stroke: #94a3b8;
+}
+
+/* Cellule nom — sans icône */
+.gar-nom-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* On cache les icônes SVG dans la cellule nom */
+.gar-icon { display: none; }
+
+.gar-nom-text {
+    font-size: .85rem;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.gar-badge-obligatoire {
+    background: var(--wafa-light-green);
+    color: var(--wafa-green);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    font-size: .62rem;
+    font-weight: 700;
+    border: 1px solid rgba(0,98,51,.15);
+}
+
+.gar-code-badge {
+    font-family: 'DM Mono', 'Fira Code', monospace;
+    background: #f1f5f9;
+    color: var(--text-mid);
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+}
+
+/* Compteur sélection */
+.gar-selection-info {
+    margin-top: .75rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .75rem;
+    font-weight: 500;
+    color: var(--text-light);
+    padding: .45rem .9rem;
+    background: #f8fafc;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+
+.input-readonly input {
+    background-color: #f3f3f3;
+    color: #666;
+    cursor: not-allowed;
+}
+
+
+.readonly-input {
+    height: 34px;
+    line-height: 34px;
+    padding: 0 12px;
+    border: 1px solid #dddbda;
+    border-radius: 8px;
+    background-color: #f3f3f3;
+    color: #3e3e3c;
+    font-size: 13px;
+    cursor: not-allowed;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.pm-error {
+    color: #c23934;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+/* --- PAGINATION (Logique EvenementList) --- */
+.ev-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    background: #f8fafc;
+    border-top: 1px solid var(--border);
+}
+
+.ev-pagination__left {
+    font-size: .75rem;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.ev-pagination__right {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ev-btn--page {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    border-radius: 6px;
+    border: 1px solid #dde8e3;
+    background: var(--white);
+    color: var(--text-mid);
+    font-size: .75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.ev-btn--page:hover:not(:disabled) {
+    background: var(--wafa-light-green);
+    border-color: var(--wafa-green);
+    color: var(--wafa-green);
+}
+
+.ev-btn--page:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.ev-btn--page-active {
+    background: var(--wafa-green) !important;
+    color: #fff !important;
+    border-color: var(--wafa-green) !important;
+    font-weight: 700;
+}
+
+.ev-page-ellipsis {
+    padding: 0 4px;
+    color: var(--text-muted);
+    font-size: .8rem;
+}
+
+/* Fix pour les doubles icônes (First/Last page) */
+.gar-page-icon-overlap { margin-left: -8px; }
+.gar-page-icon-overlap-right { margin-left: -8px; }
+
+/* Ajustement de la table pour que la pagination soit collée */
+.gar-table-wrap {
+    margin-bottom: 0;
+    border-bottom: none;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.ev-pagination {
+    border: 1px solid var(--border);
+    border-top: 1px solid var(--border);
+    border-bottom-left-radius: var(--radius);
+    border-bottom-right-radius: var(--radius);
+    margin-bottom: 1rem;
+}

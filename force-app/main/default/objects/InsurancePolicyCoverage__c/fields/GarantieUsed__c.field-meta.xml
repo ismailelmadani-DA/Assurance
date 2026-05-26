@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>GarantieUsed__c</fullName>
     <defaultValue>false</defaultValue>
-    <label>Garantie touch&amp;#233;e</label>
+    <label>Garantie touchée</label>
     <trackTrending>false</trackTrending>
     <type>Checkbox</type>
 </CustomField>

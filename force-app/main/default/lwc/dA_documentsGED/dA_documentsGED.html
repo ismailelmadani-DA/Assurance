@@ -4,86 +4,134 @@
             <div class="slds-grid slds-wrap slds-gutters">
                 
                 <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
-                    <div class="slds-box slds-theme_default header-container">
+                    <div class="slds-box slds-theme_default header-container slds-grid slds-grid_vertical-align-center">
                         <lightning-icon icon-name="standard:record" size="medium" class="slds-m-right_small"></lightning-icon>
-                        <div class="slds-text-heading_small slds-text-color_default" style="font-weight: 400;">Gestionnaire de documents</div>
-                        <div class="slds-text-body_small slds-text-color_weak slds-m-left_xx-small">0 document(s)</div>
+                        <div class="slds-text-heading_small slds-text-color_default" style="font-weight: 400;">
+                            Gestionnaire de documents
+                        </div>
                     </div>
                 </div>
 
                 <div class="slds-col slds-size_8-of-12">
-                    <div class="slds-box slds-theme_default full-height-box">
-                        <div class="upload-zone slds-box slds-box_dashed slds-align_absolute-center slds-is-relative">
-                            
-                            <template if:true={isUploading}>
-                                <lightning-spinner alternative-text="Envoi en cours" size="medium"></lightning-spinner>
-                            </template>
+                    
+                    <template if:false={isEditMode}>
+                        <div class="slds-box slds-theme_default full-height-box">
+                            <div class={uploadZoneClass}>
+                                
+                                <template if:true={isUploading}>
+                                    <lightning-spinner alternative-text="Envoi en cours" size="medium"></lightning-spinner>
+                                </template>
 
-                            <div class="slds-text-align_center">
-                                <lightning-icon icon-name="utility:upload" size="large"></lightning-icon>
-                                <h2 class="slds-text-heading_small slds-m-top_medium" style="color: #444;">Déposez vos fichiers ici</h2>
-                                <p class="slds-m-bottom_small slds-text-color_weak">ou utilisez le bouton ci-dessous</p>
-                                
-                                <div class="slds-file-selector slds-file-selector_files slds-m-top_medium">
-                                    <div class="slds-file-selector__dropzone">
-                                        <input type="file" 
-                                               class="slds-file-selector__input slds-assistive-text" 
-                                               accept=".pdf, .png, .jpg, .jpeg" 
-                                               id="file-upload-input" 
-                                               onchange={handleFileChange} />
-                                        <label class="slds-file-selector__body" for="file-upload-input" id="file-selector-secondary-label">
-                                            <span class="slds-file-selector__button slds-button slds-button_neutral">
-                                                Sélectionner un fichier
-                                            </span>
-                                        </label>
+                                <div class="slds-text-align_center">
+                                    <lightning-icon icon-name="utility:upload" size="large"></lightning-icon>
+                                    <h2 class="slds-text-heading_small slds-m-top_medium" style="color: #444;">Déposez vos fichiers ici</h2>
+                                    <p class="slds-m-bottom_small slds-text-color_weak">ou utilisez le bouton ci-dessous</p>
+                                    
+                                    <div class="slds-file-selector slds-file-selector_files slds-m-top_medium">
+                                        <div class="slds-file-selector__dropzone">
+                                            <input type="file" 
+                                                   class="slds-file-selector__input slds-assistive-text" 
+                                                   accept=".pdf, .png, .jpg, .jpeg , .docx, .xlsx , .txt" 
+                                                   id="file-upload-input" 
+                                                   disabled={isEditMode}
+                                                   onchange={handleFileChange}
+                                                   onclick={clearFileInput} />
+                                            <label class="slds-file-selector__body" for="file-upload-input" id="file-selector-secondary-label">
+                                                <span class="slds-file-selector__button slds-button slds-button_neutral">
+                                                    Sélectionner un fichier
+                                                </span>
+                                            </label>
+                                        </div>
                                     </div>
+                                    
+                                    <template if:true={fileName}>
+                                        <div class="file-ready-container slds-m-top_medium">
+                                            <p class="file-name-text">
+                                                <lightning-icon icon-name="doctype:attachment" size="small" class="slds-m-right_x-small"></lightning-icon>
+                                                {fileName}
+                                            </p>
+                                            
+                                            <div class="file-actions">
+                                                <button class="action-btn preview-btn" onclick={handlePreviewFile} title="Visualiser le document">
+                                                    <lightning-icon icon-name="utility:preview" size="x-small"></lightning-icon> 
+                                                    Visualiser
+                                                </button>
+                                                <button class="action-btn delete-btn" onclick={handleRemoveFile} title="Retirer ce document">
+                                                    <lightning-icon icon-name="utility:delete" size="x-small"></lightning-icon> 
+                                                    Supprimer
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    
                                 </div>
-                                
-                                <template if:true={fileName}>
-                                    <p class="slds-m-top_large slds-text-color_success" style="font-weight: 500;">
-                                        Document prêt : {fileName}
-                                    </p>
-                                </template>
-                                <template if:false={fileName}>
-                                    <p class="slds-m-top_large slds-text-color_weak" style="font-size: 0.8rem;">
-                                        Aucun fichier sélectionné (Max 4 Mo)
-                                    </p>
-                                </template>
                             </div>
                         </div>
+                    </template>
 
-                        <div class="slds-m-top_xx-large slds-text-align_center slds-text-color_weak">
-                            Aucun fichier sélectionné pour la prévisualisation
+                    <template if:true={isEditMode}>
+                        <div class="slds-box slds-box_x-small" style="background: #ffffff; height: 100%;">
+                            
+                            <div class="slds-grid slds-grid_align-spread slds-m-bottom_small">
+                                <span class="slds-text-heading_small slds-text-color_default" style="font-weight: 600;">Aperçu du document</span>
+                                <button type="button" class="slds-button slds-button_neutral" onclick={handleRedirect}>
+                                    <lightning-icon icon-name="utility:new_window" size="xx-small" class="slds-m-right_xx-small"></lightning-icon>
+                                    Ouvrir en plein écran
+                                </button>
+                            </div>
+                            
+                            <template if:true={previewUrl}>
+                                <iframe src={previewUrl} width="100%" height="550px" style="border: 1px solid #d8dde6; border-radius: 4px;"></iframe>
+                            </template>
+                            
+                            <template if:false={previewUrl}>
+                                <div class="slds-text-align_center slds-text-color_weak slds-p-around_medium">
+                                    Aucun aperçu disponible pour ce document.
+                                </div>
+                            </template>
+                            
                         </div>
-                    </div>
+                    </template>
+
                 </div>
+                
 
                 <div class="slds-col slds-size_4-of-12">
                     <div class="slds-box slds-theme_default full-height-box slds-p-around_none">
                         
-                        <h3 class="slds-section__title slds-theme_shade slds-p-around_small" style="color: #666; border-bottom: 1px solid #dddbda;">
+                        <h3 class="slds-section__title slds-theme_shade slds-p-around_small" style="color: #ffffff; border-bottom: 1px solid #006233; background-color: #006233; font-weight: 500;">
                             Caractéristiques
                         </h3>
                         
                         <div class="slds-form slds-p-around_medium slds-form_stacked">
-                            <lightning-combobox name="Directory__c" label="Répertoire" placeholder="Choisir un répertoire" options={repertoireOptions} required></lightning-combobox>
-                            <lightning-combobox name="Type_de_document__c" label="Type de document" placeholder="Choisir un document" options={typeDocOptions} required></lightning-combobox>
-                            <lightning-combobox name="Nature__c" label="Nature de document" placeholder="Choisir une nature" options={natureOptions}></lightning-combobox>
-                            
-                            <lightning-record-picker name="NumeroDeclaration__c" label="N° Déclaration" placeholder="Rechercher..." object-api-name="Case"></lightning-record-picker>
-                            <lightning-record-picker name="Sinistre__c" label="N° Sinistre" placeholder="Rechercher..." object-api-name="claim__c"></lightning-record-picker>
-                            <lightning-record-picker name="Police__c" label="N° Police" placeholder="Rechercher..." object-api-name="InsurancePolicy__c" ></lightning-record-picker>
-                            
-                            <lightning-input name="RegistrationNumber__c" label="N° Immatriculation"></lightning-input>
-                            <lightning-input name="CompagnieAdverse__c" label="Compagnie Adverse" placeholder="Compagnie Adverse"></lightning-input>
-                            <lightning-input type="date" name="OccurrenceDate__c" label="Date de survenance"></lightning-input>
-                            <lightning-input type="date" name="dateOfReceipt__c" label="Date de réception" value={currentDate}></lightning-input>
-                            <lightning-input type="date" name="ScanDate__c" label="Date de numérisation" value={currentDate} disabled></lightning-input>
+                            <lightning-combobox name="Directory__c" label="Répertoire" placeholder="Choisir un répertoire" options={repertoireOptions} value={valRepertoire} required></lightning-combobox>
 
-                            <lightning-combobox name="Issuer__c" label="Émetteur" placeholder="Sélectionnez un émetteur" options={emetteurOptions} required></lightning-combobox>
+                            <lightning-combobox name="Type_de_document__c" label="Type de document" placeholder="Choisir un document" options={typeDocOptions} value={valTypeDoc} required></lightning-combobox>
+
+                            <lightning-combobox name="Nature__c" label="Nature de document" placeholder="Choisir une nature" options={natureOptions} value={valNature}></lightning-combobox>
+                            <lightning-record-picker 
+                                name="NumeroDeclaration__c" 
+                                label="N° Déclaration" 
+                                placeholder="Rechercher..." 
+                                object-api-name="Case" 
+                                filter={caseFilter}
+                                value={caseValue}
+                                onchange={handleDeclarationChange}>
+                            </lightning-record-picker>
+
+                            <lightning-record-picker name="Sinistre__c" label="N° Sinistre" placeholder="Rechercher..." object-api-name="Claim__c" value={sinistreValue}></lightning-record-picker>
+                            <lightning-record-picker name="Police__c" label="N° Police" placeholder="Rechercher..." object-api-name="InsurancePolicy__c" value={policeValue}></lightning-record-picker>
+                            
+                            <lightning-input name="RegistrationNumber__c" label="N° Immatriculation" value={immatriculationValue}></lightning-input>
+                            <lightning-input name="CompagnieAdverse__c" label="Compagnie Adverse" placeholder="Compagnie Adverse"></lightning-input>
+                            <lightning-input type="date" name="OccurrenceDate__c" label="Date de survenance" value={valSurvenance}></lightning-input>
+                            <lightning-input type="date" name="dateOfReceipt__c" label="Date de réception" value={valReception}></lightning-input>
+                            <lightning-input type="date" name="ScanDate__c" label="Date de numérisation" value={currentDate} disabled="true" readonly="true"></lightning-input>
+
+                            <lightning-combobox name="Issuer__c" label="Émetteur" placeholder="Sélectionnez un émetteur" options={emetteurOptions} value={valEmetteur} required></lightning-combobox>
 
                             <div class="slds-m-top_x-large slds-m-bottom_medium slds-align_absolute-center">
-                                <lightning-button variant="brand" label="Envoyer" onclick={handleEnvoyer} class="slds-m-top_medium custom-send-button"></lightning-button>
+                                <button type="button" class="custom-send-button" onclick={handleAction}>{buttonLabel}</button>
                             </div>
                         </div>
                     </div>

@@ -1,0 +1,38 @@
+<template>
+    <tr class={rowClass}>
+        <td class="col-code">
+            <div class="cell-content">
+                <span class="code-badge" title={garantie.code}>
+                    {garantie.code}
+                </span>
+            </div>
+        </td>
+
+        <td class="col-name">
+            <div class="cell-content">
+                <span title={garantie.nom}>
+                    {garantie.nom}
+                </span>
+            </div>
+        </td>
+
+        <td class="col-type">
+            <div class="cell-content">
+                <span class="type-label" title={garantie.type}>
+                    {garantie.type}
+                </span>
+            </div>
+        </td>
+
+        <td class="col-touched">
+            <div class="cell-content">
+                <template lwc:if={isTouched}>
+                    <span class="badge badge-oui">Oui</span>
+                </template>
+                <template lwc:else>
+                    <span class="badge badge-non">Non</span>
+                </template>
+            </div>
+        </td>
+    </tr>
+</template>

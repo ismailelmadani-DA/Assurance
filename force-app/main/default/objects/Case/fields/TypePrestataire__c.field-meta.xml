@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TypePrestataire__c</fullName>
+    <label>Type de prestataire</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Expert Automobile</fullName>
+                <default>false</default>
+                <label>Expert Automobile</label>
+            </value>
+            <value>
+                <fullName>Garagiste</fullName>
+                <default>false</default>
+                <label>Garagiste</label>
+            </value>
+            <value>
+                <fullName>Médecin conseil</fullName>
+                <default>false</default>
+                <label>Médecin conseil</label>
+            </value>
+            <value>
+                <fullName>Médecin médicolégal</fullName>
+                <default>false</default>
+                <label>Médecin médicolégal</label>
+            </value>
+            <value>
+                <fullName>Enquêteur</fullName>
+                <default>false</default>
+                <label>Enquêteur</label>
+            </value>
+            <value>
+                <fullName>Avocat</fullName>
+                <default>false</default>
+                <label>Avocat</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

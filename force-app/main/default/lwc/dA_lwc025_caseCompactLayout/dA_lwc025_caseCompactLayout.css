@@ -1,0 +1,42 @@
+.ccl-container {
+    background: #ffffff;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.ccl-record-type {
+    font-size: 0.75rem;
+    color: #444444;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.ccl-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .25rem;
+    margin-left: auto;
+}
+
+.ccl-field-label {
+    font-size: 0.75rem;
+    color: #6b6d70;
+}
+
+.ccl-field-value {
+    font-size: 0.875rem;
+    color: #181818;
+    font-weight: 500;
+}
+
+.ccl-link {
+    color: #0176d3;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.ccl-link:hover {
+    text-decoration: underline;
+}

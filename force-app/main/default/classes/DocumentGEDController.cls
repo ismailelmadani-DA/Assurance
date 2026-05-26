@@ -8,6 +8,8 @@ public with sharing class DocumentGEDController {
         try {
             
             googleFileId = GoogleDriveService.uploadFile(base64Data, fileName, mimeType);
+            GoogleDriveService.makeFilePublic(googleFileId);   
+                     
         } catch (Exception e) {
             throw new AuraHandledException('Erreur Google Drive : ' + e.getMessage());
         }
@@ -84,6 +86,56 @@ public with sharing class DocumentGEDController {
                     SELECT Document__c 
                     FROM Document_Link__c 
                     WHERE Sinistre__c = :sinistreId
+                )
+                ORDER BY CreatedDate DESC
+            ];
+        } catch (Exception e) {
+            throw new AuraHandledException('Erreur de récupération : ' + e.getMessage());
+        }
+    }
+    @AuraEnabled
+    public static void updateDocumentDetails(Id docId, String repertoire, String typeDoc, String nature, 
+                                             String compagnieAdverse, Date dateSurvenance, Date dateReception, String emetteur) {
+        try {
+            Document__c docToUpdate = new Document__c(
+                Id = docId,
+                Directory__c = repertoire,
+                Type_de_document__c = typeDoc,
+                Nature__c = nature,
+                OccurrenceDate__c = dateSurvenance,  
+                dateOfReceipt__c = dateReception,    
+                Issuer__c = emetteur
+                
+            );
+            
+            update docToUpdate;
+            
+        } catch (Exception e) {
+            throw new AuraHandledException('Erreur lors de la mise à jour : ' + e.getMessage());
+        }
+    }
+    @AuraEnabled
+    public static Document__c getDocumentById(Id docId) {
+        try {
+            return [SELECT Id, Directory__c, Type_de_document__c, Nature__c, 
+                            OccurrenceDate__c, dateOfReceipt__c, Issuer__c,IdDocument__c
+                    FROM Document__c 
+                    WHERE Id = :docId 
+                    LIMIT 1];
+        } catch (Exception e) {
+            throw new AuraHandledException('Document introuvable : ' + e.getMessage());
+        }
+    }
+    @AuraEnabled(cacheable=true)
+    public static List<Document__c> getDocumentsByCase(Id caseId) {
+        try {
+            return [
+                SELECT Id, Name, Directory__c, Type_de_document__c, Nature__c, OccurrenceDate__c, IdDocument__c
+                FROM Document__c 
+                WHERE Id IN (
+                    SELECT Document__c 
+                    FROM Document_Link__c 
+                    WHERE Case__c = :caseId
                 )
                 ORDER BY CreatedDate DESC
             ];

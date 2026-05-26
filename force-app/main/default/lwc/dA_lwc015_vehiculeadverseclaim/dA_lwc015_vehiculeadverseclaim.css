@@ -1219,3 +1219,51 @@ lightning-record-picker .slds-form-element__label {
     position: absolute !important;
     width: 1px !important;
 }
+
+/* Agrandir le modal pour avoir assez de hauteur */
+.fs-modal {
+    max-width: 520px;
+    max-height: 92vh;
+    overflow: hidden;  /* le modal lui-même clip */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Le body scroll, mais avec assez de padding-bottom 
+   pour que le dropdown soit visible sans sortir */
+.fs-modal__body {
+    overflow-y: auto;
+    overflow-x: visible;
+    flex: 1;
+    padding: 1.4rem;
+    background: #fafbfa;
+    min-height: 380px;      /* ← hauteur suffisante */
+    padding-bottom: 180px;  /* ← espace sous le picker pour le dropdown */
+}
+
+/* Sections sans overflow hidden */
+.fs-section {
+    margin-bottom: 1.1rem;
+    border-radius: var(--radius-sm);
+    overflow: visible;       /* ← pas de clipping */
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-xs);
+    background: var(--white);
+    position: relative;
+}
+
+.fs-section:first-child {
+    z-index: 2;              /* ← section 1 au-dessus de section 2 */
+    position: relative;
+}
+
+.fs-section:nth-child(2) {
+    z-index: 1;
+    position: relative;
+}
+
+.fs-section__content {
+    padding: 1rem;
+    overflow: visible;       /* ← laisser passer le dropdown */
+    position: relative;
+}

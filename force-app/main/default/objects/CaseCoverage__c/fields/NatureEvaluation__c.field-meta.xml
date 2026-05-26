@@ -3,6 +3,7 @@
     <fullName>NatureEvaluation__c</fullName>
     <label>Nature d&apos;évaluation</label>
     <required>false</required>
+    <trackTrending>false</trackTrending>
     <type>Picklist</type>
     <valueSet>
         <restricted>true</restricted>
@@ -20,5 +21,4 @@
             </value>
         </valueSetDefinition>
     </valueSet>
-    <externalId>false</externalId>
 </CustomField>

@@ -259,24 +259,25 @@ renderedCallback() {
     }
 
     _enrichRecord(r) {
-        const etatClass = {
-            'Endommagé':      'pm-state pm-state--blesse',
-            'Pas de dommage': 'pm-state pm-state--indemne',
-        }[r.EtatVehicule__c] || 'pm-state pm-state--default';
+    const etatClass = {
+        'Endommagé':      'pm-state pm-state--blesse',
+        'Pas de dommage': 'pm-state pm-state--indemne',
+    }[r.EtatVehicule__c] || 'pm-state pm-state--default';
 
-        return {
-            ...r,
-            etatClass,
-            registrationNumber:    r.Vehicule__r?.RegistrationNumber__c || ' ',
-            marque:                r.Vehicule__r?.Brand__c || ' ',
-            typeVehicule:          r.TypeVehicule__c || ' ',
-            nomCompletTiers:       r.Vehicule__r?.ProprietaireDuVehicule__r?.Name || ' ',
-            dateMiseEnCirculation: r.DateMiseEnCirculation__c
-                ? new Date(r.DateMiseEnCirculation__c + 'T00:00:00').toLocaleDateString('fr-FR')
-                : '',
-            vehiculeId: r.Vehicule__c || null,
-        };
-    }
+    return {
+        ...r,
+        etatClass,
+        registrationNumber:    r.Vehicule__r?.RegistrationNumber__c || ' ',
+        marque:                r.Vehicule__r?.Brand__c || ' ',
+        typeVehicule:          r.TypeVehicule__c || ' ',
+        nomCompletTiers:       r.Vehicule__r?.ProprietaireDuVehicule__r?.Name || ' ',
+        proprietaireId:        r.Vehicule__r?.ProprietaireDuVehicule__c || null,
+        dateMiseEnCirculation: r.DateMiseEnCirculation__c
+            ? new Date(r.DateMiseEnCirculation__c + 'T00:00:00').toLocaleDateString('fr-FR')
+            : '',
+        vehiculeId: r.Vehicule__c || null,
+    };
+}
 
     _applyFilter() {
         this.filteredRecords = this.records.slice(
@@ -303,6 +304,21 @@ renderedCallback() {
             }
         });
     }
+
+
+    handleNavigateToProprietaire(e) {
+    e.preventDefault();
+    const proprietaireId = e.currentTarget.dataset.id;
+    if (!proprietaireId) return;
+    this[NavigationMixin.Navigate]({
+        type: 'standard__recordPage',
+        attributes: {
+            recordId:      proprietaireId,
+            objectApiName: 'Account',
+            actionName:    'view'
+        }
+    });
+}
 
     // ─── Ouverture modales ──────────────────────────────────────────────────────
 

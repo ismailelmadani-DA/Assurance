@@ -4,6 +4,8 @@ import { ShowToastEvent }               from 'lightning/platformShowToastEvent';
 import getMatchingEvenements            from '@salesforce/apex/DA_lwc021_ClaimEvenementController.getMatchingEvenements';
 import getEvenementAssocie              from '@salesforce/apex/DA_lwc021_ClaimEvenementController.getEvenementAssocie';
 import associerEvenement                from '@salesforce/apex/DA_lwc021_ClaimEvenementController.associerEvenement';
+import isPopupEvenementVu               from '@salesforce/apex/DA_lwc021_ClaimEvenementController.isPopupEvenementVu';
+import marquerPopupVu                   from '@salesforce/apex/DA_lwc021_ClaimEvenementController.marquerPopupVu';
 
 export default class DA_lwc021_claimEvenement extends NavigationMixin(LightningElement) {
 
@@ -11,67 +13,40 @@ export default class DA_lwc021_claimEvenement extends NavigationMixin(LightningE
     @api recordId;
 
     // ─── État interne ─────────────────────────────────────────────
-    @track showPopup          = false;
-    @track isLoading          = false;
-    @track isSaving           = false;
-    @track matchingEvenements = [];
-    @track selectedEventId    = null;
-    @track evenementAssocie   = null;
-
-    // ─── Clé localStorage unique par sinistre ────────────────────
-    get _storageKey() {
-        return `claimEvenement_dismissed_${this.recordId}`;
-    }
-
-    get _autoPopupDismissed() {
-        try {
-            return localStorage.getItem(this._storageKey) === 'true';
-        } catch (e) {
-            return false;
-        }
-    }
-
-    _markAutoPopupDismissed() {
-        try {
-            localStorage.setItem(this._storageKey, 'true');
-        } catch (e) {
-            console.error('Erreur localStorage', e);
-        }
-    }
+    @track showPopup            = false;
+    @track isLoading            = false;
+    @track isSaving             = false;
+    @track matchingEvenements   = [];
+    @track selectedEventId      = null;
+    @track evenementAssocie     = null;
+    @track hasAnyMatchingEvents = false;
 
     // ─── Lifecycle ────────────────────────────────────────────────
     connectedCallback() {
         this._loadEvenementAssocie();
     }
 
-    // ─── Charger l'événement déjà associé ────────────────────────
+    // ─── Chargement initial ───────────────────────────────────────
     async _loadEvenementAssocie() {
         try {
             const result = await getEvenementAssocie({ claimId: this.recordId });
             this.evenementAssocie = result || null;
 
-            // Pas d'événement associé ET l'utilisateur n'a pas encore fermé le popup
-            // → vérifier s'il existe des événements correspondants avant d'ouvrir
-            if (!this.evenementAssocie && !this._autoPopupDismissed) {
-                await this._openIfMatchingEvents();
+            if (!this.evenementAssocie) {
+                const dejaVu = await isPopupEvenementVu({ claimId: this.recordId });
+                const raw    = await getMatchingEvenements({ claimId: this.recordId });
+                this.hasAnyMatchingEvents = raw && raw.length > 0;
+
+                // Ouvrir auto uniquement si jamais vu ET événements trouvés
+                if (this.hasAnyMatchingEvents && !dejaVu) {
+                    this.matchingEvenements = raw.map(ev => this._decorate(ev));
+                    this._openWithDelay();
+                }
+            } else {
+                this.hasAnyMatchingEvents = true;
             }
         } catch (e) {
             console.error('Erreur chargement événement associé', e);
-        }
-    }
-
-    // ─── Ouvrir la popup seulement si des événements matchent ────
-    async _openIfMatchingEvents() {
-        try {
-            const raw = await getMatchingEvenements({ claimId: this.recordId });
-            if (raw && raw.length > 0) {
-                // Pré-remplir la liste pour éviter un double appel Apex
-                this.matchingEvenements = raw.map(ev => this._decorate(ev));
-                this._openWithDelay();
-            }
-            // Aucun événement → on n'ouvre pas
-        } catch (e) {
-            console.error('Erreur vérification événements correspondants', e);
         }
     }
 
@@ -80,23 +55,30 @@ export default class DA_lwc021_claimEvenement extends NavigationMixin(LightningE
         setTimeout(() => { this.showPopup = true; }, 600);
     }
 
-    // ─── Ouvrir la popup (clic manuel sur le bouton) ──────────────
+    // ─── Ouvrir manuellement (bouton Ajouter / Modifier) ─────────
     openPopup() {
         this.showPopup       = true;
         this.selectedEventId = null;
-        // Si la liste est déjà pré-chargée, on ne refait pas l'appel Apex
         if (this.matchingEvenements.length === 0) {
             this._fetchMatchingEvents();
         }
     }
 
-    // ─── Fermer la popup ──────────────────────────────────────────
+    // ─── Fermer (Annuler / ✕ / overlay) → persiste PopupEvenementVu__c ──
     closePopup() {
         this.showPopup          = false;
         this.selectedEventId    = null;
         this.matchingEvenements = [];
-        // Mémoriser que l'utilisateur a fermé le popup → ne plus l'ouvrir automatiquement
-        this._markAutoPopupDismissed();
+        marquerPopupVu({ claimId: this.recordId }).catch(e => {
+            console.error('Erreur marquerPopupVu', e);
+        });
+    }
+
+    // ─── Fermer après confirmation (PopupEvenementVu déjà mis à true par associerEvenement) ──
+    _fermerPopupSansMarquer() {
+        this.showPopup          = false;
+        this.selectedEventId    = null;
+        this.matchingEvenements = [];
     }
 
     // ─── Récupérer les événements correspondants ──────────────────
@@ -141,42 +123,35 @@ export default class DA_lwc021_claimEvenement extends NavigationMixin(LightningE
 
     // ─── Confirmer l'association ──────────────────────────────────
     async handleConfirm() {
-        if (!this.selectedEventId) return;
-        this.isSaving = true;
-        try {
-            const result = await associerEvenement({
-                claimId     : this.recordId,
-                evenementId : this.selectedEventId
-            });
+    if (!this.selectedEventId) return;
+    this.isSaving = true;
+    try {
+        await associerEvenement({
+            claimId     : this.recordId,
+            evenementId : this.selectedEventId
+        });
 
-            if (result && result.success === false) {
-                this.dispatchEvent(new ShowToastEvent({
-                    title   : 'Erreur',
-                    message : result.message || 'Impossible d\'associer l\'événement.',
-                    variant : 'error'
-                }));
-                return;
-            }
+        const ev = this.matchingEvenements.find(e => e.Id === this.selectedEventId);
+        this.evenementAssocie = ev || null;
 
-            const ev = this.matchingEvenements.find(e => e.Id === this.selectedEventId);
-            this.evenementAssocie = ev || null;
-            this.closePopup();
-            this.dispatchEvent(new ShowToastEvent({
-                title   : 'Succès',
-                message : `L'événement "${ev ? ev.Libelle__c : ''}" a été associé au sinistre.`,
-                variant : 'success'
-            }));
-        } catch (e) {
-            console.error('Erreur association', e);
-            this.dispatchEvent(new ShowToastEvent({
-                title   : 'Erreur',
-                message : 'Impossible d\'associer l\'événement. Veuillez réessayer.',
-                variant : 'error'
-            }));
-        } finally {
-            this.isSaving = false;
-        }
+        this._fermerPopupSansMarquer();
+
+        this.dispatchEvent(new ShowToastEvent({
+            title   : 'Succès',
+            message : `L'événement "${ev ? ev.Libelle__c : ''}" a été associé au sinistre.`,
+            variant : 'success'
+        }));
+    } catch (e) {
+        this.dispatchEvent(new ShowToastEvent({
+            title   : 'Erreur',
+            message : e?.body?.message || 'Impossible d\'associer l\'événement. Veuillez réessayer.',
+            variant : 'error'
+        }));
+    } finally {
+        this.isSaving = false;
     }
+}
+
 
     // ─── Navigation vers l'enregistrement événement ──────────────
     handleNavigateToEvenement(evt) {
@@ -195,6 +170,10 @@ export default class DA_lwc021_claimEvenement extends NavigationMixin(LightningE
     stopPropagation(evt) { evt.stopPropagation(); }
 
     // ─── Getters ──────────────────────────────────────────────────
+    get isVisible() {
+        return this.evenementAssocie !== null || this.hasAnyMatchingEvents;
+    }
+
     get hasMatchingEvents() {
         return this.matchingEvenements && this.matchingEvenements.length > 0;
     }

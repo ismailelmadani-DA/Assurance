@@ -2,8 +2,14 @@
 <StandardValueSet xmlns="http://soap.sforce.com/2006/04/metadata">
     <sorted>false</sorted>
     <standardValue>
-        <fullName>En cours</fullName>
+        <fullName>Initiale</fullName>
         <default>true</default>
+        <label>Initiale</label>
+        <closed>false</closed>
+    </standardValue>
+    <standardValue>
+        <fullName>En cours</fullName>
+        <default>false</default>
         <label>En cours</label>
         <closed>false</closed>
     </standardValue>
@@ -11,6 +17,18 @@
         <fullName>Rejetée</fullName>
         <default>false</default>
         <label>Rejetée</label>
+        <closed>true</closed>
+    </standardValue>
+    <standardValue>
+        <fullName>Clôturé</fullName>
+        <default>false</default>
+        <label>Clôturé</label>
+        <closed>true</closed>
+    </standardValue>
+    <standardValue>
+        <fullName>Traitée</fullName>
+        <default>false</default>
+        <label>traitée</label>
         <closed>true</closed>
     </standardValue>
 </StandardValueSet>

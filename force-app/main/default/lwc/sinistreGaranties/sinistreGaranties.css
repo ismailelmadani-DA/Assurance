@@ -1,0 +1,301 @@
+/* sinistreGaranties.css */
+
+.garanties-container {
+    background: #ffffff;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Salesforce Sans', Arial, sans-serif;
+}
+
+/* ========== TABLE HEADER ========== */
+.table-header {
+    background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+    color: white;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #1b5e20;
+    gap: 16px;
+}
+
+.header-title {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    flex: 1;
+}
+
+.header-counter {
+    font-size: 12px;
+    opacity: 0.95;
+    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+/* ========== TABLE WRAPPER & STYLES ========== */
+.table-wrapper {
+    overflow-x: auto;
+    background: #ffffff;
+}
+
+.garanties-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.garanties-table thead {
+    background: #f5f5f5;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.garanties-table th {
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #444;
+    background: #f5f5f5;
+    border-bottom: 2px solid #e0e0e0;
+    white-space: nowrap;
+}
+
+.garanties-table th.col-code {
+    width: 100px;
+    min-width: 100px;
+}
+
+.garanties-table th.col-name {
+    flex: 1;
+}
+
+.garanties-table th.col-type {
+    width: 140px;
+    min-width: 140px;
+}
+
+.garanties-table th.col-touched {
+    width: 100px;
+    min-width: 100px;
+    text-align: center;
+}
+
+/* ========== TABLE ROWS ========== */
+.garanties-table tbody tr {
+    border-bottom: 1px solid #e8e8e8;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.garanties-table tbody tr:hover {
+    background-color: #fafafa;
+    box-shadow: inset 4px 0 0 #2e7d32;
+}
+
+.garanties-table tbody tr.row-touched {
+    background-color: #f1f8f4;
+}
+
+.garanties-table tbody tr.row-touched:hover {
+    background-color: #e8f5f0;
+}
+
+.garanties-table tbody tr.row-rc {
+    background-color: #e3f2fd;
+}
+
+.garanties-table tbody tr.row-rc:hover {
+    background-color: #bbdefb;
+}
+
+.garanties-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+/* ========== TABLE CELLS ========== */
+.garanties-table td {
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #333;
+    vertical-align: middle;
+}
+
+.cell-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.guaranties-table td.col-code {
+    width: 100px;
+    min-width: 100px;
+}
+
+.garanties-table td.col-name {
+    flex: 1;
+}
+
+.garanties-table td.col-type {
+    width: 140px;
+    min-width: 140px;
+}
+
+.garanties-table td.col-touched {
+    width: 100px;
+    min-width: 100px;
+    text-align: center;
+}
+
+/* CODE BADGE */
+.code-badge {
+    font-family: 'Courier New', 'Monaco', monospace;
+    font-weight: 600;
+    color: #1b5e20;
+    background: #f1f8f4;
+    padding: 4px 8px;
+    border-radius: 3px;
+    display: inline-block;
+    font-size: 12px;
+}
+
+.garanties-table tbody tr:hover .code-badge {
+    background: #e8f5f0;
+}
+
+/* TYPE LABEL */
+.type-label {
+    color: #666;
+    font-size: 12px;
+    background: #f9f9f9;
+    padding: 3px 6px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+/* ========== BADGES ========== */
+.badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.badge-oui {
+    background-color: #c8e6c9;
+    color: #1b5e20;
+}
+
+.badge-non {
+    background-color: #f3e5f5;
+    color: #6a1b9a;
+}
+
+/* ========== LOADING STATE ========== */
+.loading-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 24px;
+    background: white;
+    min-height: 200px;
+}
+
+/* ========== ERROR STATE ========== */
+.error-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    background: #ffebee;
+    color: #c62828;
+    border-left: 4px solid #c62828;
+    font-size: 13px;
+}
+
+.error-icon {
+    flex-shrink: 0;
+    color: #c62828;
+}
+
+/* ========== EMPTY STATE ========== */
+.empty-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 24px;
+    background: white;
+    color: #999;
+    gap: 12px;
+    min-height: 200px;
+}
+
+.empty-icon {
+    color: #ddd;
+    opacity: 0.6;
+}
+
+.empty-box p {
+    font-size: 14px;
+    margin: 0;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+    .table-header {
+        flex-direction: column;
+        gap: 12px;
+        text-align: center;
+    }
+
+    .header-title {
+        flex: none;
+    }
+
+    .garanties-table th,
+    .garanties-table td {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+
+    .garanties-table th.col-code,
+    .garanties-table td.col-code {
+        width: 80px;
+        min-width: 80px;
+    }
+
+    .guaranties-table th.col-name,
+    .garanties-table td.col-name {
+        min-width: 150px;
+    }
+
+    .code-badge {
+        font-size: 11px;
+    }
+
+    .badge {
+        padding: 4px 10px;
+        font-size: 10px;
+    }
+}
+
+/* ========== ACCESSIBILITY ========== */
+.garanties-table th,
+.garanties-table td {
+    outline: none;
+}
+
+.garanties-table tbody tr:focus-within {
+    outline: 2px solid #1b5e20;
+    outline-offset: -2px;
+}

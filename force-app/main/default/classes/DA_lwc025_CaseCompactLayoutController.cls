@@ -29,9 +29,9 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
         @AuraEnabled public String           headerLabel         { get; set; }
         @AuraEnabled public String           iconName            { get; set; }
         @AuraEnabled public String           typeRequete         { get; set; }
-        @AuraEnabled public String           declarationOwnerId  { get; set; } // ✅ AJOUT
-        @AuraEnabled public String           reaffecterAId       { get; set; } // ✅ AJOUT
-        @AuraEnabled public String           requeteInitialeId   { get; set; } // ✅ AJOUT
+        @AuraEnabled public String           declarationOwnerId  { get; set; }
+        @AuraEnabled public String           reaffecterAId       { get; set; }
+        @AuraEnabled public String           requeteInitialeId   { get; set; }
         @AuraEnabled public Decimal          lastWizardStep      { get; set; }
         @AuraEnabled public List<FieldItem>  fields              { get; set; }
         @AuraEnabled public List<ActionItem> actions             { get; set; }
@@ -85,7 +85,6 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
                 data.typeRequete = null;
             }
 
-            // ✅ AJOUT — declarationOwnerId toujours rempli pour les Cases
             try {
                 Object ownerId = record.get('OwnerId');
                 data.declarationOwnerId = (ownerId != null) ? String.valueOf(ownerId) : null;
@@ -93,9 +92,8 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
                 data.declarationOwnerId = null;
             }
 
-            // ✅ AJOUT — reaffecterAId uniquement pour Declaration
             if (recordTypeName == RT_DECLARATION) {
-                data.reaffecterAId = resolveReaffecterAId(recordId);
+                data.reaffecterAId     = resolveReaffecterAId(recordId);
                 data.requeteInitialeId = resolveRequeteInitialeId(recordId);
                 try {
                     Object step = record.get('LastWizardStep__c');
@@ -117,7 +115,6 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
         return data;
     }
 
-    // ✅ AJOUT — cherche la Requête de réaffectation "En cours" liée à la Déclaration
     private static String resolveReaffecterAId(Id declarationId) {
         try {
             List<Case> requetes = [
@@ -132,50 +129,45 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
             if (!requetes.isEmpty() && requetes[0].ReaffecterA__c != null) {
                 return String.valueOf(requetes[0].ReaffecterA__c);
             }
-        } catch (Exception e) {
-            // champ inexistant ou pas d'accès → on ignore
-        }
+        } catch (Exception e) { }
         return null;
     }
 
-
     private static String resolveRequeteInitialeId(Id declarationId) {
-    try {
-        List<Case> requetes = [
-            SELECT Id, CreatedById
-            FROM Case
-            WHERE Declaration_Liee__c = :declarationId
-              AND TypeRequete__c      = 'Réaffecter la déclaration'
-              AND CategorieRequete__c = 'Réaffectation'
-              AND Status              = 'Initiale'
-            LIMIT 1
-        ];
-        if (!requetes.isEmpty()) {
-            return String.valueOf(requetes[0].Id);
-        }
-    } catch (Exception e) { }
-    return null;
-}
+        try {
+            List<Case> requetes = [
+                SELECT Id, CreatedById
+                FROM Case
+                WHERE Declaration_Liee__c = :declarationId
+                  AND TypeRequete__c      = 'Réaffecter la déclaration'
+                  AND CategorieRequete__c = 'Réaffectation'
+                  AND Status              = 'Initiale'
+                LIMIT 1
+            ];
+            if (!requetes.isEmpty()) {
+                return String.valueOf(requetes[0].Id);
+            }
+        } catch (Exception e) { }
+        return null;
+    }
 
-private static String resolveRequeteInitialeCreatedById(Id declarationId) {
-    try {
-        List<Case> requetes = [
-            SELECT Id, CreatedById
-            FROM Case
-            WHERE Declaration_Liee__c = :declarationId
-              AND TypeRequete__c      = 'Réaffecter la déclaration'
-              AND CategorieRequete__c = 'Réaffectation'
-              AND Status              = 'Initiale'
-            LIMIT 1
-        ];
-        if (!requetes.isEmpty()) {
-            return String.valueOf(requetes[0].CreatedById);
-        }
-    } catch (Exception e) { }
-    return null;
-}
-
-
+    private static String resolveRequeteInitialeCreatedById(Id declarationId) {
+        try {
+            List<Case> requetes = [
+                SELECT Id, CreatedById
+                FROM Case
+                WHERE Declaration_Liee__c = :declarationId
+                  AND TypeRequete__c      = 'Réaffecter la déclaration'
+                  AND CategorieRequete__c = 'Réaffectation'
+                  AND Status              = 'Initiale'
+                LIMIT 1
+            ];
+            if (!requetes.isEmpty()) {
+                return String.valueOf(requetes[0].CreatedById);
+            }
+        } catch (Exception e) { }
+        return null;
+    }
 
     private static Set<String> buildSoqlFields(
             List<String> requestedFields,
@@ -207,7 +199,7 @@ private static String resolveRequeteInitialeCreatedById(Id declarationId) {
             soqlFields.add('CaseNumber');
             soqlFields.add('RecordTypeId');
             soqlFields.add('RecordType.DeveloperName');
-            soqlFields.add('OwnerId');              // ✅ AJOUT
+            soqlFields.add('OwnerId');
             soqlFields.add('TypeRequete__c');
             soqlFields.add('CategorieRequete__c');
             soqlFields.add('LastWizardStep__c');
@@ -237,7 +229,7 @@ private static String resolveRequeteInitialeCreatedById(Id declarationId) {
         String soql = 'SELECT '
             + String.join(new List<String>(soqlFields), ', ')
             + ' FROM '  + objectApiName
-            + ' WHERE Id = :recordId WITH SECURITY_ENFORCED LIMIT 1';
+            + ' WHERE Id = :recordId LIMIT 1'; // ✅ WITH SECURITY_ENFORCED retiré
         try {
             List<SObject> rows = Database.query(soql);
             return rows.isEmpty() ? null : rows[0];

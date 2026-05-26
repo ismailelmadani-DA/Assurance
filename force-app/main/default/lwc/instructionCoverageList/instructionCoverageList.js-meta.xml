@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>57.0</apiVersion>
+    <isExposed>true</isExposed>
+    <masterLabel>Instruction Coverage List</masterLabel>
+    <description>Affiche la liste des Instruction Coverages avec Code de garantie et Nom de garantie (cliquable)</description>
+    
+    <targets>
+        <target>lightning__RecordPage</target>
+    </targets>
+    
+    <targetConfigs>
+        <targetConfig targets="lightning__RecordPage">
+            <property name="recordId" type="String" description="ID de l'enregistrement Instruction" />
+        </targetConfig>
+    </targetConfigs>
+</LightningComponentBundle>

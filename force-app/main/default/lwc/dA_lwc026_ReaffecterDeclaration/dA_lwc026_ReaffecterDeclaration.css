@@ -1,0 +1,781 @@
+:host {
+    /* ── Wafa Brand Core ── */
+    --wafa-green: #006233;
+    --wafa-yellow: #3a9e60;
+    --wafa-dark-green: #004824;
+    --wafa-deep: #002e18;
+    --wafa-light-green: #e6f2ec;
+    --wafa-pale-yellow: #d8f0e3;
+    --wafa-gold: #1a7a4a;
+
+    /* ── Gradient vert ── */
+    --wafa-grad: linear-gradient(90deg, #006233 0%, #3a9e60 50%, #7dc99a 100%);
+    --wafa-grad-diag: linear-gradient(135deg, #004824 0%, #006233 50%, #3a9e60 100%);
+
+    /* ── Neutrals ── */
+    --text-main: #1a1a1a;
+    --text-mid: #444444;
+    --text-light: #707070;
+    --text-muted: #9a9a9a;
+    --bg-light: #F8F9FA;
+    --bg-surface: #fdfdfd;
+    --white: #FFFFFF;
+    --border: #e2e8e4;
+    --border-strong: #c5d5cc;
+
+    /* ── Semantic ── */
+    --fs-red: #c0392b;
+    --fs-red-bg: #fdf0ef;
+    --fs-orange: #d35400;
+    --fs-orange-bg: #fef5ec;
+    --fs-green-ok: #1a7a4a;
+    --fs-green-bg: #ebf7f1;
+
+    /* ── Elevation ── */
+    --shadow-xs: 0 1px 2px rgba(0, 98, 51, .06);
+    --shadow-sm: 0 2px 8px rgba(0, 98, 51, .08), 0 1px 3px rgba(0, 0, 0, .04);
+    --shadow-md: 0 6px 20px rgba(0, 98, 51, .12), 0 2px 6px rgba(0, 0, 0, .06);
+    --shadow-lg: 0 16px 48px rgba(0, 40, 20, .18), 0 4px 12px rgba(0, 0, 0, .08);
+
+    /* ── Shape & Motion ── */
+    --radius: 12px;
+    --radius-sm: 7px;
+    --radius-pill: 999px;
+    --ease: cubic-bezier(.4, 0, .2, 1);
+    --dur: .2s;
+
+    font-family: 'DM Sans', 'Salesforce Sans', Arial, sans-serif;
+    color: var(--text-main);
+}
+
+/* ════════════════════════════════════════
+   BUTTONS
+════════════════════════════════════════ */
+.fs-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .46rem .95rem;
+    border-radius: var(--radius-pill);
+    border: none;
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--dur) var(--ease);
+    white-space: nowrap;
+    text-decoration: none;
+    font-family: inherit;
+    letter-spacing: .01em;
+}
+
+.fs-btn--add {
+    background: var(--wafa-green);
+    color: var(--white);
+    box-shadow: 0 3px 10px rgba(0, 98, 51, .28);
+    font-weight: 700;
+    letter-spacing: .02em;
+    flex-shrink: 0;
+}
+
+.fs-btn--add:hover {
+    background: var(--wafa-dark-green);
+    box-shadow: 0 5px 16px rgba(0, 98, 51, .38);
+    transform: translateY(-1px);
+}
+
+.fs-btn--cancel {
+    background: var(--bg-light);
+    color: var(--text-mid);
+    border: 1px solid var(--border);
+}
+
+.fs-btn--cancel:hover {
+    background: var(--border);
+    color: var(--text-main);
+}
+
+.fs-btn--save {
+    background: var(--wafa-green);
+    color: var(--white);
+    min-width: 150px;
+    justify-content: center;
+    box-shadow: 0 3px 10px rgba(0, 98, 51, .28);
+}
+
+.fs-btn--save:hover:not([disabled]) {
+    background: var(--wafa-dark-green);
+    box-shadow: 0 5px 16px rgba(0, 98, 51, .38);
+    transform: translateY(-1px);
+}
+
+.fs-btn--disabled,
+.fs-btn:disabled {
+    opacity: .38;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none !important;
+}
+
+/* ════════════════════════════════════════
+   MODAL OVERLAY
+════════════════════════════════════════ */
+.fs-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 30, 15, .6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9000;
+    padding: 1rem;
+    animation: fs-fade-in .18s var(--ease);
+}
+
+/* ════════════════════════════════════════
+   MODAL
+════════════════════════════════════════ */
+.fs-modal {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 520px;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: fs-slide-up .24s cubic-bezier(.34, 1.2, .64, 1);
+}
+
+.fs-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.1rem 1.4rem;
+    background: var(--wafa-dark-green);
+    color: var(--white);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.fs-modal__header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #3a9e60, transparent);
+}
+
+.fs-modal__header-inner {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+}
+
+.fs-modal__header-inner lightning-icon:first-child {
+    background: #3a9e60;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    --lwc-colorTextIconDefault: var(--white);
+    flex-shrink: 0;
+    padding: 4px;
+}
+
+.fs-modal__title {
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--white);
+    margin: 0;
+    letter-spacing: -.01em;
+}
+
+.fs-modal__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, .25);
+    background: rgba(255, 255, 255, .1);
+    color: var(--white);
+    cursor: pointer;
+    transition: all var(--dur) var(--ease);
+    flex-shrink: 0;
+}
+
+.fs-modal__close:hover {
+    background: rgba(58, 158, 96, .25);
+    border-color: #3a9e60;
+    transform: rotate(90deg);
+}
+
+.fs-modal__body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 1.4rem;
+    position: relative;
+    background: #fafbfa;
+}
+
+.fs-modal__body::-webkit-scrollbar {
+    width: 5px;
+}
+
+.fs-modal__body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.fs-modal__body::-webkit-scrollbar-thumb {
+    background: var(--wafa-green);
+    border-radius: 3px;
+}
+
+.fs-modal__footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .75rem;
+    padding: 1rem 1.4rem;
+    border-top: 1px solid var(--border);
+    background: var(--bg-light);
+    flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════
+   FORM SECTION
+════════════════════════════════════════ */
+.fs-section {
+    margin-bottom: 1.1rem;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-xs);
+    background: var(--white);
+}
+
+.fs-section__title {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    padding: .6rem 1rem;
+    background: linear-gradient(90deg, #e6f2ec 0%, rgba(216, 240, 227, .6) 100%);
+    border-bottom: 1px solid var(--border-strong);
+    font-size: .69rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--wafa-dark-green);
+}
+
+.fs-section__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #3a9e60;
+    color: var(--white);
+    font-size: .64rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    box-shadow: 0 1px 4px rgba(58, 158, 96, .4);
+}
+
+.fs-section__content {
+    padding: 1rem;
+}
+
+/* ════════════════════════════════════════
+   CHECKBOX LIST
+════════════════════════════════════════ */
+.fs-checkbox-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .55rem .75rem;
+    border-radius: var(--radius-sm);
+    transition: background var(--dur) var(--ease);
+    border: 1px solid transparent;
+}
+
+.fs-checkbox-item:hover {
+    background: var(--wafa-light-green);
+    border-color: rgba(0, 98, 51, .1);
+}
+
+.fs-checkbox-item + .fs-checkbox-item {
+    margin-top: .3rem;
+}
+
+.fs-pending-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    padding: .15rem .5rem;
+    border-radius: var(--radius-pill);
+    font-size: .6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    background: #fef5ec;
+    color: var(--fs-orange);
+    border: 1px solid rgba(211, 84, 0, .15);
+}
+
+.fs-pending-tag::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--fs-orange);
+    animation: fs-pulse 1.5s ease-in-out infinite;
+}
+
+/* ════════════════════════════════════════
+   ANIMATIONS
+════════════════════════════════════════ */
+@keyframes fs-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fs-slide-up {
+    from { opacity: 0; transform: translateY(28px) scale(.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+
+@keyframes fs-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .3; }
+}
+
+/* ════════════════════════════════════════
+   FOCUS VISIBLE
+════════════════════════════════════════ */
+.fs-btn:focus-visible,
+.fs-modal__close:focus-visible {
+    outline: 2px solid #3a9e60;
+    outline-offset: 2px;
+}
+
+/* ════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════ */
+@media (max-width: 640px) {
+    .fs-btn--add {
+        justify-content: center;
+    }
+
+    .fs-modal {
+        max-height: 100dvh;
+        border-radius: 0;
+    }
+
+    .fs-modal__body {
+        padding: 1rem;
+    }
+}
+
+/* ════════════════════════════════════════
+   BARRE DE BOUTONS
+════════════════════════════════════════ */
+.fs-actions-row {
+    display    : flex;
+    align-items: center;
+    justify-content: center;   /* ← centrage horizontal */
+    gap        : .6rem;
+    flex-wrap  : wrap;
+    width      : 100%;          /* ← prend toute la largeur disponible */
+}
+
+/* Variante couleur pour le bouton événement si besoin de distinction */
+.fs-btn--event {
+    background: var(--wafa-dark-green);
+}
+.fs-btn--event:hover {
+    background: var(--wafa-deep);
+}
+
+/* ════════════════════════════════════════
+   OVERLAY ÉVÉNEMENT
+════════════════════════════════════════ */
+.sep-overlay {
+    position       : fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background     : rgba(0,30,15,.6);
+    backdrop-filter: blur(4px);
+    z-index        : 9000;
+    padding        : 1rem;
+    animation      : sepFadeIn .18s var(--ease);
+}
+
+.sep-modal {
+    background    : var(--white);
+    border-radius : var(--radius);
+    box-shadow    : var(--shadow-md);
+    border        : 1px solid var(--border);
+    width         : 580px;
+    max-width     : 95vw;
+    max-height    : 92vh;
+    display       : flex;
+    flex-direction: column;
+    overflow      : hidden;
+    animation     : sepSlideUp .24s cubic-bezier(.34,1.2,.64,1);
+    position      : fixed;
+    top: 50%; left: 50%;
+    transform     : translate(-50%, -50%);
+    z-index       : 9001;
+}
+
+@keyframes sepFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes sepSlideUp {
+    from { opacity: 0; transform: translate(-50%, calc(-50% + 28px)) scale(.96); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* ─ Header ─ */
+.sep-modal__header {
+    display        : flex;
+    align-items    : center;
+    justify-content: space-between;
+    padding        : 1.1rem 1.4rem;
+    background     : var(--wafa-dark-green);
+    color          : var(--white);
+    flex-shrink    : 0;
+    position       : relative;
+    overflow       : hidden;
+}
+.sep-modal__header::after {
+    content: ''; position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #3a9e60, transparent);
+}
+.sep-modal__header-inner { display: flex; align-items: center; gap: .7rem; }
+.sep-modal__icon {
+    background: #3a9e60; width: 34px; height: 34px;
+    border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0; padding: 4px;
+    --lwc-colorTextIconDefault: var(--white);
+}
+.sep-modal__title    { font-size: .95rem; font-weight: 700; color: var(--white); margin: 0; letter-spacing: -.01em; }
+.sep-modal__subtitle { font-size: .74rem; color: rgba(255,255,255,.82); margin: 2px 0 0; }
+.sep-modal__close {
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.1);
+    color: var(--white); cursor: pointer; flex-shrink: 0;
+    transition: all var(--dur) var(--ease);
+}
+.sep-modal__close:hover { background: rgba(58,158,96,.25); border-color: #3a9e60; transform: rotate(90deg); }
+
+/* ─ Body ─ */
+.sep-modal__body {
+    padding: .6rem 1.4rem; overflow-y: auto; flex: 1;
+    min-height: 0; background: #fafbfa;
+}
+.sep-modal__body::-webkit-scrollbar       { width: 5px; }
+.sep-modal__body::-webkit-scrollbar-track { background: transparent; }
+.sep-modal__body::-webkit-scrollbar-thumb { background: var(--wafa-green); border-radius: 3px; }
+
+/* ─ Spinner ─ */
+.sep-loading {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 2.5rem 1rem; gap: 12px;
+    color: var(--text-light); font-size: .83rem;
+}
+
+/* ─ Liste événements ─ */
+.sep-event-list { display: flex; flex-direction: column; gap: 8px; }
+
+.sep-event-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); cursor: pointer;
+    background: var(--white);
+    transition: border-color var(--dur) var(--ease),
+                background   var(--dur) var(--ease),
+                box-shadow   var(--dur) var(--ease);
+}
+.sep-event-row:hover        { border-color: var(--wafa-green); background: var(--wafa-light-green); }
+.sep-event-row--selected    { border-color: var(--wafa-green) !important; background: var(--wafa-light-green) !important; box-shadow: 0 0 0 3px rgba(0,98,51,.1); }
+
+.sep-event-row__radio { flex-shrink: 0; }
+.sep-radio {
+    width: 18px; height: 18px; border: 2px solid var(--border-strong);
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; background: var(--white); flex-shrink: 0;
+    transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.sep-radio--checked { border-color: var(--wafa-green); background: var(--wafa-green); }
+.sep-radio__dot     { width: 7px; height: 7px; background: var(--white); border-radius: 50%; }
+
+.sep-event-row__content { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; }
+.sep-event-row__name    { font-size: .86rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sep-event-row__code    { font-size: .71rem; font-weight: 500; color: var(--wafa-dark-green); background: rgba(0,98,51,.1); border-radius: var(--radius-pill); padding: 2px 9px; font-family: monospace; white-space: nowrap; flex-shrink: 0; }
+
+/* ─ État vide ─ */
+.sep-empty-popup            { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 1rem; gap: 6px; }
+.sep-empty-popup__icon      { width: 40px; height: 40px; color: var(--border-strong); margin-bottom: .5rem; }
+.sep-empty-popup__title     { font-size: .9rem; font-weight: 700; color: var(--text-mid); margin: 0; }
+.sep-empty-popup__sub       { font-size: .77rem; color: var(--text-muted); margin: 0; max-width: 340px; line-height: 1.5; }
+
+/* ─ Footer modal événement ─ */
+.sep-modal__footer {
+    display: flex; justify-content: flex-end; align-items: center;
+    gap: .75rem; padding: 1rem 1.4rem;
+    border-top: 1px solid var(--border);
+    background: var(--bg-light); flex-shrink: 0;
+}
+.sep-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: .4rem; padding: .46rem 1.1rem; border-radius: var(--radius-pill);
+    border: none; font-size: .78rem; font-weight: 600; cursor: pointer;
+    transition: all var(--dur) var(--ease); white-space: nowrap;
+    font-family: inherit; letter-spacing: .01em; min-width: 140px;
+}
+.sep-btn--cancel  { background: var(--white); color: var(--text-mid); border: 1.5px solid var(--border-strong) !important; }
+.sep-btn--cancel:hover { background: var(--wafa-light-green); border-color: var(--wafa-green) !important; color: var(--wafa-green); }
+.sep-btn--confirm { background: var(--wafa-green); color: var(--white); box-shadow: 0 3px 10px rgba(0,98,51,.28); }
+.sep-btn--confirm:hover:not(:disabled) { background: var(--wafa-dark-green); box-shadow: 0 5px 16px rgba(0,98,51,.38); transform: translateY(-1px); }
+.sep-btn--confirm:disabled { opacity: .38; cursor: not-allowed; pointer-events: none; transform: none; }
+
+/* ─ Responsive ─ */
+@media (max-width: 640px) {
+    .fs-actions-row  { flex-direction: column; align-items: stretch; }
+    .sep-modal       { max-height: 100dvh; border-radius: 0; width: 100%; }
+    .sep-modal__body { padding: 1rem; }
+    .sep-modal__footer { gap: .5rem; }
+    .sep-btn         { flex: 1; min-width: 0; font-size: .72rem; }
+}
+
+/* Même couleur pour les deux boutons */
+.fs-btn--event {
+    background: var(--wafa-green);  /* même vert que Flagger Sinistre */
+}
+.fs-btn--event:hover {
+    background: var(--wafa-dark-green);
+}
+
+.fs-btn--fixed {
+    min-width: 170px;
+    justify-content: center;
+}
+
+/* 1. Modifiez le bloc .fs-modal__body pour lui donner un peu d'espace en bas */
+.fs-modal__body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 1.4rem;
+    position: relative;
+    background: #fafbfa;
+    /* On ajoute une hauteur minimale pour que le scroll ne bloque pas tout de suite */
+    min-height: 350px; 
+}
+
+/* 2. Modifiez la section pour ENLEVER le overflow hidden */
+.fs-section {
+    margin-bottom: 1.1rem;
+    border-radius: var(--radius-sm);
+    /* overflow: hidden;  <-- SUPPRIMEZ OU COMMENTEZ CETTE LIGNE */
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-xs);
+    background: var(--white);
+    position: relative; /* Indispensable pour le z-index */
+}
+
+/* 3. Forcez la première section à être au-dessus de la deuxième */
+/* Cela permet à la liste de l'utilisateur de passer par-dessus le champ Motif */
+.fs-section:first-child {
+    z-index: 2;
+}
+
+.fs-section:nth-child(2) {
+    z-index: 1;
+}
+
+/* 4. Optionnel : S'assurer que le record-picker ne soit pas gêné par le conteneur content */
+.fs-section__content {
+    padding: 1rem;
+    position: relative;
+}
+
+/* Supprimer overflow:hidden sur .fs-section (déjà fait dans ton CSS) */
+.fs-section {
+    /* overflow: hidden;  ← déjà commenté, bien */
+    position: relative;
+}
+
+/* Donner un z-index élevé à la première section */
+.fs-section:first-child {
+    z-index: 10;  /* ← augmenter à 10 au lieu de 2 */
+}
+
+.fs-section:nth-child(2) {
+    z-index: 1;
+}
+
+/* CRUCIAL : permettre au body du modal de ne pas clipper le dropdown */
+.fs-modal__body {
+    overflow: visible !important;  /* ← changer overflow-y:auto en visible */
+}
+
+.fs-modal__body {
+    overflow-y: auto;
+    overflow-x: visible;
+    flex: 1;
+    padding: 1.4rem;
+    background: #fafbfa;
+    min-height: 420px; /* assez de place pour le dropdown */
+}
+
+.fs-section:first-child {
+    z-index: 10;
+    position: relative;
+}
+
+.fs-section__content {
+    position: relative;
+    overflow: visible; /* important */
+}
+
+.fs-modal {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 520px;
+    max-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    overflow: visible; /* ← visible, pas hidden */
+    animation: fs-slide-up .24s cubic-bezier(.34, 1.2, .64, 1);
+}
+
+.fs-modal__body {
+    overflow: visible; /* ← visible pour laisser passer le dropdown */
+    flex: 1;
+    padding: 1.4rem;
+    background: #fafbfa;
+}
+
+.fs-section {
+    margin-bottom: 1.1rem;
+    border-radius: var(--radius-sm);
+    overflow: visible;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-xs);
+    background: var(--white);
+    position: relative;
+}
+
+.fs-section:first-child {
+    z-index: 10;
+    position: relative;
+}
+
+.fs-section:nth-child(2) {
+    z-index: 1;
+    position: relative;
+}
+
+.fs-section__content {
+    padding: 1rem;
+    overflow: visible;
+    position: relative;
+}
+
+.fs-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.fs-label {
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    margin-bottom: .2rem;
+    display: block;
+}
+
+.fs-required {
+    color: #c23934;
+    margin-right: .15rem;
+    text-decoration: none;
+    font-style: normal;
+}
+
+.fs-error {
+    color: var(--fs-red);
+    font-size: .7rem;
+    margin-top: .28rem;
+    padding-left: .15rem;
+    font-weight: 500;
+}
+
+/* Cacher le label natif du record-picker */
+.fs-field lightning-record-picker .slds-form-element__label,
+.fs-field lightning-record-picker label.slds-form-element__label {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.fs-modal__footer .fs-btn {
+    min-width: 120px;
+    justify-content: center;
+}
+
+/* ── Modal bordures arrondies ── */
+.fs-modal {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+}
+
+.fs-modal__header {
+    border-radius: 16px 16px 0 0 !important;
+}
+
+.fs-modal__footer {
+    border-radius: 0 0 16px 16px !important;
+}
+
+/* ── Fix dropdown record-picker sans casser border-radius ── */
+.fs-modal__body {
+    overflow: visible !important;
+    border-radius: 0 !important;
+}
+
+.fs-section {
+    overflow: visible !important;
+    border-radius: 10px !important;
+}
+
+.fs-section__content {
+    overflow: visible !important;
+    border-radius: 0 0 10px 10px !important;
+}
+
+.fs-section__title {
+    border-radius: 10px 10px 0 0 !important;
+}

@@ -9,6 +9,7 @@ export default class TableCell extends LightningElement {
     @api isCurrency;
     @api isNumber;
     @api isText;
+    @api isString = false;  // ✅ FIXED: Added missing isString prop
     @api recordId;
     @api isDate;
     @api currencyCode;
@@ -24,6 +25,7 @@ export default class TableCell extends LightningElement {
             'isPicklist:', this.isPicklist, 
             'isMultiPicklist:', this.isMultiPicklist, 
             'isTextArea:', this.isTextArea,
+            'isString:', this.isString,
             'isCurrency:', this.isCurrency,
             'isNumber:', this.isNumber,
             'Value:', this.fieldValue);
@@ -33,10 +35,10 @@ export default class TableCell extends LightningElement {
             console.log('URL field details:');
             console.log('  fieldName:', this.fieldName);
             console.log('  displayField:', this.displayField);
-            console.log('  fieldValue:', this.fieldValue);
-            console.log('  displayValue:', this.displayValue);
-            console.log('  recordId:', this.recordId);
-            console.log('  record.Id:', this.record.Id);
+            console.log('  fieldValue (URL link):', this.fieldValue);
+            console.log('  displayValue (displayed text):', this.displayValue);
+            console.log('  recordId (record):', this.recordId);
+            console.log('  record.Id:', this.record?.Id);
         }
     }
 
@@ -126,7 +128,16 @@ export default class TableCell extends LightningElement {
 
     // Get the display value for URL fields
     get displayValue() {
-        return this.getFieldValue(this.record, this.displayField || this.fieldName);
+        let value = this.getFieldValue(this.record, this.displayField || this.fieldName);
+        
+        // ✅ CLEAN UP Num_ro_d_immatriculation__c - Remove line breaks and ID part
+        if (this.displayField === 'Num_ro_d_immatriculation__c' && value) {
+            // Remove line breaks and take only the first part before /
+            value = value.replace(/[\n\r]/g, ' ').trim().split('/')[0].trim();
+            console.log('✅ Cleaned displayValue for Num_ro_d_immatriculation__c:', value);
+        }
+        
+        return value;
     }
 
     // Determine if text area content is expandable
@@ -167,31 +178,73 @@ export default class TableCell extends LightningElement {
         event.preventDefault();
         event.stopPropagation();
         
-        // Debug information
-        console.log('Link clicked for:', this.fieldName);
-        console.log('Record ID:', this.record.Id);
-        console.log('Link clicked for:', this.fieldValue);
+        console.log('===== LINK CLICK DEBUG =====');
+        console.log('Field name:', this.fieldName);
+        console.log('Field value (should be URL):', this.fieldValue);
+        console.log('Display value:', this.displayValue);
+        console.log('Record ID (main):', this.recordId);
+        console.log('===========================');
         
-        // Get the record ID from the main record, not the field value
-         const recordId = this.fieldValue.split('/')[1];
-        console.log('recordId'+recordId);
-        
-        if (recordId) {
-            console.log('Dispatching linkclick event with recordId:', recordId);
-            
-            const linkClickEvent = new CustomEvent('linkclick', {
-                detail: {
-                    recordId: recordId,
-                    fieldName: this.fieldName
-                },
-                bubbles: true,
-                composed: true
-            });
-            
-            this.dispatchEvent(linkClickEvent);
-        } else {
-            console.error('No record ID available for navigation');
+        // ✅ IMPROVED: Extract record ID from the URL field value
+        if (!this.fieldValue || typeof this.fieldValue !== 'string') {
+            console.error('❌ Invalid field value for URL:', this.fieldValue);
+            return;
         }
+
+        // Extract ID from URL (format: /a05qL000... or /001xx...)
+        const recordIdFromUrl = this.extractRecordIdFromUrl(this.fieldValue);
+        
+        if (!recordIdFromUrl) {
+            console.error('❌ Could not extract record ID from URL:', this.fieldValue);
+            return;
+        }
+
+        console.log('✅ Extracted Record ID:', recordIdFromUrl);
+        
+        // Dispatch event to parent component
+        const linkClickEvent = new CustomEvent('linkclick', {
+            detail: {
+                recordId: recordIdFromUrl,
+                fieldName: this.fieldName,
+                displayValue: this.displayValue
+            },
+            bubbles: true,
+            composed: true
+        });
+        
+        this.dispatchEvent(linkClickEvent);
+        console.log('✅ Link click event dispatched');
+    }
+
+    // ✅ NEW: Helper method to extract record ID from URL
+    extractRecordIdFromUrl(url) {
+        if (!url || typeof url !== 'string') {
+            return null;
+        }
+
+        // Remove leading/trailing whitespace
+        url = url.trim();
+
+        // Handle formats like "/a05qL000..." or "/001xx..."
+        if (url.startsWith('/')) {
+            const recordId = url.substring(1);  // Remove the leading slash
+            
+            // Validate Salesforce ID format (15 or 18 characters)
+            if (recordId && (recordId.length === 15 || recordId.length === 18)) {
+                return recordId;
+            } else {
+                console.warn('⚠️ Invalid Salesforce ID format:', recordId);
+                return recordId;  // Return anyway in case it's valid
+            }
+        }
+
+        // If no leading slash, assume it's already an ID
+        if (url.length === 15 || url.length === 18) {
+            return url;
+        }
+
+        console.error('❌ Cannot parse URL:', url);
+        return null;
     }
     
     // Handle text area click to expand/collapse

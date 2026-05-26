@@ -332,14 +332,7 @@ public with sharing class ClaimSearchController {
         }
     }
 
-    @AuraEnabled(cacheable=true)
-    public static Map<String, List<String>> getTypeDocumentsByReportoire() {
-        Map<String, List<String>> result = new Map<String, List<String>>();
-        result.put('Pièces d’identité', new List<String>{'CIN', 'Passeport', 'Permis de conduire'});
-        result.put('Documents Véhicule', new List<String>{'Carte Grise', 'Attestation d’assurance', 'Visite Technique'});
-        result.put('Documents Sinistre', new List<String>{'Constat Amiable', 'PV de Police', 'Rapport Expertise'});
-        return result;
-    }
+
 
     @AuraEnabled
     public static String saveDocumentLocally(Map<String, Object> fileData) {
@@ -695,7 +688,6 @@ public with sharing class ClaimSearchController {
             }
 
            
-            // Copy CaseCoverage to ClaimCoverage
             List<CaseCoverage__c> caseCoverages = DM009_CaseCoverage.getByCaseId('Id, Name, CodeGarantie__c, Insurance_Policy_Coverage__c', caseId);
 
             if (!caseCoverages.isEmpty()) {
@@ -710,7 +702,19 @@ public with sharing class ClaimSearchController {
                 }
                 insert claimCoverages;
             }
-
+            List<Document_Link__c> docLinks = [
+                SELECT Id, Sinistre__c 
+                FROM Document_Link__c 
+                WHERE Case__c = :caseId
+            ];
+            
+            if (!docLinks.isEmpty()) {
+                for (Document_Link__c dl : docLinks) {
+                    dl.Sinistre__c = newClaim.Id; 
+                }
+                update docLinks;
+            }
+            
             currentCase.Status = 'En cours';
             currentCase.Claim__c = newClaim.Id;
             currentCase.LastWizardStep__c = null;

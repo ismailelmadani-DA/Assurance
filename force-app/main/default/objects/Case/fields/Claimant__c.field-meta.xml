@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Claimant__c</fullName>
+    <label>Déclarant du sinistre</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Assuré</fullName>
+                <default>false</default>
+                <label>Assuré</label>
+            </value>
+            <value>
+                <fullName>Tiers</fullName>
+                <default>false</default>
+                <label>Tiers</label>
+            </value>
+            <value>
+                <fullName>Compagnie adverse</fullName>
+                <default>false</default>
+                <label>Compagnie adverse</label>
+            </value>
+            <value>
+                <fullName>Police / Gendarmerie</fullName>
+                <default>false</default>
+                <label>Police / Gendarmerie</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

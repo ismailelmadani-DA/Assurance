@@ -1,0 +1,97 @@
+<template>
+    <div class="slds-is-relative">
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Chargement" size="medium"></lightning-spinner>
+        </template>
+
+        <div class="slds-grid slds-wrap slds-gutters slds-m-top_medium">
+            
+            <div class="slds-col slds-size_1-of-1 slds-large-size_7-of-12 slds-m-bottom_medium">
+                <div class="slds-box slds-theme_default" style="height: 100%; border: 2px dashed #d8dde6; background: #f4f6f9;">
+                    <div class="slds-text-align_center slds-p-around_large">
+                        <lightning-icon icon-name="utility:upload" size="large"></lightning-icon>
+                        <h2 class="slds-text-heading_small slds-m-top_medium" style="font-weight: 600; color: #444;">Déposez votre document ici</h2>
+                        
+                        <div class="slds-m-top_medium">
+                            <input type="file" accept=".pdf, .png, .jpg, .jpeg" class="slds-hide" id="file-upload" onchange={handleFileChange}/>
+                            <label for="file-upload" class="slds-button slds-button_neutral">
+                                Sélectionner un fichier
+                            </label>
+                        </div>
+
+                        <template if:true={selectedFileName}>
+                            <div class="slds-m-top_large slds-box slds-box_x-small slds-theme_default slds-grid slds-grid_align-spread slds-grid_vertical-align-center" style="border-left: 4px solid #006233;">
+                                <div class="slds-grid slds-grid_vertical-align-center">
+                                    <lightning-icon icon-name="doctype:attachment" size="small" class="slds-m-right_small"></lightning-icon>
+                                    <strong class="slds-truncate" style="max-width: 200px;">{selectedFileName}</strong>
+                                </div>
+                                <lightning-button-icon icon-name="utility:delete" variant="bare" onclick={clearFile} title="Retirer ce fichier"></lightning-button-icon>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slds-col slds-size_1-of-1 slds-large-size_5-of-12">
+                <div class="slds-box slds-theme_default" style="border-top: 4px solid #006233;">
+                    <h3 class="slds-text-heading_small slds-m-bottom_medium" style="font-weight: 600; color: #006233;">Caractéristiques du document</h3>
+                    
+                    <lightning-combobox label="Répertoire" options={optionsDirectory} value={repertoire} onchange={handleInputChange} data-field="repertoire" required></lightning-combobox>
+                    <lightning-combobox label="Type de document" options={optionsDocType} value={typeDocument} onchange={handleInputChange} data-field="typeDocument" required disabled={isTypeDisabled}></lightning-combobox>
+                    <lightning-input label="Nature du document" value={nature} onchange={handleInputChange} data-field="nature"></lightning-input>
+
+                    <div class="slds-m-top_medium slds-p-around_small" style="background: #fcfcfc; border: 1px solid #e5e5e5; border-radius: 4px;">
+                        <lightning-input label="N° Déclaration" value={caseNumber} disabled></lightning-input>
+                        <lightning-input label="N° Police" value={policyNumber} disabled></lightning-input>
+                        <lightning-input label="N° Immatriculation" value={registrationNumber} disabled></lightning-input>
+                        <lightning-input type="date" label="Date de survenance" value={dateSurvenance} disabled></lightning-input>
+                    </div>
+
+                    <div class="slds-m-top_medium">
+                        <button class="slds-button slds-button_brand" style="background: #006233; width: 100%; border: none;" onclick={handleUpload} disabled={isUploadDisabled}>
+                            Ajouter ce document
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="slds-m-top_x-large">
+            <h3 class="slds-text-heading_small slds-m-bottom_small" style="font-weight: 600;">
+                Documents indexés ({documents.length})
+            </h3>
+            
+            <div class="slds-box slds-theme_default slds-p-around_none">
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                    <thead>
+                        <tr class="slds-line-height_reset" style="background: #e8f5e9;">
+                            <th style="color: #006233;">NOM DU DOCUMENT</th>
+                            <th style="color: #006233;">RÉPERTOIRE</th>
+                            <th style="color: #006233;">TYPE</th>
+                            <th style="color: #006233; width: 120px;">ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={documents} for:item="doc">
+                            <tr key={doc.Id}>
+                                <td><strong>{doc.Name}</strong></td>
+                                <td>{doc.Directory__c}</td>
+                                <td>{doc.Type_de_document__c}</td>
+                                <td>
+                                    <lightning-button-icon icon-name="utility:preview" variant="bare" class="slds-m-right_small" title="Aperçu Google Drive" data-id={doc.IdDocument__c} onclick={handleView}></lightning-button-icon>
+                                    <lightning-button-icon icon-name="utility:delete" variant="bare" title="Supprimer" data-id={doc.Id} onclick={handleDelete}></lightning-button-icon>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+                
+                <template if:false={hasDocuments}>
+                    <div class="slds-p-around_large slds-text-align_center slds-text-color_weak">
+                        Aucun document n'a encore été ajouté à cette déclaration.
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+</template>

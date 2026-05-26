@@ -89,7 +89,6 @@ public class DA_TestDataFactory {
             Origin      = 'Web',
             AccountId   = accountId,
             Police__c   = policyId
-           
         );
         if (params != null) {
             for (String fieldName : params.keySet()) {
@@ -101,7 +100,7 @@ public class DA_TestDataFactory {
 
     public static Claim__c createTestClaim(Id caseId, Map<String, Object> params) {
         Claim__c claim = new Claim__c(
-            Case__c     = caseId
+            Case__c = caseId
         );
         if (params != null) {
             for (String fieldName : params.keySet()) {
@@ -209,5 +208,74 @@ public class DA_TestDataFactory {
             }
         }
         return p;
+    }
+
+    public static VehicleCaseAssignment__c createTestVehicleCaseAssignment(Id claimId, Id caseId, Boolean isOpposing, Map<String, Object> params) {
+        VehicleCaseAssignment__c v = new VehicleCaseAssignment__c(
+            Claim__c         = claimId,
+            Case__c          = caseId,
+            isOpposingCar__c = isOpposing
+        );
+        if (params != null) {
+            for (String fieldName : params.keySet()) {
+                v.put(fieldName, params.get(fieldName));
+            }
+        }
+        return v;
+    }
+
+    public static Account createTestPrestataire(String type, Map<String, Object> params) {
+        Id rtId = DA_Utility.getRecordTypeId('Account', 'Prestataire');
+        String suffix = uniqueSuffix();
+        Account acc = new Account(
+            Name                 = 'Prestataire_' + suffix,
+            RecordTypeId         = rtId,
+            TypeDePrestataire__c = type,
+            Phone                = '0600000000',
+            Email__c             = 'test' + suffix + '@test.com',
+            Ville__c             = 'Casablanca',
+            Adresse__c           = '1 Rue Test',
+            Pays__c              = 'Maroc'
+        );
+        if (params != null) {
+            for (String fieldName : params.keySet()) {
+                acc.put(fieldName, params.get(fieldName));
+            }
+        }
+        return acc;
+    }
+
+    public static RIB__c createTestRib(Id accountId, Map<String, Object> params) {
+        RIB__c rib = new RIB__c(
+            ParticipantAccount__c = accountId,
+            RIB__c                = '007123456789012345678901',
+            Actif__c              = true,
+            Statut__c             = 'RIB Validé'
+        );
+        if (params != null) {
+            for (String fieldName : params.keySet()) {
+                rib.put(fieldName, params.get(fieldName));
+            }
+        }
+        return rib;
+    }
+
+    public static Evenement__c createTestEvenement(Map<String, Object> params) {
+        String suffix = uniqueSuffix();
+        Evenement__c evt = new Evenement__c(
+           Libelle__c   = 'EVT_' + suffix,
+           Categorie__c = 'Catastrophe naturelle',
+           Type__c      = 'Inondation',
+           DateDebut__c = Date.today(),
+           DateFin__c   = Date.today().addDays(5),
+           Pays__c      = 'Maroc',
+           Ville__c     = 'Casablanca'
+        );
+        if (params != null) {
+           for (String fieldName : params.keySet()) {
+               evt.put(fieldName, params.get(fieldName));
+           }
+        }
+        return evt;
     }
 }

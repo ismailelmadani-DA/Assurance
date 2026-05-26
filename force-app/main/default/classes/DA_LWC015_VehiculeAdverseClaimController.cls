@@ -25,9 +25,10 @@ public with sharing class DA_LWC015_VehiculeAdverseClaimController {
     // ── Lecture ───────────────────────────────────────────────────────────────
 
     @AuraEnabled(cacheable=false)
-    public static List<SObject> getVehiclesAdverses(Id claimId) {
-        return DM002_VehicleCaseAssignment.getVehiclesAdverses(claimId);
-    }
+public static List<SObject> getVehiclesAdverses(Id claimId) {
+    if (claimId == null) return new List<SObject>();
+    return DM002_VehicleCaseAssignment.getVehiclesAdverses(claimId);
+}
 
     @AuraEnabled
     public static Map<String, Object> getVehicleAdverseById(Id assignmentId) {

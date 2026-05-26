@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>NatureMission__c</fullName>
+    <label>Nature de la mission</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Expertise Automobile</fullName>
+                <default>false</default>
+                <label>Expertise Automobile</label>
+            </value>
+            <value>
+                <fullName>Réparation</fullName>
+                <default>false</default>
+                <label>Réparation</label>
+            </value>
+            <value>
+                <fullName>Expertise classique</fullName>
+                <default>false</default>
+                <label>Expertise classique</label>
+            </value>
+            <value>
+                <fullName>Expertise additive</fullName>
+                <default>false</default>
+                <label>Expertise additive</label>
+            </value>
+            <value>
+                <fullName>Expertise contradictoire</fullName>
+                <default>false</default>
+                <label>Expertise contradictoire</label>
+            </value>
+            <value>
+                <fullName>Expertise sur document</fullName>
+                <default>false</default>
+                <label>Expertise sur document</label>
+            </value>
+            <value>
+                <fullName>Appréciation</fullName>
+                <default>false</default>
+                <label>Appréciation</label>
+            </value>
+            <value>
+                <fullName>Avis d&apos;expertise médical</fullName>
+                <default>false</default>
+                <label>Avis d&apos;expertise médical</label>
+            </value>
+            <value>
+                <fullName>Expertise médicolégal</fullName>
+                <default>false</default>
+                <label>Expertise médicolégal</label>
+            </value>
+            <value>
+                <fullName>Demande de complément d&apos;information</fullName>
+                <default>false</default>
+                <label>Demande de complément d&apos;information</label>
+            </value>
+            <value>
+                <fullName>Suspicion de fraude</fullName>
+                <default>false</default>
+                <label>Suspicion de fraude</label>
+            </value>
+            <value>
+                <fullName>Saisie Arrêt</fullName>
+                <default>false</default>
+                <label>Saisie Arrêt</label>
+            </value>
+            <value>
+                <fullName>Consultation judiciaire</fullName>
+                <default>false</default>
+                <label>Consultation judiciaire</label>
+            </value>
+            <value>
+                <fullName>Sommation interpellative</fullName>
+                <default>false</default>
+                <label>Sommation interpellative</label>
+            </value>
+            <value>
+                <fullName>Recours judiciaire</fullName>
+                <default>false</default>
+                <label>Recours judiciaire</label>
+            </value>
+            <value>
+                <fullName>Procédure judiciaire</fullName>
+                <default>false</default>
+                <label>Procédure judiciaire</label>
+            </value>
+            <value>
+                <fullName>Demande de PV</fullName>
+                <default>false</default>
+                <label>Demande de PV</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

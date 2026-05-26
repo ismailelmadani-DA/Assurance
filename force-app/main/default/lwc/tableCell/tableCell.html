@@ -80,6 +80,13 @@
         </div>
     </template>
     
+    <!-- String Field (EMAIL, TEXT, etc) -->
+    <template if:true={isString}>
+        <div class="string-container">
+            {fieldValue}
+        </div>
+    </template>
+    
     <!-- Default Text Field -->
     <template if:true={isText}>
         {fieldValue}

@@ -1,0 +1,106 @@
+<template>
+    <div class="doc-card">
+        <div class="doc-header">
+            <div class="doc-header__left">
+                <div class="doc-header__icon-wrap">
+                    <lightning-icon icon-name="standard:document" size="small" variant="inverse"></lightning-icon>
+                </div>
+                <div>
+                    <h2 class="doc-header__title">Documents GED</h2>
+                    <span class="doc-header__subtitle">{totalLabel}</span>
+                </div>
+            </div>
+            
+            <div class="doc-header__actions">
+                <button class="doc-btn doc-btn--add" onclick={handleAdd} title="Ajouter un document">
+                    <lightning-icon icon-name="utility:add" size="xx-small"></lightning-icon>
+                    <span>Ajouter Document</span>
+                </button>
+                
+                <button class="doc-btn doc-btn--icon" onclick={handleRefresh} title="Actualiser">
+                    <lightning-icon icon-name="utility:refresh" size="xx-small" variant="inverse"></lightning-icon>
+                </button>
+            </div>
+        </div>
+
+        <div class="doc-body">
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Chargement..." size="medium"></lightning-spinner>
+            </template>
+
+            <template if:true={hasRecords}>
+                <div class="doc-table-wrap">
+                    <table class="doc-table">
+                        <thead>
+                            <tr>
+                                <th class="doc-th">NOM DU DOCUMENT</th>
+                                <th class="doc-th">RÉPERTOIRE</th>
+                                <th class="doc-th">TYPE DE DOCUMENT</th>
+                                <th class="doc-th">DATE DE RÉCEPTION</th>
+                                <th class="doc-th">ÉMETTEUR</th>
+                                <th class="doc-th doc-th--center">ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={documents} for:item="doc">
+                                <tr key={doc.Id}>
+                                    <td class="doc-td doc-td--name">
+                                        <a class="doc-link" href="javascript:void(0)" data-id={doc.Id} onclick={handleViewRecordStandard}>{doc.Name}</a>
+                                    </td>
+                                    <td class="doc-td">{doc.Directory__c}</td>
+                                    <td class="doc-td">{doc.Type_de_document__c}</td>
+                                    <td class="doc-td doc-td--mono">
+                                        <lightning-formatted-date-time value={doc.dateOfReceipt__c}></lightning-formatted-date-time>
+                                    </td>
+                                    <td class="doc-td">{doc.Issuer__c}</td>
+                                    <td class="doc-td doc-td--center doc-td--actions">
+                                        <button class="doc-action-btn doc-action-btn--view" data-id={doc.Id} onclick={handleViewRecord} title="Visualiser">
+                                            <lightning-icon icon-name="utility:preview" size="xx-small"></lightning-icon>
+                                        </button>
+                                        <button class="doc-action-btn doc-action-btn--edit" data-id={doc.Id} onclick={handleEditRecord} title="Modifier">
+                                            <lightning-icon icon-name="utility:edit" size="xx-small"></lightning-icon>
+                                        </button>
+                                        <button class="doc-action-btn doc-action-btn--delete" data-id={doc.Id} onclick={handleDeleteRecord} title="Supprimer">
+                                            <lightning-icon icon-name="utility:delete" size="xx-small"></lightning-icon>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+
+            <template if:false={hasRecords}>
+                <div class="doc-empty">
+                    <p>Aucun document associé à ce sinistre.</p>
+                </div>
+            </template>
+        </div>
+    </div>
+    <template if:true={showFormModal}>
+        <div class="doc-modal-overlay">
+            <section class="doc-modal" role="dialog" aria-modal="true">
+                
+                <header class="doc-modal__header">
+                    <div class="doc-modal__header-inner">
+                        <lightning-icon icon-name="standard:file" size="small" variant="inverse"></lightning-icon>
+                        <h2 class="doc-modal__title">{modalTitle}</h2>
+                    </div>
+                    <button class="doc-modal__close" onclick={closeModal} title="Fermer">
+                        <lightning-icon icon-name="utility:close" size="x-small" variant="inverse"></lightning-icon>
+                    </button>
+                </header>
+
+                <div class="doc-modal__body" style="background-color: #f0f4f8; padding: 0;">
+                    <c-d-a_documents-g-e-d 
+                        record-id={recordId} 
+                        document-id={selectedDocumentId} 
+                        onclose={handleModalClose}>
+                    </c-d-a_documents-g-e-d>
+                </div>
+
+            </section>
+        </div>
+    </template>
+</template>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>SourceRequete__c</fullName>
+    <label>Source de la requête</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Courrier GED</fullName>
+                <default>false</default>
+                <label>Courrier GED</label>
+            </value>
+            <value>
+                <fullName>Instruction</fullName>
+                <default>false</default>
+                <label>Instruction</label>
+            </value>
+            <value>
+                <fullName>Déclaration</fullName>
+                <default>false</default>
+                <label>Déclaration</label>
+            </value>
+            <value>
+                <fullName>Règlement</fullName>
+                <default>false</default>
+                <label>Règlement</label>
+            </value>
+            <value>
+                <fullName>Révision Sinistre</fullName>
+                <default>false</default>
+                <label>Révision Sinistre</label>
+            </value>
+            <value>
+                <fullName>Instruction Recours Sortant</fullName>
+                <default>false</default>
+                <label>Instruction Recours Sortant</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

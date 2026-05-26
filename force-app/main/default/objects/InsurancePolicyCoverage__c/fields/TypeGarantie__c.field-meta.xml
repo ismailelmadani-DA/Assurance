@@ -10,7 +10,7 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Materielle</fullName>
+                <fullName>Matérielle</fullName>
                 <default>false</default>
                 <label>Matérielle</label>
             </value>
@@ -18,6 +18,11 @@
                 <fullName>Corporelle</fullName>
                 <default>false</default>
                 <label>Corporelle</label>
+            </value>
+            <value>
+                <fullName>Générale</fullName>
+                <default>false</default>
+                <label>Générale</label>
             </value>
         </valueSetDefinition>
     </valueSet>

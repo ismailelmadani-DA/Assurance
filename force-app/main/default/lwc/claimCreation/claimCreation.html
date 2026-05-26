@@ -277,59 +277,18 @@
                 </template>
 
                 <!-- ===================== ÉTAPE 5 ===================== -->
-                <template lwc:if={isStep5}>
+               <template lwc:if={isStep5}>
                     <h1 class="main-title slds-m-bottom_medium">Importation des documents</h1>
-                    <div class="slds-box slds-theme_shade slds-m-bottom_medium slds-grid slds-wrap">
-                        <div class="slds-col slds-size_1-of-4">Date Survenance: <strong>{dateSurvenance}</strong></div>
-                        <div class="slds-col slds-size_1-of-4">N° Police:
-                            <strong>{selectedPolicyRecord.PolicyNumber}</strong></div>
-                        <div class="slds-col slds-size_1-of-4">N° Immatriculation:
-                            <strong>{selectedPolicyRecord.RegistrationNumber}</strong></div>
-                        <div class="slds-col slds-size_1-of-4">N° Déclaration: <strong>{createdCaseNumber}</strong>
-                        </div>
-                    </div>
-                    <div class="slds-section slds-is-open">
-                        <h3 class="slds-section__title slds-theme_shade slds-p-horizontal_small">Importation des
-                            documents</h3>
-                        <div class="slds-grid slds-gutters slds-wrap slds-p-around_small slds-grid_vertical-align-end">
-                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
-                                <lightning-combobox label="Répertoire" placeholder="Choisir un répertoire"
-                                    options={optionsDirectory} value={selectedDirectory} onchange={handleFolderChange}
-                                    required></lightning-combobox>
-                            </div>
-                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
-                                <lightning-combobox label="Type de document" placeholder="Choisir un document"
-                                    options={optionsDocType} value={selectedDocType} onchange={handleDocTypeChange}
-                                    required></lightning-combobox>
-                            </div>
-                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
-                                <lightning-file-upload label="Sélectionner des fichiers" record-id={createdCaseId}
-                                    onuploadfinished={handleUploadFinished} multiple
-                                    disabled={isUploadDisabled}></lightning-file-upload>
-                            </div>
-                        </div>
-                    </div>
-                    <template if:true={files.length}>
-                        <div class="slds-m-top_medium">
-                            <h3 class="slds-text-heading_small slds-m-bottom_small">Fichiers à indexer</h3>
-                            <div class="slds-box slds-theme_shade">
-                                <template for:each={files} for:item="file">
-                                    <div key={file.fileName}
-                                        class="slds-grid slds-grid_align-spread slds-p-around_x-small border-bottom">
-                                        <div class="slds-col slds-size_4-of-12"><strong>{file.fileName}</strong></div>
-                                        <div class="slds-col slds-size_4-of-12"><span
-                                                class="slds-badge">{file.repertoire}</span> / {file.typeDocument}</div>
-                                        <div class="slds-col slds-size_4-of-12 slds-text-align_right">
-                                            <button class="action-button btn-indexer" onclick={handleUploadSingle}
-                                                data-id={file.fileName}>Indexer</button>
-                                            <button class="action-button btn-delete slds-m-left_x-small"
-                                                onclick={handleRemoveFile} data-id={file.fileName}>Supprimer</button>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                    </template>
+
+                    <c-ged-document-manager
+                        case-id={createdCaseId}
+                        case-number={createdCaseNumber}
+                        policy-id={selectedPolicyId}
+                        policy-number={selectedPolicyRecord.PolicyNumber}
+                        registration-number={selectedPolicyRecord.RegistrationNumber}
+                        date-survenance={dateSurvenance}>
+                    </c-ged-document-manager>
+                    
                 </template>
 
                 <!-- ===================== ÉTAPE 6 ===================== -->

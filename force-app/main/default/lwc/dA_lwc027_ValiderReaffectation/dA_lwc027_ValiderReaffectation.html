@@ -1,0 +1,63 @@
+<template>
+    <!-- ═══ MODAL CONFIRMATION ═══ -->
+    <template if:true={isModalOpen}>
+        <div class="fs-modal-overlay">
+            <div class="fs-modal">
+                <div class="fs-modal__header fs-modal__header--validate">
+                    <div class="fs-modal__header-inner">
+                        <lightning-icon icon-name="utility:check" size="small"></lightning-icon>
+                        <h2 class="fs-modal__title">Valider la réaffectation</h2>
+                    </div>
+                    <button class="fs-modal__close" onclick={handleCloseModal}>
+                        <lightning-icon icon-name="utility:close" size="xx-small" variant="inverse"></lightning-icon>
+                    </button>
+                </div>
+
+                <div class="fs-modal__body">
+                    <div class="fs-confirm-block">
+                        <lightning-icon
+                            icon-name="utility:warning"
+                            size="medium"
+                            variant="warning"
+                            class="fs-confirm-icon">
+                        </lightning-icon>
+                        <p class="fs-confirm-text">
+                            Êtes-vous sûr de vouloir valider cette réaffectation ?<br/>
+                            Le propriétaire de la déclaration <strong>{requeteInfo.declarationNumber} </strong>
+                            sera transféré à <strong> {requeteInfo.reaffecterAName}</strong>.
+                        </p>
+                    </div>
+
+                    <template if:true={requeteInfo}>
+                        <div class="fs-info-card">
+                            <div class="fs-info-row">
+                                <span class="fs-info-label">Réaffecter à</span>
+                                <span class="fs-info-value">{requeteInfo.reaffecterAName}</span>
+                            </div>
+                            <div class="fs-info-row">
+                                <span class="fs-info-label">Déclaration</span>
+                                <span class="fs-info-value">{requeteInfo.declarationNumber}</span>
+                            </div>
+                            <template if:true={requeteInfo.motif}>
+                                <div class="fs-info-row">
+                                    <span class="fs-info-label">Motif</span>
+                                    <span class="fs-info-value fs-info-value--motif">{requeteInfo.motif}</span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="fs-modal__footer">
+                    <button class="fs-btn fs-btn--cancel" onclick={handleCloseModal}>Annuler</button>
+                    <button class="fs-btn fs-btn--validate-confirm" onclick={handleConfirm} disabled={isSaving}>
+                        <template if:true={isSaving}>
+                            <lightning-spinner alternative-text="Traitement" size="x-small" variant="inverse"></lightning-spinner>
+                        </template>
+                        Confirmer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+</template>
