@@ -1,4 +1,3 @@
-// DA_lwc005_ClaimCircumstancesForm.js
 import { LightningElement, api, track, wire } from 'lwc';
 import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
 
@@ -10,7 +9,6 @@ import PARTY_FIELD from '@salesforce/schema/Case.OpposingParty__c';
 export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
     @api claimSummary = {};
 
-    // ✅ AJOUT : Propriété @api pour recevoir les données sauvegardées du parent
     @api
     get savedFormData() {
         return this._formData;
@@ -18,11 +16,9 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
     set savedFormData(value) {
         if (value) {
             this._formData = { ...this._formData, ...value };
-            // Restaurer isDamageYes si AnyDamage__c est true
             if (value.AnyDamage__c === true || value.AnyDamage__c === 'true') {
                 this.isDamageYes = true;
             }
-            // Restaurer les points de choc
             if (value.PointsDeChoc__c) {
                 this._savedPointsDeChoc = value.PointsDeChoc__c;
                 this._savedPrecisions = value.PrecisionsDommages__c;
@@ -43,7 +39,6 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
     };
     @track isDamageYes = false;
 
-    // ✅ AJOUT : Variables pour les données sauvegardées à transmettre au point choc
     _savedPointsDeChoc = '';
     _savedPrecisions = '';
 
@@ -53,7 +48,8 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
     }
 
     @track triggerOptions = [];
-    @track causeOptions = [];
+    @track _allCauseValues = [];
+    @track _causeControllerValues = {};
     @track partyOptions = [];
 
     ouiNonOptions = [
@@ -64,8 +60,20 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
     @wire(getObjectInfo, { objectApiName: CASE_OBJECT })
     caseObjectInfo;
 
+    get declarationRecordTypeId() {
+        const infos = this.caseObjectInfo && this.caseObjectInfo.data && this.caseObjectInfo.data.recordTypeInfos;
+        if (!infos) return undefined;
+        for (const id in infos) {
+            const info = infos[id];
+            if (!info.master && (info.name === 'Declaration' || info.developerName === 'Declaration')) {
+                return info.recordTypeId;
+            }
+        }
+        return this.caseObjectInfo.data.defaultRecordTypeId;
+    }
+
     @wire(getPicklistValues, {
-        recordTypeId: '$caseObjectInfo.data.defaultRecordTypeId',
+        recordTypeId: '$declarationRecordTypeId',
         fieldApiName: TRIGGER_FIELD
     })
     wiredTriggerValues({ data, error }) {
@@ -73,15 +81,32 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
     }
 
     @wire(getPicklistValues, {
-        recordTypeId: '$caseObjectInfo.data.defaultRecordTypeId',
+        recordTypeId: '$declarationRecordTypeId',
         fieldApiName: CAUSE_FIELD
     })
     wiredCauseValues({ data, error }) {
-        if (data) this.causeOptions = data.values;
+        if (data) {
+            this._allCauseValues = data.values;
+            this._causeControllerValues = data.controllerValues || {};
+        }
+    }
+
+    get causeOptions() {
+        const trigger = this._formData.TriggeringEventOfClaim__c;
+        if (!trigger) {
+            return [];
+        }
+        const controllerIndex = this._causeControllerValues[trigger];
+        if (controllerIndex === undefined) {
+            return [];
+        }
+        return this._allCauseValues
+            .filter((v) => Array.isArray(v.validFor) && v.validFor.includes(controllerIndex))
+            .map((v) => ({ label: v.label, value: v.value }));
     }
 
     @wire(getPicklistValues, {
-        recordTypeId: '$caseObjectInfo.data.defaultRecordTypeId',
+        recordTypeId: '$declarationRecordTypeId',
         fieldApiName: PARTY_FIELD
     })
     wiredPartyValues({ data, error }) {
@@ -102,6 +127,10 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
             this._formData.AnyDamage__c = (value === 'true');
         }
 
+        if (field === 'TriggeringEventOfClaim__c') {
+            this._formData = { ...this._formData, CausesOfClaim__c: '' };
+        }
+
         this.notifyParent();
     }
 
@@ -111,7 +140,6 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
             PointsDeChoc__c: event.detail.clickedParts,
             PrecisionsDommages__c: event.detail.precisionDommage
         };
-        // ✅ Mettre à jour les sauvegardées aussi
         this._savedPointsDeChoc = event.detail.clickedParts;
         this._savedPrecisions = event.detail.precisionDommage;
         this.notifyParent();
@@ -123,7 +151,6 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
         }));
     }
 
-    // ✅ AJOUT : Getters pour passer les données sauvegardées au composant point choc
     get pointsDeChocSaved() {
         return this._savedPointsDeChoc;
     }
@@ -132,11 +159,10 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
         return this._savedPrecisions;
     }
 
-    // Dans DA_lwc005 — ajouter ce getter
     get anyDamageValue() {
         if (this._formData.AnyDamage__c === true) return 'true';
         if (this._formData.AnyDamage__c === false) return 'false';
-        return this._formData.AnyDamage__c; // cas string déjà
+        return this._formData.AnyDamage__c; 
     }
 
     @api

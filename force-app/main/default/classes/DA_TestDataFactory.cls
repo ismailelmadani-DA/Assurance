@@ -278,4 +278,37 @@ public class DA_TestDataFactory {
         }
         return evt;
     }
+
+public static Instruction__c createTestInstruction(Id claimId, Map<String, Object> params) {
+    Instruction__c instruction = new Instruction__c(
+        Claim__c = claimId  
+    );
+    
+    if (params != null) {
+        for (String key : params.keySet()) {
+            instruction.put(key, params.get(key));
+        }
+    }
+    
+    return instruction;
+}
+
+public static Instruction_Coverage__c createTestInstructionCoverage(
+    Id instructionId, 
+    Id claimCoverageId, 
+    Map<String, Object> params
+) {
+    Instruction_Coverage__c coverage = new Instruction_Coverage__c(
+        Instruction__c = instructionId,
+        ClaimCoverage__c = claimCoverageId
+    );
+    
+    if (params != null) {
+        for (String key : params.keySet()) {
+            coverage.put(key, params.get(key));
+        }
+    }
+    
+    return coverage;
+}
 }

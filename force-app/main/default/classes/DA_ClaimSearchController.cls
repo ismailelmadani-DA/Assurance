@@ -195,7 +195,6 @@ public with sharing class DA_ClaimSearchController {
             newClaim.Case__c = caseId;
             newClaim.PolicyNumber__c = policyId;
             newClaim.Vehicule__c = vehicleId;
-            newClaim.RegistrationNumber__c = registrationNumber;
             newClaim.Status__c = 'Ouvert';
             
             // Mapping dynamique des champs envoyés par le LWC

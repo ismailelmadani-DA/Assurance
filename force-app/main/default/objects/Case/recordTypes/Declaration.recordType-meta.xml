@@ -51,7 +51,15 @@
     <picklistValues>
         <picklist>CausesOfClaim__c</picklist>
         <values>
+            <fullName>Choc %2F Collision</fullName>
+            <default>false</default>
+        </values>
+        <values>
             <fullName>Accident</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Renversement</fullName>
             <default>false</default>
         </values>
         <values>
@@ -59,19 +67,7 @@
             <default>false</default>
         </values>
         <values>
-            <fullName>Choc %2F Collision</fullName>
-            <default>false</default>
-        </values>
-        <values>
             <fullName>Chute d%27objet</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Collision</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Incendie</fullName>
             <default>false</default>
         </values>
         <values>
@@ -79,11 +75,147 @@
             <default>false</default>
         </values>
         <values>
-            <fullName>Panne</fullName>
+            <fullName>Sortie de route</fullName>
             <default>false</default>
         </values>
         <values>
-            <fullName>Renversement</fullName>
+            <fullName>Heurt de véhicule</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Heurt d%27obstacle fixe</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Perte de contrôle</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Accident avec piéton</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Accident avec animal</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Inondation</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Tempête</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Grêle</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Tremblement de terre</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Glissement de terrain</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Chute d%27arbre</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Foudre</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Vent violent</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Submersion</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Coulée de boue</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Incendie</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Court-circuit</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Explosion</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Surchauffe moteur</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Incendie criminel</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Propagation de feu</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Auto-combustion</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Vol total</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Tentative de vol</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Vol avec effraction</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Vol d%27accessoires</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Détournement</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Vandalisme</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Car-jacking</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Impact</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Fissure</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Bris pare-brise</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Bris vitre latérale</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Bris lunette arrière</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Acte de vandalisme</fullName>
             <default>false</default>
         </values>
     </picklistValues>

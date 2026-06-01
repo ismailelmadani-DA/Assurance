@@ -28,6 +28,9 @@ public class DA_TestBuilderFactory {
     private List<ClaimParticipant__c>        claimParticipants        = new List<ClaimParticipant__c>();
     private List<VehicleCaseAssignment__c>   vehicleCaseAssignments   = new List<VehicleCaseAssignment__c>();
     private List<Evenement__c>               evenements               = new List<Evenement__c>();
+    private List<Instruction__c>               instructions           = new List<Instruction__c>();
+    private List<Instruction_Coverage__c>    instructionCoverages     = new List<Instruction_Coverage__c>();
+
 
     private Map<String, User>         usersByAlias    = new Map<String, User>();
     private Map<String, Claim__c>     claimsByKey     = new Map<String, Claim__c>();
@@ -378,6 +381,36 @@ public class DA_TestBuilderFactory {
         requestApprovals.add(r);
         return this;
     }
+public DA_TestBuilderFactory withInstruction() {
+    return withCustomInstructions(1, null);
+}
+
+public DA_TestBuilderFactory withCustomInstructions(Integer count, Map<String, Object> params) {
+    // Récupérer le dernier Claim créé
+    if (claims.isEmpty()) {
+        throw new IllegalArgumentException('withInstruction() requires a Claim to be created first via withClaims()');
+    }
+    
+    List<Instruction__c> newInstructions = new List<Instruction__c>();
+    Claim__c lastClaim = claims[claims.size() - 1];
+    
+    for (Integer i = 0; i < count; i++) {
+        newInstructions.add(DA_TestDataFactory.createTestInstruction(lastClaim.Id, params));
+    }
+    insert newInstructions;
+    instructions.addAll(newInstructions);
+    return this;
+}
+
+public DA_TestBuilderFactory withInstructionCoverages(Integer count, Id instructionId, Id claimCoverageId, Map<String, Object> params) {
+    List<Instruction_Coverage__c> newCoverages = new List<Instruction_Coverage__c>();
+    for (Integer i = 0; i < count; i++) {
+        newCoverages.add(DA_TestDataFactory.createTestInstructionCoverage(instructionId, claimCoverageId, params));
+    }
+    insert newCoverages;
+    instructionCoverages.addAll(newCoverages);
+    return this;
+}
 
     // ============================================================
     // ACCESSEURS — RETOURNENT LES LISTES INTERNES
@@ -465,5 +498,13 @@ public class DA_TestBuilderFactory {
 
     public Map<String, Evenement__c> getScenarioEvenements() {
         return evenementsByKey;
+    }
+
+    public List<Instruction__c> getInstructions() {
+    return instructions;
+    }
+
+public List<Instruction_Coverage__c> getInstructionCoverages() {
+    return instructionCoverages;
     }
 }

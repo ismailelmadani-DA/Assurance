@@ -16,7 +16,7 @@ import NOTIF_FIELD from '@salesforce/schema/Account.MoyenNotification__c';
 // Apex
 import searchPolicies from '@salesforce/apex/ClaimSearchController.searchPolicies';
 import createCase from '@salesforce/apex/ClaimSearchController.createCase';
-import getPicklistOptions from '@salesforce/apex/ClaimSearchController.getTypeDocumentsByReportoire';
+import getPicklistOptions from '@salesforce/apex/DA_ClaimSearchController.getTypeDocumentsByReportoire';
 import saveDocumentLocally from '@salesforce/apex/ClaimSearchController.saveDocumentLocally';
 import updateCaseRecord from '@salesforce/apex/ClaimSearchController.updateCaseRecord';
 import savePassengers from '@salesforce/apex/ClaimSearchController.savePassengers';
@@ -745,8 +745,16 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
             this.showDecisionModal = false;
 
             if (this.decisionChoice === 'reject') {
-                this.showToast('Succès', 'Déclaration rejetée.', 'success');
-                this.redirectToCase(this.createdCaseId);
+                this.showToast(
+                    'Succès',
+                    'Déclaration rejetée. Pour la consultation cliquez ici : {0}',
+                    'success',
+                    [{
+                        url: '/' + this.createdCaseId,
+                        label: this.createdCaseNumber
+                    }]
+                );
+                this.redirectToHome();
             } else {
                 this.showToast('Succès', 'Déclaration initialisée', 'success');
                 this.currentStep = 5;
@@ -790,13 +798,36 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
         }
     }
 
+    redirectToHome() {
+        this[NavigationMixin.Navigate]({
+            type: 'standard__namedPage',
+            attributes: {
+                pageName: 'home'
+            }
+        });
+        if (this.isConsoleNavigation) {
+            // eslint-disable-next-line @lwc/lwc/no-async-operation
+            setTimeout(async () => {
+                try {
+                    const focused = await getFocusedTabInfo();
+                    if (focused && focused.tabId) {
+                        await closeTab(focused.tabId);
+                    }
+                } catch (e) {
+                    // ignore — not in a Console workspace
+                }
+            }, 400);
+        }
+    }
+
     // =========================================================
     // TOAST
     // =========================================================
-    showToast(title, message, variant) {
+    showToast(title, message, variant, messageData) {
         this.dispatchEvent(new ShowToastEvent({
             title: title,
             message: message,
+            messageData: messageData,
             variant: variant,
             mode: 'sticky'
         }));
