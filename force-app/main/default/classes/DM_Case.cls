@@ -50,6 +50,83 @@ public with sharing class DM_Case {
         return existantes.isEmpty() ? null : existantes[0];
     }
 
+    // ─── DA_lwc025 ──────────────────────────────────────────────────
+
+    public static String getReaffecterAId(Id declarationId) {
+        try {
+            List<Case> requetes = (List<Case>) DA_Utility.query(
+                'Id, ReaffecterA__c',
+                OBJ,
+                'Declaration_Liee__c = \'' + declarationId + '\'' +
+                ' AND TypeRequete__c = \'Réaffecter la déclaration\'' +
+                ' AND CategorieRequete__c = \'Réaffectation\'' +
+                ' AND Status = \'En cours\'',
+                null,
+                1
+            );
+            if (!requetes.isEmpty() && requetes[0].ReaffecterA__c != null)
+                return String.valueOf(requetes[0].ReaffecterA__c);
+        } catch (Exception e) { }
+        return null;
+    }
+
+    public static String getRequeteInitialeId(Id declarationId) {
+        try {
+            List<Case> requetes = (List<Case>) DA_Utility.query(
+                'Id, CreatedById',
+                OBJ,
+                'Declaration_Liee__c = \'' + declarationId + '\'' +
+                ' AND TypeRequete__c = \'Réaffecter la déclaration\'' +
+                ' AND CategorieRequete__c = \'Réaffectation\'' +
+                ' AND Status = \'Initiale\'',
+                null,
+                1
+            );
+            if (!requetes.isEmpty())
+                return String.valueOf(requetes[0].Id);
+        } catch (Exception e) { }
+        return null;
+    }
+
+    public static String getRequeteInitialeCreatedById(Id declarationId) {
+        try {
+            List<Case> requetes = (List<Case>) DA_Utility.query(
+                'Id, CreatedById',
+                OBJ,
+                'Declaration_Liee__c = \'' + declarationId + '\'' +
+                ' AND TypeRequete__c = \'Réaffecter la déclaration\'' +
+                ' AND CategorieRequete__c = \'Réaffectation\'' +
+                ' AND Status = \'Initiale\'',
+                null,
+                1
+            );
+            if (!requetes.isEmpty())
+                return String.valueOf(requetes[0].CreatedById);
+        } catch (Exception e) { }
+        return null;
+    }
+
+    public static SObject queryRecord(
+            Id recordId,
+            String objectApiName,
+            Set<String> soqlFields,
+            Boolean isCase,
+            Map<String, Schema.SObjectField> fieldMap) {
+
+        if (!isCase && fieldMap.containsKey('name')) soqlFields.add('Name');
+
+        String soql = 'SELECT '
+            + String.join(new List<String>(soqlFields), ', ')
+            + ' FROM '  + objectApiName
+            + ' WHERE Id = :recordId LIMIT 1';
+        try {
+            List<SObject> rows = Database.query(soql);
+            return rows.isEmpty() ? null : rows[0];
+        } catch (Exception e) {
+            throw new AuraHandledException('Erreur SOQL : ' + e.getMessage());
+        }
+    }
+
     // ─── Générique ──────────────────────────────────────────────────
 
     public static Case getById(String fields, Id caseId) {

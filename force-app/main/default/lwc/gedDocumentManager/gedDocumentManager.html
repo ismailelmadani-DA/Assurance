@@ -38,7 +38,7 @@
                     
                     <lightning-combobox label="Répertoire" options={optionsDirectory} value={repertoire} onchange={handleInputChange} data-field="repertoire" required></lightning-combobox>
                     <lightning-combobox label="Type de document" options={optionsDocType} value={typeDocument} onchange={handleInputChange} data-field="typeDocument" required disabled={isTypeDisabled}></lightning-combobox>
-                    <lightning-input label="Nature du document" value={nature} onchange={handleInputChange} data-field="nature"></lightning-input>
+                    <lightning-combobox label="Nature du document" options={optionsNature} value={nature} onchange={handleInputChange} data-field="nature"></lightning-combobox>
 
                     <div class="slds-m-top_medium slds-p-around_small" style="background: #fcfcfc; border: 1px solid #e5e5e5; border-radius: 4px;">
                         <lightning-input label="N° Déclaration" value={caseNumber} disabled></lightning-input>
@@ -48,7 +48,7 @@
                     </div>
 
                     <div class="slds-m-top_medium">
-                        <button class="slds-button slds-button_brand" style="background: #006233; width: 100%; border: none;" onclick={handleUpload} disabled={isUploadDisabled}>
+                        <button type="button" class="slds-button slds-button_brand" style="background: #006233; width: 100%; border: none;" onclick={handleUpload} disabled={isUploadDisabled}>
                             Ajouter ce document
                         </button>
                     </div>
@@ -79,6 +79,7 @@
                                 <td>{doc.Type_de_document__c}</td>
                                 <td>
                                     <lightning-button-icon icon-name="utility:preview" variant="bare" class="slds-m-right_small" title="Aperçu Google Drive" data-id={doc.IdDocument__c} onclick={handleView}></lightning-button-icon>
+                                    <lightning-button-icon icon-name="utility:edit" variant="bare" class="slds-m-right_small" title="Modifier" data-id={doc.Id} onclick={handleEdit}></lightning-button-icon>
                                     <lightning-button-icon icon-name="utility:delete" variant="bare" title="Supprimer" data-id={doc.Id} onclick={handleDelete}></lightning-button-icon>
                                 </td>
                             </tr>
@@ -94,4 +95,37 @@
             </div>
         </div>
     </div>
+    <template if:true={isEditModalOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_small">
+            <div class="slds-modal__container">
+                
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Fermer" onclick={closeEditModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close" size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Fermer</span>
+                    </button>
+                    <h2 class="slds-text-heading_medium slds-hyphenate" style="color: #006233; font-weight: 600;">Modification du document</h2>
+                </header>
+                
+                <div class="slds-modal__content slds-p-around_medium">
+                    <template if:true={isLoading}>
+                        <lightning-spinner alternative-text="Chargement" size="medium"></lightning-spinner>
+                    </template>
+                    
+                    <div class="slds-form slds-form_stacked">
+                        <lightning-combobox label="Répertoire" options={optionsDirectory} value={editRepertoire} data-field="editRepertoire" onchange={handleEditChange} required></lightning-combobox>
+                        <lightning-combobox label="Type de document" options={optionsDocType} value={editTypeDocument} data-field="editTypeDocument" onchange={handleEditChange} required></lightning-combobox>
+                        <lightning-combobox label="Nature du document" options={optionsNature} value={editNature} data-field="editNature" onchange={handleEditChange}></lightning-combobox>                   
+                     </div>
+                </div>
+
+                <footer class="slds-modal__footer">
+                    <button class="slds-button slds-button_neutral" onclick={closeEditModal}>Annuler</button>
+                    <button class="slds-button slds-button_brand" style="background: #006233; border: none;" onclick={saveEdit}>Mettre à jour</button>
+                </footer>
+                
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
 </template>

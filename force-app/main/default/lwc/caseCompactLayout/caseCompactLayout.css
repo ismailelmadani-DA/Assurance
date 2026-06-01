@@ -1,16 +1,51 @@
 /* ── Conteneur principal ── */
 .ccl-container {
     background: #ffffff;
-    padding: 0.75rem 1.25rem !important;
-    border-bottom: 1px solid #e5e5e5;
+    padding: 0 !important;
+    border-radius: 12px;
+    border: 0.5px solid #e0e0e0;
+    overflow: hidden;
+}
+
+/* ── Header ── */
+.ccl-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 0.5px solid #e0e0e0;
+}
+
+/* ── Icône ronde ── */
+.ccl-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #FAECE7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-right: 12px;
 }
 
 /* ── Record type (sous-titre) ── */
 .ccl-record-type {
-    font-size: 0.75rem;
-    color: #444444;
+    font-size: 0.68rem;
+    color: #6b6d70;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.06em;
+    margin: 0 0 2px;
+    padding: 0;
+}
+
+/* ── Numéro / titre principal ── */
+.ccl-title {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #181818;
+    margin: 0;
+    line-height: 1;
 }
 
 /* ── Boutons d'action ── */
@@ -18,7 +53,7 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 0.25rem;
+    gap: 4px;
     margin-left: auto;
 }
 
@@ -27,110 +62,151 @@
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    background-color: #fff3cd;
-    border: 1px solid #f0c040;
+    background-color: #FAEEDA;
+    border: 0.5px solid #FAC775;
     border-radius: 1rem;
     padding: 0.25rem 0.75rem;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #7a5c00;
+    color: #854F0B;
     white-space: nowrap;
     margin-right: 0.5rem;
 }
 
 .ccl-badge-reaffectation lightning-icon {
-    --sds-c-icon-color-foreground-default: #f0a500;
-}
-
-/* ── Ligne des champs ── */
-.ccl-fields-row {
-    margin-top: 0.2rem !important;
-    margin-bottom: 0 !important;
+    --sds-c-icon-color-foreground-default: #BA7517;
 }
 
 /* ── Grille des champs ── */
 .ccl-fields-grid {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    flex-direction: row !important;
-    row-gap: 0 !important;
-    column-gap: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 16px 20px;
+    gap: 16px;
     list-style: none;
-    width: 100%;
+    margin: 0 !important;
 }
 
 /* ── Item individuel ── */
 .ccl-field-item {
-    flex: 1 1 0 !important;
-    min-width: 0 !important;
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-    padding-right: 0.75rem !important;
+    min-width: 0;
+    padding: 0 !important;
     margin: 0 !important;
 }
 
 /* ── Label du champ ── */
 .ccl-field-label {
-    font-size: 0.6875rem !important;
-    color: #6b6d70 !important;
-    line-height: 1.1 !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    font-size: 0.6875rem;
+    color: #6b6d70;
+    line-height: 1.1;
+    margin: 0 0 4px;
+    padding: 0;
 }
 
 /* ── Valeur du champ ── */
 .ccl-field-value {
-    font-size: 0.8125rem !important;
-    color: #181818 !important;
-    font-weight: 500 !important;
-    line-height: 1.2 !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    font-size: 0.8125rem;
+    color: #181818;
+    font-weight: 500;
+    line-height: 1.2;
+    margin: 0;
+    padding: 0;
 }
 
 /* ── Valeur vide ── */
 .ccl-field-empty {
-    font-size: 0.8125rem !important;
-    color: #aeaeae !important;
-    line-height: 1.2 !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    font-size: 0.8125rem;
+    color: #aeaeae;
+    line-height: 1.2;
 }
 
 /* ── Lien lookup ── */
 .ccl-link {
-    color: #0176d3 !important;
-    text-decoration: none !important;
-    font-size: 0.8125rem !important;
-    font-weight: 500 !important;
-    line-height: 1.2 !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    color: #185FA5;
+    text-decoration: none;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.2;
 }
 
 .ccl-link:hover {
-    text-decoration: underline !important;
+    text-decoration: underline;
 }
 
-/* ── Overrides SLDS ── */
+/* ── Status badge pill ── */
+.ccl-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+.ccl-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.ccl-status--rejetee  { background: #FAECE7; color: #993C1D; }
+.ccl-status--rejetee  .ccl-status-dot { background: #D85A30; }
+
+.ccl-status--initiale { background: #E6F1FB; color: #185FA5; }
+.ccl-status--initiale .ccl-status-dot { background: #378ADD; }
+
+.ccl-status--en-cours { background: #EAF3DE; color: #3B6D11; }
+.ccl-status--en-cours .ccl-status-dot { background: #639922; }
+
+.ccl-status--cloturee { background: #F1EFE8; color: #5F5E5A; }
+.ccl-status--cloturee .ccl-status-dot { background: #888780; }
+
+.ccl-status--default  { background: #F1EFE8; color: #5F5E5A; }
+.ccl-status--default  .ccl-status-dot { background: #888780; }
+
+/* ── Overrides SLDS résiduels ── */
 .ccl-container .slds-page-header__col-details {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
     width: 100% !important;
 }
 
-.ccl-container .slds-grid {
-    margin: 0 !important;
-}
-
-.ccl-container .slds-col {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
-}
-
 .ccl-container p {
     margin-top: 0 !important;
     margin-bottom: 0 !important;
+}
+
+/* ── Boutons même taille ── */
+.ccl-action-btn {
+    display: inline-flex;
+}
+
+.ccl-action-btn lightning-button,
+.ccl-action-btn lightning-button button {
+    width: 100%;
+}
+
+.ccl-actions lightning-button {
+    min-width: unset;
+}
+
+.ccl-actions lightning-button button {
+    width: auto;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+/* ── Bouton Rejeter → rouge franc ── */
+.ccl-actions lightning-button[data-name="rejectReassign"] button,
+.ccl-actions .ccl-action-btn lightning-button[data-name="rejectReassign"] button {
+    background-color: #C23934 !important;
+    border-color: #C23934 !important;
+    color: #ffffff !important;
+}
+
+.ccl-actions lightning-button[data-name="rejectReassign"] button:hover {
+    background-color: #A61A14 !important;
+    border-color: #A61A14 !important;
 }

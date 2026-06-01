@@ -1,13 +1,19 @@
 import { LightningElement, api, wire } from 'lwc';
 import { NavigationMixin }             from 'lightning/navigation';
 import { IsConsoleNavigation, openTab } from 'lightning/platformWorkspaceApi';
-import { refreshApex }                 from '@salesforce/apex';
 import { ShowToastEvent }              from 'lightning/platformShowToastEvent';
 import USER_ID                         from '@salesforce/user/Id';
 import getRecordData from '@salesforce/apex/DA_lwc025_CaseCompactLayoutController.getRecordData';
 import closeCase     from '@salesforce/apex/DA_lwc025_CaseCompactLayoutController.closeCase';
 import cancelCase    from '@salesforce/apex/DA_lwc025_CaseCompactLayoutController.cancelCase';
 import takeOverCase  from '@salesforce/apex/DA_lwc025_CaseCompactLayoutController.takeOverCase';
+
+const STATUS_CLASSES = {
+    'Rejetée'  : 'ccl-status-badge ccl-status--rejetee',
+    'Initiale' : 'ccl-status-badge ccl-status--initiale',
+    'En cours' : 'ccl-status-badge ccl-status--en-cours',
+    'Clôturée' : 'ccl-status-badge ccl-status--cloturee',
+};
 
 export default class CaseCompactLayout extends NavigationMixin(LightningElement) {
 
@@ -27,33 +33,37 @@ export default class CaseCompactLayout extends NavigationMixin(LightningElement)
     @wire(IsConsoleNavigation) isConsoleNavigation;
 
     connectedCallback() {
-    this.loadData();
-}
-
-async loadData() {
-    this._loading = true;
-    try {
-        const data = await getRecordData({
-            recordId       : this.recordId,
-            objectApiName  : this.objectApiName,
-            fieldsCsv      : this.fields,
-            recordTypeName : this.defaultRecordType
-        });
-        this._error = null;
-        this._data  = {
-            ...data,
-            fields: (data.fields || []).map(f => ({
-                ...f,
-                recordUrl: (f.isLookup && f.lookupId) ? '/' + f.lookupId : null
-            }))
-        };
-    } catch (error) {
-        this._error = error;
-        this._data  = null;
-    } finally {
-        this._loading = false;
+        this.loadData();
     }
-}
+
+    async loadData() {
+        this._loading = true;
+        try {
+            const data = await getRecordData({
+                recordId       : this.recordId,
+                objectApiName  : this.objectApiName,
+                fieldsCsv      : this.fields,
+                recordTypeName : this.defaultRecordType
+            });
+            this._error = null;
+            this._data  = {
+                ...data,
+                fields: (data.fields || []).map(f => ({
+                    ...f,
+                    recordUrl   : (f.isLookup && f.lookupId) ? '/' + f.lookupId : null,
+                    isStatus    : f.fieldPath === 'Status',
+                    statusClass : f.fieldPath === 'Status'
+                        ? (STATUS_CLASSES[f.displayValue] || 'ccl-status-badge ccl-status--default')
+                        : null
+                }))
+            };
+        } catch (error) {
+            this._error = error;
+            this._data  = null;
+        } finally {
+            this._loading = false;
+        }
+    }
 
     /* ── Getters ── */
     get hasError()     { return this._error !== null; }
@@ -67,44 +77,31 @@ async loadData() {
     get hasRequeteInitiale() { return !!this._data?.requeteInitialeId; }
     get requeteInitialeId()  { return this._data?.requeteInitialeId || null; }
 
-    // ✅ NOUVEAU — deux cas de visibilité pour les boutons de la Déclaration
     get isDeclarationButtonVisible() {
-    if (!this._data) return false;
-
-    // Cas 1 — requête En cours → ReaffecterA voit uniquement poursuivre
-    const reaffecterAId = this._data.reaffecterAId;
-    if (reaffecterAId) {
-        return reaffecterAId === USER_ID;
+        if (!this._data) return false;
+        const reaffecterAId = this._data.reaffecterAId;
+        if (reaffecterAId) {
+            return reaffecterAId === USER_ID;
+        }
+        if (this._data.requeteInitialeId) {
+            return false;
+        }
+        return this._data.declarationOwnerId === USER_ID;
     }
-
-    // Cas 2 — requête Initiale → personne ne voit les boutons
-    // mais le badge est affiché via hasRequeteInitiale
-    if (this._data.requeteInitialeId) {
-        return false;
-    }
-
-    // Cas 3 — pas de requête ou requête Rejetée → gestionnaire actuel
-    return this._data.declarationOwnerId === USER_ID;
-}
 
     get actionItems() {
         const actions = this._data?.actions || [];
         return actions.filter(a => {
-            // ✅ Boutons Declaration — visibilité gérée par isDeclarationButtonVisible
             if (a.name === 'continueDeclaration' && this._data?.recordTypeName === 'Declaration') {
-    // visible pour gestionnaire actuel ET ReaffecterA — mais PAS si requête Initiale
-    if (this._data.requeteInitialeId) return false;
-    // masqué une fois le sinistre créé (LastWizardStep__c remis à null par finalizeClaimProcess)
-    if (this._data.lastWizardStep == null) return false;
-    return this.isDeclarationButtonVisible;
-}
-if (a.name === 'reassign' && this._data?.recordTypeName === 'Declaration') {
-    // visible uniquement si pas de requête Initiale ET pas de requête En cours
-    if (this._data.requeteInitialeId) return false;
-    if (this._data.reaffecterAId)     return false;
-    return this._data.declarationOwnerId === USER_ID;
-}
-            // Boutons Requete — filtrés par isOwner de lwc027/lwc028
+                if (this._data.requeteInitialeId) return false;
+                if (this._data.lastWizardStep == null) return false;
+                return this.isDeclarationButtonVisible;
+            }
+            if (a.name === 'reassign' && this._data?.recordTypeName === 'Declaration') {
+                if (this._data.requeteInitialeId) return false;
+                if (this._data.reaffecterAId)     return false;
+                return this._data.declarationOwnerId === USER_ID;
+            }
             if (a.name === 'validateReassign') return this._showValidateReassign;
             if (a.name === 'rejectReassign')   return this._showRejectReassign;
             return true;
@@ -141,7 +138,7 @@ if (a.name === 'reassign' && this._data?.recordTypeName === 'Declaration') {
         try {
             await closeCase({ recordId: this.recordId });
             this.toast('Succès', 'Case clôturé.', 'success');
-            await refreshApex(this._wired);
+            this.loadData();
         } catch (e) { this.toast('Erreur', this.extract(e), 'error'); }
     }
 
@@ -149,7 +146,7 @@ if (a.name === 'reassign' && this._data?.recordTypeName === 'Declaration') {
         try {
             await cancelCase({ recordId: this.recordId });
             this.toast('Succès', 'Mission annulée.', 'success');
-            await refreshApex(this._wired);
+            this.loadData();
         } catch (e) { this.toast('Erreur', this.extract(e), 'error'); }
     }
 
@@ -157,7 +154,7 @@ if (a.name === 'reassign' && this._data?.recordTypeName === 'Declaration') {
         try {
             await takeOverCase({ recordId: this.recordId });
             this.toast('Succès', 'Requête prise en charge.', 'success');
-            await refreshApex(this._wired);
+            this.loadData();
         } catch (e) { this.toast('Erreur', this.extract(e), 'error'); }
     }
 
@@ -190,17 +187,17 @@ if (a.name === 'reassign' && this._data?.recordTypeName === 'Declaration') {
             if (fallback) fallback.handleOpenModal();
         }
     }
- 
 
     runCancelReassign() {
-    const modal = this.refs.cancelReassignModal;
-    if (modal) {
-        modal.handleOpenModal();
-    } else {
-        const fallback = this.template.querySelector('c-d-a_lwc029_-annuler-reaffectation');
-        if (fallback) fallback.handleOpenModal();
+        const modal = this.refs.cancelReassignModal;
+        if (modal) {
+            modal.handleOpenModal();
+        } else {
+            const fallback = this.template.querySelector('c-d-a_lwc029_-annuler-reaffectation');
+            if (fallback) fallback.handleOpenModal();
+        }
     }
-   }
+
     handleOwnerResolved(event) {
         this._showValidateReassign = event.detail.isOwner;
     }

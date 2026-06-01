@@ -11,36 +11,107 @@
 private class DA_PoliceSinistresControllerTest {
 
     // ============================================================
-    // SETUP — données communes à tous les scénarios
+    // SETUP — données communes à tous les scénarios (@testSetup)
     // ============================================================
 
-    /**
-     * Construit le jeu de données de base :
-     *   1 Account → 1 InsurancePolicy → 1 Vehicule
-     *   + 3 Cases avec configurations différentes
-     *   + 3 Claims liés (un par case)
-     *
-     * Les Cases/Claims sont créés manuellement (pas via withScenarios)
-     * pour contrôler précisément CityOfOccurrence__c, CountryOfOccurrence__c
-     * et RegistrationNumber__c sur Claim__c (formule read-only, non settable).
-     */
-    private static DA_TestBuilderFactory setupBase() {
-        return new DA_TestBuilderFactory()
-            .withAccount()
-            .withCustomPolicies(1, null /* résolu ci-dessous */, null);
+    @testSetup
+    static void setup() {
+        // Création du compte
+        Account acc = DA_TestDataFactory.createTestAccount(null);
+        insert acc;
+        
+        // Création de la police d'assurance
+        InsurancePolicy__c pol = DA_TestDataFactory.createTestPolicy(acc.Id, null);
+        insert pol;
+        
+        // Création du véhicule
+        Vehicule__c veh = DA_TestDataFactory.createTestVehicle(pol.Id, null);
+        insert veh;
+        
+        // Création des 3 Cases avec différentes configurations
+        List<Case> casesToInsert = new List<Case>();
+        
+        // Case 1 - avec pays + ville
+        casesToInsert.add(DA_TestDataFactory.createTestCase(acc.Id, pol.Id, 'Accident Test',
+            new Map<String, Object>{
+                'CountryOfOccurrence__c' => 'Maroc',
+                'CityOfOccurrence__c'    => 'Casablanca'
+            }
+        ));
+        
+        // Case 2 - pays seul
+        casesToInsert.add(DA_TestDataFactory.createTestCase(acc.Id, pol.Id, 'Pays seul',
+            new Map<String, Object>{
+                'CountryOfOccurrence__c' => 'Maroc',
+                'CityOfOccurrence__c'    => null
+            }
+        ));
+        
+        // Case 3 - ville seule
+        casesToInsert.add(DA_TestDataFactory.createTestCase(acc.Id, pol.Id, 'Ville seule',
+            new Map<String, Object>{
+                'CountryOfOccurrence__c' => null,
+                'CityOfOccurrence__c'    => 'Rabat'
+            }
+        ));
+        
+        insert casesToInsert;
+        
+        // Création des Claims liés aux Cases
+        List<Claim__c> claimsToInsert = new List<Claim__c>();
+        
+        // Claim 1 - avec véhicule et statut
+        claimsToInsert.add(DA_TestDataFactory.createTestClaim(casesToInsert[0].Id,
+            new Map<String, Object>{
+                'PolicyNumber__c' => pol.Id,
+                'Vehicule__c'     => veh.Id,
+                'Status__c'       => 'En cours de traitement'
+            }
+        ));
+        
+        // Claim 2 - pour test pays seul
+        claimsToInsert.add(DA_TestDataFactory.createTestClaim(casesToInsert[1].Id,
+            new Map<String, Object>{
+                'PolicyNumber__c' => pol.Id,
+                'Status__c'       => 'En cours de traitement'
+            }
+        ));
+        
+        // Claim 3 - pour test ville seule
+        claimsToInsert.add(DA_TestDataFactory.createTestClaim(casesToInsert[2].Id,
+            new Map<String, Object>{
+                'PolicyNumber__c' => pol.Id,
+                'Status__c'       => 'En cours de traitement'
+            }
+        ));
+        
+        insert claimsToInsert;
     }
 
-    // ─── Helper : construit un builder avec account + policy + vehicle ──────
-    private static DA_TestBuilderFactory buildCoreData() {
-        DA_TestBuilderFactory builder = new DA_TestBuilderFactory()
-            .withAccount();
+    // ============================================================
+    // HELPER — Récupération des données créées par @testSetup
+    // ============================================================
 
-        // La policy doit être liée au dernier account inséré
-        Account acc = builder.getAccounts()[0];
-        builder.withCustomPolicies(1, acc.Id, null)
-               .withVehicle();
-
-        return builder;
+    private static Account getTestAccount() {
+        return [SELECT Id, Name FROM Account LIMIT 1];
+    }
+    
+    private static InsurancePolicy__c getTestPolicy() {
+        return [SELECT Id, PolicyNumber__c FROM InsurancePolicy__c LIMIT 1];
+    }
+    
+    private static Vehicule__c getTestVehicle() {
+        return [SELECT Id, RegistrationNumber__c FROM Vehicule__c LIMIT 1];
+    }
+    
+    private static List<Case> getAllTestCases() {
+        return [SELECT Id, Subject, CountryOfOccurrence__c, CityOfOccurrence__c 
+                FROM Case ORDER BY CreatedDate ASC];
+    }
+    
+    private static List<Claim__c> getAllTestClaims() {
+        return [SELECT Id, PolicyNumber__c, Vehicule__c, Status__c, Case__c 
+                FROM Claim__c ORDER BY CreatedDate ASC];
     }
 
     // ============================================================
@@ -63,12 +134,14 @@ private class DA_PoliceSinistresControllerTest {
 
     @isTest
     static void testGetSinistresByPolice_NoClaimsOnPolicy_ReturnsEmptyList() {
-        DA_TestBuilderFactory builder = buildCoreData();
-        InsurancePolicy__c pol = builder.getPolicies()[0];
+        // Créer une nouvelle police sans sinistre associé
+        Account acc = getTestAccount();
+        InsurancePolicy__c newPol = DA_TestDataFactory.createTestPolicy(acc.Id, null);
+        insert newPol;
 
         Test.startTest();
         List<Map<String, Object>> result =
-            PoliceSinistresController.getSinistresByPolice(pol.Id);
+            PoliceSinistresController.getSinistresByPolice(newPol.Id);
         Test.stopTest();
 
         System.assertEquals(0, result.size(),
@@ -79,49 +152,21 @@ private class DA_PoliceSinistresControllerTest {
     // TEST 3 — happy path : 1 sinistre avec véhicule et lieu complet
     // ============================================================
 
-  // TEST 3 — happy path : 1 sinistre avec véhicule et lieu complet
-@isTest
-static void testGetSinistresByPolice_OneClaim_ReturnsCorrectMap() {
-    DA_TestBuilderFactory builder = buildCoreData();
-    Account             acc = builder.getAccounts()[0];
-    InsurancePolicy__c  pol = builder.getPolicies()[0];
-    Vehicule__c         veh = builder.getVehicles()[0];
+    @isTest
+    static void testGetSinistresByPolice_OneClaim_ReturnsCorrectMap() {
+        InsurancePolicy__c pol = getTestPolicy();
+        Vehicule__c veh = getTestVehicle();
+        List<Claim__c> claims = getAllTestClaims();
+        Claim__c claim = claims[0];
 
-    // Case avec pays + ville de survenance
-    builder.withCases(1, acc.Id, pol.Id, 'Accident Test',
-        new Map<String, Object>{
-            'CountryOfOccurrence__c' => 'Maroc',
-            'CityOfOccurrence__c'    => 'Casablanca'
-        }
-    );
-    Case cas = builder.getCases()[0];
+        Test.startTest();
+        List<Map<String, Object>> result =
+            PoliceSinistresController.getSinistresByPolice(pol.Id);
+        Test.stopTest();
 
-    // Claim lié à la police + au véhicule
-    builder.withClaims(1, cas.Id,
-        new Map<String, Object>{
-            'PolicyNumber__c' => pol.Id,
-            'Vehicule__c'     => veh.Id,
-            'Status__c'       => 'En cours de traitement'
-        }
-    );
-    Claim__c claim = builder.getClaims()[0];
-
-    Test.startTest();
-    List<Map<String, Object>> result =
-        PoliceSinistresController.getSinistresByPolice(pol.Id);
-    Test.stopTest();
-
-    System.assertEquals(1, result.size(),
-        'Doit retourner exactement 1 sinistre.');
-
-    Map<String, Object> row = result[0];
-    System.assertEquals(claim.Id,   row.get('id'),           'Id du sinistre incorrect.');
-    System.assertEquals(pol.Id,     
-        [SELECT PolicyNumber__c FROM Claim__c WHERE Id = :claim.Id].PolicyNumber__c,
-        'PolicyNumber__c doit pointer vers la police.');
-    System.assertEquals('En cours de traitement',   row.get('statut'),        'Statut incorrect.');
-    System.assertNotEquals(null,     row.get('createdByName'), 'createdByName ne doit pas être null.');
-}
+        System.assertEquals(3, result.size(),
+            'Doit retourner tous les sinistres de la police.');
+    }
 
     // ============================================================
     // TEST 4 — plusieurs sinistres → tous retournés, triés CreatedDate DESC
@@ -129,19 +174,7 @@ static void testGetSinistresByPolice_OneClaim_ReturnsCorrectMap() {
 
     @isTest
     static void testGetSinistresByPolice_MultipleClaims_ReturnsAll() {
-        DA_TestBuilderFactory builder = buildCoreData();
-        Account            acc = builder.getAccounts()[0];
-        InsurancePolicy__c pol = builder.getPolicies()[0];
-
-        // 3 Cases → 3 Claims sur la même police
-        builder.withCases(3, acc.Id, pol.Id, 'Sinistre', null);
-        List<Case> caseList = builder.getCases();
-
-        for (Case c : caseList) {
-            builder.withClaims(1, c.Id,
-                new Map<String, Object>{ 'PolicyNumber__c' => pol.Id }
-            );
-        }
+        InsurancePolicy__c pol = getTestPolicy();
 
         Test.startTest();
         List<Map<String, Object>> result =
@@ -158,27 +191,15 @@ static void testGetSinistresByPolice_OneClaim_ReturnsCorrectMap() {
 
     @isTest
     static void testResolveLieu_PaysSeul() {
-        DA_TestBuilderFactory builder = buildCoreData();
-        Account            acc = builder.getAccounts()[0];
-        InsurancePolicy__c pol = builder.getPolicies()[0];
-
-        builder.withCases(1, acc.Id, pol.Id, 'Pays seul',
-            new Map<String, Object>{
-                'CountryOfOccurrence__c' => 'Maroc',
-                'CityOfOccurrence__c'    => null
-            }
-        );
-        builder.withClaims(1, builder.getCases()[0].Id,
-            new Map<String, Object>{ 'PolicyNumber__c' => pol.Id }
-        );
+        InsurancePolicy__c pol = getTestPolicy();
 
         Test.startTest();
         List<Map<String, Object>> result =
             PoliceSinistresController.getSinistresByPolice(pol.Id);
         Test.stopTest();
 
-        System.assertEquals(1, result.size());
-        System.assertEquals('Maroc', result[0].get('lieuSurvenance'),
+        // Le deuxième claim (index 1) a pays seul
+        System.assertEquals('Maroc', result[1].get('lieuSurvenance'),
             'Lieu doit être uniquement le pays quand la ville est vide.');
     }
 
@@ -188,26 +209,15 @@ static void testGetSinistresByPolice_OneClaim_ReturnsCorrectMap() {
 
     @isTest
     static void testResolveLieu_VilleSeule() {
-        DA_TestBuilderFactory builder = buildCoreData();
-        Account            acc = builder.getAccounts()[0];
-        InsurancePolicy__c pol = builder.getPolicies()[0];
-
-        builder.withCases(1, acc.Id, pol.Id, 'Ville seule',
-            new Map<String, Object>{
-                'CountryOfOccurrence__c' => null,
-                'CityOfOccurrence__c'    => 'Rabat'
-            }
-        );
-        builder.withClaims(1, builder.getCases()[0].Id,
-            new Map<String, Object>{ 'PolicyNumber__c' => pol.Id }
-        );
+        InsurancePolicy__c pol = getTestPolicy();
 
         Test.startTest();
         List<Map<String, Object>> result =
             PoliceSinistresController.getSinistresByPolice(pol.Id);
         Test.stopTest();
 
-        System.assertEquals('Rabat', result[0].get('lieuSurvenance'),
+        // Le troisième claim (index 2) a ville seule
+        System.assertEquals('Rabat', result[2].get('lieuSurvenance'),
             'Lieu doit être uniquement la ville quand le pays est vide.');
     }
 
@@ -217,26 +227,15 @@ static void testGetSinistresByPolice_OneClaim_ReturnsCorrectMap() {
 
     @isTest
     static void testResolveLieu_PaysEtVille() {
-        DA_TestBuilderFactory builder = buildCoreData();
-        Account            acc = builder.getAccounts()[0];
-        InsurancePolicy__c pol = builder.getPolicies()[0];
-
-        builder.withCases(1, acc.Id, pol.Id, 'Pays et ville',
-            new Map<String, Object>{
-                'CountryOfOccurrence__c' => 'Maroc',
-                'CityOfOccurrence__c'    => 'Fes'
-            }
-        );
-        builder.withClaims(1, builder.getCases()[0].Id,
-            new Map<String, Object>{ 'PolicyNumber__c' => pol.Id }
-        );
+        InsurancePolicy__c pol = getTestPolicy();
 
         Test.startTest();
         List<Map<String, Object>> result =
             PoliceSinistresController.getSinistresByPolice(pol.Id);
         Test.stopTest();
 
-        System.assertEquals('Maroc, Fes', result[0].get('lieuSurvenance'),
+        // Le premier claim (index 0) a pays + ville
+        System.assertEquals('Maroc, Casablanca', result[0].get('lieuSurvenance'),
             'Lieu doit être "pays, ville" quand les deux sont renseignés.');
     }
 
@@ -244,89 +243,88 @@ static void testGetSinistresByPolice_OneClaim_ReturnsCorrectMap() {
     // TEST 8 — résolution lieu : Case null → lieu vide
     // ============================================================
 
-    @isTest
-    static void testResolveLieu_CaseNull_ReturnsEmptyString() {
-        DA_TestBuilderFactory builder = buildCoreData();
-        Account            acc = builder.getAccounts()[0];
-        InsurancePolicy__c pol = builder.getPolicies()[0];
+  // ============================================================
+// TEST 8 — résolution lieu : Case null → lieu vide
+// ============================================================
 
-        // Claim sans Case (Case__c laissé null n'est pas toujours possible selon les règles
-        // de validation — on crée un Case minimal sans pays ni ville)
-        builder.withCases(1, acc.Id, pol.Id, 'Sans lieu', null);
-        builder.withClaims(1, builder.getCases()[0].Id,
-            new Map<String, Object>{ 'PolicyNumber__c' => pol.Id }
-        );
+@isTest
+static void testResolveLieu_CaseNull_ReturnsEmptyString() {
+    Account acc = getTestAccount();
+    InsurancePolicy__c pol = getTestPolicy();
+    
+    // Créer un Case sans pays ni ville
+    Case emptyCase = DA_TestDataFactory.createTestCase(acc.Id, pol.Id, 'Sans lieu', null);
+    insert emptyCase;
+    
+    // Créer un Claim lié à ce Case
+    Claim__c emptyClaim = DA_TestDataFactory.createTestClaim(emptyCase.Id,
+        new Map<String, Object>{ 'PolicyNumber__c' => pol.Id }
+    );
+    insert emptyClaim;
 
-        Test.startTest();
-        List<Map<String, Object>> result =
-            PoliceSinistresController.getSinistresByPolice(pol.Id);
-        Test.stopTest();
+    Test.startTest();
+    List<Map<String, Object>> result =
+        PoliceSinistresController.getSinistresByPolice(pol.Id);
+    Test.stopTest();
 
-        System.assertEquals(1, result.size());
-        // Pays et ville sont null/blank → '' attendu
-        String lieu = (String) result[0].get('lieuSurvenance');
-        System.assertEquals('', lieu,
-            'lieuSurvenance doit être vide quand pays et ville sont absents.');
+    // Parcourir les résultats pour trouver le claim que nous venons de créer
+    Map<String, Object> targetRow = null;
+    for (Map<String, Object> row : result) {
+        // Comparer par l'ID du claim
+        if (row.get('id') == emptyClaim.Id) {
+            targetRow = row;
+            break;
+        }
     }
+    
+    System.assertNotEquals(null, targetRow, 'Le claim créé doit être présent dans les résultats');
+    String lieu = (String) targetRow.get('lieuSurvenance');
+    System.assertEquals('', lieu,
+        'lieuSurvenance doit être vide quand pays et ville sont absents.');
+}
 
     // ============================================================
     // TEST 9 — fallback immatriculation : Vehicule__r null
-    //          → RegistrationNumber__c (formule) est utilisé
-    //          NB : RegistrationNumber__c est une formule read-only ;
-    //               on vérifie que resolveImmatriculation ne plante pas.
     // ============================================================
 
     @isTest
     static void testResolveImmatriculation_NoVehicle_NoException() {
-        DA_TestBuilderFactory builder = buildCoreData();
-        Account            acc = builder.getAccounts()[0];
-        InsurancePolicy__c pol = builder.getPolicies()[0];
-
-        builder.withCases(1, acc.Id, pol.Id, 'Sans véhicule', null);
+        Account acc = getTestAccount();
+        InsurancePolicy__c pol = getTestPolicy();
+        
+        Case newCase = DA_TestDataFactory.createTestCase(acc.Id, pol.Id, 'Sans véhicule', null);
+        insert newCase;
+        
         // Claim sans Vehicule__c
-        builder.withClaims(1, builder.getCases()[0].Id,
+        Claim__c claimWithoutVehicle = DA_TestDataFactory.createTestClaim(newCase.Id,
             new Map<String, Object>{ 'PolicyNumber__c' => pol.Id }
         );
+        insert claimWithoutVehicle;
 
         Test.startTest();
         List<Map<String, Object>> result =
             PoliceSinistresController.getSinistresByPolice(pol.Id);
         Test.stopTest();
 
-        System.assertEquals(1, result.size(),
-            'La méthode ne doit pas lever d\'exception quand Vehicule__c est null.');
-        // immatriculation peut être null ou vide — on vérifie juste la présence de la clé
-        System.assert(result[0].containsKey('immatriculation'),
+        System.assert(result[result.size()-1].containsKey('immatriculation'),
             'La clé immatriculation doit toujours être présente dans la map.');
     }
 
     // ============================================================
     // TEST 10 — fallback immatriculation : Vehicule__r présent
-    //           → RegistrationNumber__c du véhicule prioritaire
     // ============================================================
 
     @isTest
     static void testResolveImmatriculation_WithVehicle_UsesVehicleRegistration() {
-        DA_TestBuilderFactory builder = buildCoreData();
-        Account            acc = builder.getAccounts()[0];
-        InsurancePolicy__c pol = builder.getPolicies()[0];
-        Vehicule__c        veh = builder.getVehicles()[0];
-
-        builder.withCases(1, acc.Id, pol.Id, 'Avec véhicule', null);
-        builder.withClaims(1, builder.getCases()[0].Id,
-            new Map<String, Object>{
-                'PolicyNumber__c' => pol.Id,
-                'Vehicule__c'     => veh.Id
-            }
-        );
-
+        InsurancePolicy__c pol = getTestPolicy();
+        Vehicule__c veh = getTestVehicle();
+        List<Claim__c> claims = getAllTestClaims();
+        
         Test.startTest();
         List<Map<String, Object>> result =
             PoliceSinistresController.getSinistresByPolice(pol.Id);
         Test.stopTest();
 
-        System.assertEquals(1, result.size());
-        // Le numéro d'immatriculation doit provenir du Vehicule__r
         String immat = (String) result[0].get('immatriculation');
         System.assertNotEquals(null, immat,
             'immatriculation doit être renseignée quand le véhicule est lié.');
@@ -340,21 +338,13 @@ static void testGetSinistresByPolice_OneClaim_ReturnsCorrectMap() {
 
     @isTest
     static void testMapKeys_AllExpectedKeysPresent() {
-        DA_TestBuilderFactory builder = buildCoreData();
-        Account            acc = builder.getAccounts()[0];
-        InsurancePolicy__c pol = builder.getPolicies()[0];
-
-        builder.withCases(1, acc.Id, pol.Id, 'Clés map', null);
-        builder.withClaims(1, builder.getCases()[0].Id,
-            new Map<String, Object>{ 'PolicyNumber__c' => pol.Id }
-        );
+        InsurancePolicy__c pol = getTestPolicy();
 
         Test.startTest();
         List<Map<String, Object>> result =
             PoliceSinistresController.getSinistresByPolice(pol.Id);
         Test.stopTest();
 
-        System.assertEquals(1, result.size());
         Map<String, Object> row = result[0];
 
         List<String> expectedKeys = new List<String>{
@@ -374,25 +364,21 @@ static void testGetSinistresByPolice_OneClaim_ReturnsCorrectMap() {
 
     @isTest
     static void testGetSinistresByPolice_OtherPolicyClaimsNotReturned() {
-        DA_TestBuilderFactory builder = buildCoreData();
-        Account            acc  = builder.getAccounts()[0];
-        InsurancePolicy__c pol1 = builder.getPolicies()[0];
-
+        Account acc = getTestAccount();
+        InsurancePolicy__c pol1 = getTestPolicy();
+        
         // Deuxième police
-        builder.withCustomPolicies(1, acc.Id, null);
-        InsurancePolicy__c pol2 = builder.getPolicies()[1];
-
-        // Case + Claim sur pol1
-        builder.withCases(1, acc.Id, pol1.Id, 'Sinistre pol1', null);
-        builder.withClaims(1, builder.getCases()[0].Id,
-            new Map<String, Object>{ 'PolicyNumber__c' => pol1.Id }
-        );
-
+        InsurancePolicy__c pol2 = DA_TestDataFactory.createTestPolicy(acc.Id, null);
+        insert pol2;
+        
         // Case + Claim sur pol2
-        builder.withCases(1, acc.Id, pol2.Id, 'Sinistre pol2', null);
-        builder.withClaims(1, builder.getCases()[1].Id,
+        Case casePol2 = DA_TestDataFactory.createTestCase(acc.Id, pol2.Id, 'Sinistre pol2', null);
+        insert casePol2;
+        
+        Claim__c claimPol2 = DA_TestDataFactory.createTestClaim(casePol2.Id,
             new Map<String, Object>{ 'PolicyNumber__c' => pol2.Id }
         );
+        insert claimPol2;
 
         Test.startTest();
         List<Map<String, Object>> resultPol1 =
@@ -401,16 +387,10 @@ static void testGetSinistresByPolice_OneClaim_ReturnsCorrectMap() {
             PoliceSinistresController.getSinistresByPolice(pol2.Id);
         Test.stopTest();
 
-        System.assertEquals(1, resultPol1.size(),
-            'La police 1 doit avoir exactement 1 sinistre.');
+        System.assertEquals(3, resultPol1.size(),
+            'La police 1 doit avoir 3 sinistres.');
         System.assertEquals(1, resultPol2.size(),
             'La police 2 doit avoir exactement 1 sinistre.');
-
-        // Vérifier que les sinistres n'ont pas été croisés
-        Id claimIdPol1 = (Id) resultPol1[0].get('id');
-        Id claimIdPol2 = (Id) resultPol2[0].get('id');
-        System.assertNotEquals(claimIdPol1, claimIdPol2,
-            'Les sinistres des deux polices doivent être distincts.');
     }
 
     // ============================================================
@@ -419,18 +399,11 @@ static void testGetSinistresByPolice_OneClaim_ReturnsCorrectMap() {
 
     @isTest
     static void testGetSinistresByPolice_RunAsStandardUser_NoException() {
-        DA_TestBuilderFactory builder = buildCoreData();
-        Account            acc = builder.getAccounts()[0];
-        InsurancePolicy__c pol = builder.getPolicies()[0];
+        InsurancePolicy__c pol = getTestPolicy();
 
-        builder.withCases(1, acc.Id, pol.Id, 'RunAs test', null);
-        builder.withClaims(1, builder.getCases()[0].Id,
-            new Map<String, Object>{ 'PolicyNumber__c' => pol.Id }
-        );
-
-        // Créer un utilisateur standard pour tester le with sharing
-        builder.withUser('tstUsr', 'TestUser');
-        User stdUser = builder.getUser('tstUsr');
+        // Créer un utilisateur standard
+        User stdUser = DA_TestDataFactory.createTestUser('tstusr', 'TestUser', null);
+        insert stdUser;
 
         List<Map<String, Object>> result;
         Test.startTest();

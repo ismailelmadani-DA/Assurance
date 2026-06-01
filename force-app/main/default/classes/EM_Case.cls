@@ -48,6 +48,20 @@ public with sharing class EM_Case {
         updateRequete(requete);
     }
 
+    // ─── DA_lwc025 ──────────────────────────────────────────────────
+
+    public static void closeCase(Id recordId) {
+        update new Case(Id = recordId, Status = 'Clôturé');
+    }
+
+    public static void cancelCase(Id recordId) {
+        update new Case(Id = recordId, Status = 'Annulé');
+    }
+
+    public static void takeOverCase(Id recordId) {
+        update new Case(Id = recordId, OwnerId = UserInfo.getUserId(), Status = 'En cours');
+    }
+
     // ─── DML privés ─────────────────────────────────────────────────
 
     private static Id insertRequeteReaffectation(Id declarationId, Id targetUserId, String motif, Id managerId) {

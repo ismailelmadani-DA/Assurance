@@ -70,19 +70,11 @@
             <default>false</default>
         </values>
         <values>
-            <fullName>Collision</fullName>
-            <default>false</default>
-        </values>
-        <values>
             <fullName>Incendie</fullName>
             <default>false</default>
         </values>
         <values>
             <fullName>Jet de pierre</fullName>
-            <default>false</default>
-        </values>
-        <values>
-            <fullName>Panne</fullName>
             <default>false</default>
         </values>
         <values>

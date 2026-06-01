@@ -222,6 +222,18 @@
                 <default>false</default>
                 <label>Acte de vandalisme</label>
             </value>
+            <value>
+                <fullName>Collision</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Collision</label>
+            </value>
+            <value>
+                <fullName>Panne</fullName>
+                <default>false</default>
+                <isActive>false</isActive>
+                <label>Panne</label>
+            </value>
         </valueSetDefinition>
         <valueSettings>
             <controllingFieldValue>Accident</controllingFieldValue>

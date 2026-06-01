@@ -6,10 +6,12 @@ import { getObjectInfo, getPicklistValues } from 'lightning/uiObjectInfoApi';
 import DOCUMENT_OBJECT from '@salesforce/schema/Document__c';
 import DIRECTORY_FIELD from '@salesforce/schema/Document__c.Directory__c';
 import TYPEDOC_FIELD from '@salesforce/schema/Document__c.Type_de_document__c';
+import NATURE_FIELD from '@salesforce/schema/Document__c.Nature__c';
 
 import saveDocumentWithGED from '@salesforce/apex/DocumentGEDController.saveDocumentWithGED';
 import getDocumentsByCase from '@salesforce/apex/DocumentGEDController.getDocumentsByCase';
 import deleteDocument from '@salesforce/apex/DocumentGEDController.deleteDocument';
+import updateDocumentDetails from '@salesforce/apex/DocumentGEDController.updateDocumentDetails'; 
 
 export default class GedDocumentManager extends LightningElement {
     // --- Variables d'entrée (API) ---
@@ -30,12 +32,19 @@ export default class GedDocumentManager extends LightningElement {
     // --- Formulaire ---
     @track repertoire = '';
     @track typeDocument = '';
-    @track nature = '';
+    @track optionsNature = [];
     
     // --- Listes ---
     @track allPicklistData = {};
     @track optionsDirectory = [];
     @track optionsDocType = [];
+
+    // Variables pour la modale de modification
+    @track isEditModalOpen = false;
+    @track editDocId = null;
+    @track editRepertoire = '';
+    @track editTypeDocument = '';
+    @track editNature = '';
 
     // --- Tableau ---
     @track documents = [];
@@ -66,6 +75,7 @@ export default class GedDocumentManager extends LightningElement {
         recordTypeId: '$documentInfo.data.defaultRecordTypeId', 
         fieldApiName: DIRECTORY_FIELD 
     })
+    
     wiredDirectoryValues({ data, error }) {
         if (data) {
             this.optionsDirectory = data.values; // Récupère direct les API Names corrects !
@@ -81,6 +91,17 @@ export default class GedDocumentManager extends LightningElement {
         if (data) {
             this.allTypeDocValues = data; // On stocke tout pour filtrer ensuite (si liste dépendante)
             this.optionsDocType = data.values;
+        }
+    }
+
+    // 4. On récupère automatiquement les valeurs de la liste "Nature" (CORPOREL, MATERIEL)
+    @wire(getPicklistValues, { 
+        recordTypeId: '$documentInfo.data.defaultRecordTypeId', 
+        fieldApiName: NATURE_FIELD 
+    })
+    wiredNatureValues({ data, error }) {
+        if (data) {
+            this.optionsNature = data.values; 
         }
     }
 
@@ -102,6 +123,65 @@ export default class GedDocumentManager extends LightningElement {
             this.selectedFile = event.target.files[0];
             this.selectedFileName = this.selectedFile.name;
         }
+    }
+
+    // 1. Ouvre la modale et pré-remplit les champs avec les données actuelles
+    handleEdit(event) {
+        const docId = event.currentTarget.dataset.id;
+        const docToEdit = this.documents.find(doc => doc.Id === docId); // [cite: 21]
+        
+        if (docToEdit) {
+            this.editDocId = docId;
+            this.editRepertoire = docToEdit.Directory__c;
+            this.editTypeDocument = docToEdit.Type_de_document__c;
+            this.editNature = docToEdit.Nature__c;
+            
+            this.isEditModalOpen = true;
+        }
+    }
+
+    // 2. Ferme la modale
+    closeEditModal() {
+        this.isEditModalOpen = false;
+        this.editDocId = null;
+    }
+
+    // 3. Gère la saisie dans les champs de la modale
+    handleEditChange(event) {
+        const field = event.target.dataset.field;
+        this[field] = event.target.value;
+    }
+
+    // 4. Envoie les modifications à Salesforce
+    saveEdit() {
+        if (!this.editRepertoire || !this.editTypeDocument) {
+            this.showToast('Erreur', 'Veuillez remplir tous les champs obligatoires.', 'error'); // [cite: 153]
+            return;
+        }
+
+        this.isLoading = true;
+        
+        updateDocumentDetails({ 
+            docId: this.editDocId,
+            repertoire: this.editRepertoire,
+            typeDoc: this.editTypeDocument,
+            nature: this.editNature,
+            dateSurvenance: this.dateSurvenance, 
+            dateReception: null, 
+            emetteur: null       
+        })
+        .then(() => {
+            this.showToast('Succès', 'Le document a été mis à jour.', 'success'); 
+            this.closeEditModal();
+            return refreshApex(this.wiredDocsResult); 
+        })
+        .catch(error => {
+            console.error('Erreur Update:', error);
+            this.showToast('Erreur', 'Échec de la mise à jour.', 'error'); 
+        })
+        .finally(() => {
+            this.isLoading = false; 
+        });
     }
 
     clearFile() {
@@ -182,4 +262,5 @@ export default class GedDocumentManager extends LightningElement {
     showToast(title, message, variant) {
         this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
+    
 }

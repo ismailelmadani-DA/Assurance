@@ -37,6 +37,8 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
         @AuraEnabled public List<ActionItem> actions             { get; set; }
     }
 
+    // ─── AuraEnabled ────────────────────────────────────────────────
+
     @AuraEnabled(cacheable=true)
     public static CompactData getRecordData(
             Id     recordId,
@@ -57,12 +59,12 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
         if (sobjType == null)
             throw new AuraHandledException('Objet inconnu : ' + objectApiName);
 
-        Map<String, Schema.SObjectField> fieldMap = sobjType.getDescribe().fields.getMap();
-        List<String> requestedFields = parseFields(fieldsCsv);
-        Boolean      isCase          = (objectApiName == 'Case');
+        Map<String, Schema.SObjectField> fieldMap        = sobjType.getDescribe().fields.getMap();
+        List<String>                     requestedFields = parseFields(fieldsCsv);
+        Boolean                          isCase          = (objectApiName == 'Case');
 
         Set<String> soqlFields = buildSoqlFields(requestedFields, fieldMap, isCase);
-        SObject     record     = queryRecord(recordId, objectApiName, soqlFields, isCase, fieldMap);
+        SObject     record     = DM_Case.queryRecord(recordId, objectApiName, soqlFields, isCase, fieldMap);
 
         if (record == null)
             throw new AuraHandledException('Enregistrement introuvable.');
@@ -81,93 +83,57 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
             try {
                 Object typeReq   = record.get('TypeRequete__c');
                 data.typeRequete = (typeReq != null) ? String.valueOf(typeReq) : null;
-            } catch (Exception e) {
-                data.typeRequete = null;
-            }
+            } catch (Exception e) { data.typeRequete = null; }
 
             try {
-                Object ownerId = record.get('OwnerId');
+                Object ownerId          = record.get('OwnerId');
                 data.declarationOwnerId = (ownerId != null) ? String.valueOf(ownerId) : null;
-            } catch (Exception e) {
-                data.declarationOwnerId = null;
-            }
+            } catch (Exception e) { data.declarationOwnerId = null; }
 
             if (recordTypeName == RT_DECLARATION) {
-                data.reaffecterAId     = resolveReaffecterAId(recordId);
-                data.requeteInitialeId = resolveRequeteInitialeId(recordId);
+                data.reaffecterAId     = DM_Case.getReaffecterAId(recordId);
+                data.requeteInitialeId = DM_Case.getRequeteInitialeId(recordId);
                 try {
-                    Object step = record.get('LastWizardStep__c');
+                    Object step         = record.get('LastWizardStep__c');
                     data.lastWizardStep = (step != null) ? (Decimal) step : null;
-                } catch (Exception e) {
-                    data.lastWizardStep = null;
-                }
+                } catch (Exception e) { data.lastWizardStep = null; }
             }
 
         } else {
             try {
                 Object nameVal  = record.get('Name');
                 data.caseNumber = (nameVal != null) ? String.valueOf(nameVal) : String.valueOf(record.Id);
-            } catch (Exception e) {
-                data.caseNumber = String.valueOf(record.Id);
-            }
+            } catch (Exception e) { data.caseNumber = String.valueOf(record.Id); }
         }
 
         return data;
     }
 
-    private static String resolveReaffecterAId(Id declarationId) {
-        try {
-            List<Case> requetes = [
-                SELECT Id, ReaffecterA__c
-                FROM Case
-                WHERE Declaration_Liee__c = :declarationId
-                  AND TypeRequete__c     = 'Réaffecter la déclaration'
-                  AND CategorieRequete__c = 'Réaffectation'
-                  AND Status             = 'En cours'
-                LIMIT 1
-            ];
-            if (!requetes.isEmpty() && requetes[0].ReaffecterA__c != null) {
-                return String.valueOf(requetes[0].ReaffecterA__c);
-            }
-        } catch (Exception e) { }
-        return null;
+    @AuraEnabled
+    public static void closeCase(Id recordId) {
+        if (recordId == null) throw new AuraHandledException('recordId est requis.');
+        try { EM_Case.closeCase(recordId); }
+        catch (AuraHandledException e) { throw e; }
+        catch (Exception e) { throw new AuraHandledException('Erreur clôture : ' + e.getMessage()); }
     }
 
-    private static String resolveRequeteInitialeId(Id declarationId) {
-        try {
-            List<Case> requetes = [
-                SELECT Id, CreatedById
-                FROM Case
-                WHERE Declaration_Liee__c = :declarationId
-                  AND TypeRequete__c      = 'Réaffecter la déclaration'
-                  AND CategorieRequete__c = 'Réaffectation'
-                  AND Status              = 'Initiale'
-                LIMIT 1
-            ];
-            if (!requetes.isEmpty()) {
-                return String.valueOf(requetes[0].Id);
-            }
-        } catch (Exception e) { }
-        return null;
+    @AuraEnabled
+    public static void cancelCase(Id recordId) {
+        if (recordId == null) throw new AuraHandledException('recordId est requis.');
+        try { EM_Case.cancelCase(recordId); }
+        catch (AuraHandledException e) { throw e; }
+        catch (Exception e) { throw new AuraHandledException('Erreur annulation : ' + e.getMessage()); }
     }
 
-    private static String resolveRequeteInitialeCreatedById(Id declarationId) {
-        try {
-            List<Case> requetes = [
-                SELECT Id, CreatedById
-                FROM Case
-                WHERE Declaration_Liee__c = :declarationId
-                  AND TypeRequete__c      = 'Réaffecter la déclaration'
-                  AND CategorieRequete__c = 'Réaffectation'
-                  AND Status              = 'Initiale'
-                LIMIT 1
-            ];
-            if (!requetes.isEmpty()) {
-                return String.valueOf(requetes[0].CreatedById);
-            }
-        } catch (Exception e) { }
-        return null;
+    @AuraEnabled
+    public static void takeOverCase(Id recordId) {
+        if (recordId == null) throw new AuraHandledException('recordId est requis.');
+        try { EM_Case.takeOverCase(recordId); }
+        catch (AuraHandledException e) { throw e; }
+        catch (Exception e) { throw new AuraHandledException('Erreur prise en charge : ' + e.getMessage()); }
     }
+
+    
 
     private static Set<String> buildSoqlFields(
             List<String> requestedFields,
@@ -215,27 +181,6 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
             if (String.isNotBlank(t)) out.add(t);
         }
         return out;
-    }
-
-    private static SObject queryRecord(
-            Id recordId,
-            String objectApiName,
-            Set<String> soqlFields,
-            Boolean isCase,
-            Map<String, Schema.SObjectField> fieldMap) {
-
-        if (!isCase && fieldMap.containsKey('name')) soqlFields.add('Name');
-
-        String soql = 'SELECT '
-            + String.join(new List<String>(soqlFields), ', ')
-            + ' FROM '  + objectApiName
-            + ' WHERE Id = :recordId LIMIT 1'; // ✅ WITH SECURITY_ENFORCED retiré
-        try {
-            List<SObject> rows = Database.query(soql);
-            return rows.isEmpty() ? null : rows[0];
-        } catch (Exception e) {
-            throw new AuraHandledException('Erreur SOQL : ' + e.getMessage());
-        }
     }
 
     private static List<FieldItem> buildFieldsDynamic(
@@ -287,7 +232,7 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
                             Object nameVal = related.get('Name');
                             displayValue = (nameVal != null) ? String.valueOf(nameVal) : null;
                         }
-                    } catch (Exception e) { /* ignore */ }
+                    } catch (Exception e) { }
                 }
             }
             if (String.isBlank(displayValue) && lookupId != null) displayValue = String.valueOf(lookupId);
@@ -302,9 +247,9 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
             Map<String, Schema.SObjectField> fieldMap,
             String fieldPath) {
 
-        List<String> parts      = fieldPath.split('\\.');
-        String relationshipName = parts[0];
-        String childField       = (parts.size() > 1) ? parts[1] : 'Name';
+        List<String> parts          = fieldPath.split('\\.');
+        String       relationshipName = parts[0];
+        String       childField       = (parts.size() > 1) ? parts[1] : 'Name';
 
         String lookupFieldApi = resolveLookupApi(relationshipName, fieldMap);
         Schema.DescribeFieldResult dfr = (lookupFieldApi != null
@@ -317,7 +262,7 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
             try {
                 Object raw = record.get(lookupFieldApi);
                 lookupId = (raw instanceof Id) ? (Id) raw : null;
-            } catch (Exception e) { /* ignore */ }
+            } catch (Exception e) { }
         }
 
         String displayValue = null;
@@ -327,7 +272,7 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
                 Object v = related.get(childField);
                 displayValue = (v != null) ? String.valueOf(v) : null;
             }
-        } catch (Exception e) { /* ignore */ }
+        } catch (Exception e) { }
 
         if (String.isBlank(displayValue) && lookupId != null) displayValue = String.valueOf(lookupId);
         return lookupItem(fieldPath, label, lookupId, displayValue);
@@ -372,7 +317,6 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
             actions.add(action('close',  'Clôturer', 'brand',       'utility:check'));
 
         } else if (rt == RT_REQUETE) {
-
             String typeReq      = null;
             String categorieReq = null;
             try {
@@ -380,13 +324,9 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
                 Object c = record.get('CategorieRequete__c');
                 typeReq      = (t != null) ? String.valueOf(t) : null;
                 categorieReq = (c != null) ? String.valueOf(c) : null;
-            } catch (Exception e) {
-                typeReq      = null;
-                categorieReq = null;
-            }
+            } catch (Exception e) { }
 
-            if (typeReq == 'Réaffecter la déclaration'
-                && categorieReq == 'Réaffectation') {
+            if (typeReq == 'Réaffecter la déclaration' && categorieReq == 'Réaffectation') {
                 actions.add(action('validateReassign', 'Valider la réaffectation', 'brand',       'utility:check'));
                 actions.add(action('rejectReassign',   'Rejeter la réaffectation', 'destructive', 'utility:close'));
             } else {
@@ -398,39 +338,18 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
         return actions;
     }
 
-    @AuraEnabled
-    public static void closeCase(Id recordId) {
-        if (recordId == null) throw new AuraHandledException('recordId est requis.');
-        try { update new Case(Id = recordId, Status = 'Clôturé'); }
-        catch (Exception e) { throw new AuraHandledException('Erreur clôture : ' + e.getMessage()); }
-    }
-
-    @AuraEnabled
-    public static void cancelCase(Id recordId) {
-        if (recordId == null) throw new AuraHandledException('recordId est requis.');
-        try { update new Case(Id = recordId, Status = 'Annulé'); }
-        catch (Exception e) { throw new AuraHandledException('Erreur annulation : ' + e.getMessage()); }
-    }
-
-    @AuraEnabled
-    public static void takeOverCase(Id recordId) {
-        if (recordId == null) throw new AuraHandledException('recordId est requis.');
-        try { update new Case(Id = recordId, OwnerId = UserInfo.getUserId(), Status = 'En cours'); }
-        catch (Exception e) { throw new AuraHandledException('Erreur prise en charge : ' + e.getMessage()); }
-    }
-
     private static FieldItem textItem(String path, String label, String value) {
         FieldItem fi = new FieldItem();
-        fi.fieldPath    = path;   fi.label        = label;
-        fi.fieldType    = 'STRING'; fi.isLookup   = false;
-        fi.isDateTime   = false;  fi.displayValue = String.isBlank(value) ? null : value;
+        fi.fieldPath    = path;       fi.label        = label;
+        fi.fieldType    = 'STRING';   fi.isLookup     = false;
+        fi.isDateTime   = false;      fi.displayValue = String.isBlank(value) ? null : value;
         return fi;
     }
 
     private static FieldItem lookupItem(String path, String label, Id lookupId, String displayValue) {
         FieldItem fi = new FieldItem();
-        fi.fieldPath    = path;   fi.label    = label;
-        fi.fieldType    = 'REFERENCE'; fi.isLookup = true; fi.isDateTime = false;
+        fi.fieldPath    = path;        fi.label      = label;
+        fi.fieldType    = 'REFERENCE'; fi.isLookup   = true; fi.isDateTime = false;
         fi.lookupId     = (lookupId != null) ? String.valueOf(lookupId) : null;
         fi.displayValue = String.isBlank(displayValue)
                           ? (lookupId != null ? String.valueOf(lookupId) : null) : displayValue;
@@ -439,8 +358,8 @@ public with sharing class DA_lwc025_CaseCompactLayoutController {
 
     private static FieldItem dateTimeItem(String path, String label, Object rawValue) {
         FieldItem fi = new FieldItem();
-        fi.fieldPath  = path; fi.label      = label;
-        fi.fieldType  = 'DATETIME'; fi.isLookup = false; fi.isDateTime = true;
+        fi.fieldPath    = path;       fi.label      = label;
+        fi.fieldType    = 'DATETIME'; fi.isLookup   = false; fi.isDateTime = true;
         fi.displayValue = parseDateToIso(rawValue);
         return fi;
     }
