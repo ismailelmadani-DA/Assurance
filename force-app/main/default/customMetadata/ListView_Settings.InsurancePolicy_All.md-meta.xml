@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Polices d’assurance</label>
+    <protected>false</protected>
+    <values>
+        <field>FieldsToShow__c</field>
+        <value xsi:type="xsd:string">Name;AccountName__c;DateEffet__c;DateExpiration__c;PolicyCategory__c;Status__c;OwnerId</value>
+    </values>
+    <values>
+        <field>LookUPToShow__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>ObjectAPIName__c</field>
+        <value xsi:type="xsd:string">InsurancePolicy__c</value>
+    </values>
+    <values>
+        <field>Ordre__c</field>
+        <value xsi:type="xsd:double">50.0</value>
+    </values>
+    <values>
+        <field>ShowOwnerFilter__c</field>
+        <value xsi:type="xsd:boolean">false</value>
+    </values>
+    <values>
+        <field>developerName__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>labelOfFields__c</field>
+        <value xsi:type="xsd:string">Name:Numéro de police;AccountName__c:Assuré;DateEffet__c:Date d&apos;effet;DateExpiration__c:Date d&apos;expiration;PolicyCategory__c:Type de police;Status__c:Statut;OwnerId:Propriétaire</value>
+    </values>
+    <values>
+        <field>listViewName__c</field>
+        <value xsi:type="xsd:string">01 - Toutes les polices d’assurance</value>
+    </values>
+    <values>
+        <field>logo__c</field>
+        <value xsi:type="xsd:string">standard:contract</value>
+    </values>
+    <values>
+        <field>showMes__c</field>
+        <value xsi:type="xsd:boolean">false</value>
+    </values>
+    <values>
+        <field>sobjectName__c</field>
+        <value xsi:type="xsd:string">Police d’assurance</value>
+    </values>
+    <values>
+        <field>toDisplay__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>visibleToProfiles__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>whereClause__c</field>
+        <value xsi:nil="true"/>
+    </values>
+</CustomMetadata>

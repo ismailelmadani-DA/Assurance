@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Comptes passagers</label>
+    <protected>false</protected>
+    <values>
+        <field>FieldsToShow__c</field>
+        <value xsi:type="xsd:string">Name;Pays__c;Ville__c;Phone;Email__c;RecordType.Name;OwnerId</value>
+    </values>
+    <values>
+        <field>LookUPToShow__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>ObjectAPIName__c</field>
+        <value xsi:type="xsd:string">Account</value>
+    </values>
+    <values>
+        <field>Ordre__c</field>
+        <value xsi:type="xsd:double">12.0</value>
+    </values>
+    <values>
+        <field>ShowOwnerFilter__c</field>
+        <value xsi:type="xsd:boolean">false</value>
+    </values>
+    <values>
+        <field>developerName__c</field>
+        <value xsi:type="xsd:string">Passager</value>
+    </values>
+    <values>
+        <field>labelOfFields__c</field>
+        <value xsi:type="xsd:string">Name:Nom et prénom;Pays__c:Pays;Ville__c:Ville;Phone:Téléphone;Email__c:Email;RecordType.Name:Type de Colonne;OwnerId: Propriétaire</value>
+    </values>
+    <values>
+        <field>listViewName__c</field>
+        <value xsi:type="xsd:string">03- Comptes passagers</value>
+    </values>
+    <values>
+        <field>logo__c</field>
+        <value xsi:type="xsd:string">standard:account</value>
+    </values>
+    <values>
+        <field>showMes__c</field>
+        <value xsi:type="xsd:boolean">false</value>
+    </values>
+    <values>
+        <field>sobjectName__c</field>
+        <value xsi:type="xsd:string">Compte</value>
+    </values>
+    <values>
+        <field>toDisplay__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>visibleToProfiles__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>whereClause__c</field>
+        <value xsi:nil="true"/>
+    </values>
+</CustomMetadata>

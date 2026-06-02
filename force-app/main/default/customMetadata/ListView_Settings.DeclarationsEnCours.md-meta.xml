@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Déclarations en cours</label>
+    <protected>false</protected>
+    <values>
+        <field>FieldsToShow__c</field>
+        <value xsi:type="xsd:string">CaseNumber;Claim__c;Police__c;Police__r.PolicyNumber__c;Vehicule__r.RegistrationNumber__c;CountryOfOccurrence__c;CityOfOccurrence__c;Status;DateOfDeclarationCreation__c;OwnerId</value>
+    </values>
+    <values>
+        <field>LookUPToShow__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>ObjectAPIName__c</field>
+        <value xsi:type="xsd:string">Case</value>
+    </values>
+    <values>
+        <field>Ordre__c</field>
+        <value xsi:type="xsd:double">31.0</value>
+    </values>
+    <values>
+        <field>ShowOwnerFilter__c</field>
+        <value xsi:type="xsd:boolean">false</value>
+    </values>
+    <values>
+        <field>developerName__c</field>
+        <value xsi:type="xsd:string">Declaration</value>
+    </values>
+    <values>
+        <field>labelOfFields__c</field>
+        <value xsi:type="xsd:string">CaseNumber:Numéro de déclaration;Claim__c: N° de sinistre;Police__r.PolicyNumber__c:Police;Vehicule__r.RegistrationNumber__c:Numéro d’immatriculation;CountryOfOccurrence__c:Pays de survenance;CityOfOccurrence__c:Ville de survenance;Status:Statut;DateOfDeclarationCreation__c:Date de création;OwnerId:Propriétaire</value>
+    </values>
+    <values>
+        <field>listViewName__c</field>
+        <value xsi:type="xsd:string">02- Déclarations en cours</value>
+    </values>
+    <values>
+        <field>logo__c</field>
+        <value xsi:type="xsd:string">standard:case</value>
+    </values>
+    <values>
+        <field>showMes__c</field>
+        <value xsi:type="xsd:boolean">false</value>
+    </values>
+    <values>
+        <field>sobjectName__c</field>
+        <value xsi:type="xsd:string">Déclaration</value>
+    </values>
+    <values>
+        <field>toDisplay__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>visibleToProfiles__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>whereClause__c</field>
+        <value xsi:type="xsd:string">Status = &apos;En cours&apos;</value>
+    </values>
+</CustomMetadata>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Instruction</label>
+    <protected>false</protected>
+    <values>
+        <field>FieldsToShow__c</field>
+        <value xsi:type="xsd:string">Name;Claim__c;InstructionType__c;TypeDegat__c;Vehicule__c;Vehicule__r.RegistrationNumber__c;Victimes__r.ParticipantAccount__r.Name;Statut__c;CreatedDate;CreatedById</value>
+    </values>
+    <values>
+        <field>LookUPToShow__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>ObjectAPIName__c</field>
+        <value xsi:type="xsd:string">Instruction__c</value>
+    </values>
+    <values>
+        <field>Ordre__c</field>
+        <value xsi:type="xsd:double">60.0</value>
+    </values>
+    <values>
+        <field>ShowOwnerFilter__c</field>
+        <value xsi:type="xsd:boolean">false</value>
+    </values>
+    <values>
+        <field>developerName__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>labelOfFields__c</field>
+        <value xsi:type="xsd:string">Name:Numéro d&apos;instruction;Claim__c:Sinistre;InstructionType__c:Type d&apos;instruction;TypeDegat__c:Type de dégât;Vehicule__r.RegistrationNumber__c:Véhicule;Victimes__r.ParticipantAccount__r.Name:Victime;Statut__c:Statut;CreatedDate:Date de création;CreatedById:Propriétaire</value>
+    </values>
+    <values>
+        <field>listViewName__c</field>
+        <value xsi:type="xsd:string">01- Toutes les Instructions</value>
+    </values>
+    <values>
+        <field>logo__c</field>
+        <value xsi:type="xsd:string">standard:record</value>
+    </values>
+    <values>
+        <field>showMes__c</field>
+        <value xsi:type="xsd:boolean">false</value>
+    </values>
+    <values>
+        <field>sobjectName__c</field>
+        <value xsi:type="xsd:string">Instruction</value>
+    </values>
+    <values>
+        <field>toDisplay__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>visibleToProfiles__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>whereClause__c</field>
+        <value xsi:nil="true"/>
+    </values>
+</CustomMetadata>

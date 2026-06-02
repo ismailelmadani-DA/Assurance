@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Sinistres clos</label>
+    <protected>false</protected>
+    <values>
+        <field>FieldsToShow__c</field>
+        <value xsi:type="xsd:string">Name;Case__c;CountryOfOccurrence__c;DateOfOccurrence__c;Status__c;OwnerId</value>
+    </values>
+    <values>
+        <field>LookUPToShow__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>ObjectAPIName__c</field>
+        <value xsi:type="xsd:string">Claim__c</value>
+    </values>
+    <values>
+        <field>Ordre__c</field>
+        <value xsi:type="xsd:double">24.0</value>
+    </values>
+    <values>
+        <field>ShowOwnerFilter__c</field>
+        <value xsi:type="xsd:boolean">false</value>
+    </values>
+    <values>
+        <field>developerName__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>labelOfFields__c</field>
+        <value xsi:type="xsd:string">Name: N° sinistre;Case__c:N° Déclaration CountryOfOccurrence__c: Pays de Survenance;DateOfOccurrence__c:Date de survenance;Status__c;Statut;OwnerId:Propriétaire</value>
+    </values>
+    <values>
+        <field>listViewName__c</field>
+        <value xsi:type="xsd:string">05- Sinistres clos</value>
+    </values>
+    <values>
+        <field>logo__c</field>
+        <value xsi:type="xsd:string">standard:partner_fund_claim</value>
+    </values>
+    <values>
+        <field>showMes__c</field>
+        <value xsi:type="xsd:boolean">false</value>
+    </values>
+    <values>
+        <field>sobjectName__c</field>
+        <value xsi:type="xsd:string">Sinistre</value>
+    </values>
+    <values>
+        <field>toDisplay__c</field>
+        <value xsi:type="xsd:boolean">true</value>
+    </values>
+    <values>
+        <field>visibleToProfiles__c</field>
+        <value xsi:nil="true"/>
+    </values>
+    <values>
+        <field>whereClause__c</field>
+        <value xsi:type="xsd:string">Status__c =&apos;Sinistre clos, soldé&apos;</value>
+    </values>
+</CustomMetadata>
