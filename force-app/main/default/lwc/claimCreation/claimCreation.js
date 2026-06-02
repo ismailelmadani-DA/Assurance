@@ -732,7 +732,7 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
                 policyId: this.selectedPolicyId,
                 vehicleId: this.selectedPolicyRecord.vehicleId,
                 dateSurvenance: this.dateSurvenance,
-                insuredIsContact: this.insuredIsContact
+                insuredIsContact: this.isSameAsInsured
             };
             if (this.decisionChoice === 'reject') {
                 payload.rejectMotif = this.motifRejet.trim();

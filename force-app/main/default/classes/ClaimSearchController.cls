@@ -89,6 +89,7 @@ public with sharing class ClaimSearchController {
             Case newCase = new Case();
             newCase.Police__c = policyId;
             newCase.Vehicule__c = (Id)data.get('vehicleId');
+            newCase.InsuredIsContact__c = insuredIsContact;
             
             newCase.CountryOfOccurrence__c = (String)data.get('country');
             newCase.CityOfOccurrence__c = (String)data.get('city');
