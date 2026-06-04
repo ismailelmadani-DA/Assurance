@@ -1,3 +1,4 @@
+// DA_lwc005_ClaimCircumstancesForm.js
 import { LightningElement, api, track, wire } from 'lwc';
 import { getPicklistValues, getObjectInfo } from 'lightning/uiObjectInfoApi';
 
@@ -61,7 +62,7 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
     caseObjectInfo;
 
     get declarationRecordTypeId() {
-        const infos = this.caseObjectInfo && this.caseObjectInfo.data && this.caseObjectInfo.data.recordTypeInfos;
+        const infos = this.caseObjectInfo?.data?.recordTypeInfos;
         if (!infos) return undefined;
         for (const id in infos) {
             const info = infos[id];
@@ -72,34 +73,53 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
         return this.caseObjectInfo.data.defaultRecordTypeId;
     }
 
+    _decodeHtml(s) {
+        if (typeof s !== 'string') return s;
+        const txt = document.createElement('textarea');
+        txt.innerHTML = s;
+        return txt.value;
+    }
+
+    _normalizePicklistValues(values) {
+        return (values || []).map((v) => ({
+            ...v,
+            label: this._decodeHtml(v.label),
+            value: this._decodeHtml(v.value)
+        }));
+    }
+
+    _normalizeControllerValues(map) {
+        const out = {};
+        for (const k in map || {}) {
+            out[this._decodeHtml(k)] = map[k];
+        }
+        return out;
+    }
+
     @wire(getPicklistValues, {
         recordTypeId: '$declarationRecordTypeId',
         fieldApiName: TRIGGER_FIELD
     })
-    wiredTriggerValues({ data, error }) {
-        if (data) this.triggerOptions = data.values;
+    wiredTriggerValues({ data }) {
+        if (data) this.triggerOptions = this._normalizePicklistValues(data.values);
     }
 
     @wire(getPicklistValues, {
         recordTypeId: '$declarationRecordTypeId',
         fieldApiName: CAUSE_FIELD
     })
-    wiredCauseValues({ data, error }) {
+    wiredCauseValues({ data }) {
         if (data) {
-            this._allCauseValues = data.values;
-            this._causeControllerValues = data.controllerValues || {};
+            this._allCauseValues = this._normalizePicklistValues(data.values);
+            this._causeControllerValues = this._normalizeControllerValues(data.controllerValues);
         }
     }
 
     get causeOptions() {
         const trigger = this._formData.TriggeringEventOfClaim__c;
-        if (!trigger) {
-            return [];
-        }
+        if (!trigger) return [];
         const controllerIndex = this._causeControllerValues[trigger];
-        if (controllerIndex === undefined) {
-            return [];
-        }
+        if (controllerIndex === undefined) return [];
         return this._allCauseValues
             .filter((v) => Array.isArray(v.validFor) && v.validFor.includes(controllerIndex))
             .map((v) => ({ label: v.label, value: v.value }));
@@ -109,8 +129,8 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
         recordTypeId: '$declarationRecordTypeId',
         fieldApiName: PARTY_FIELD
     })
-    wiredPartyValues({ data, error }) {
-        if (data) this.partyOptions = data.values;
+    wiredPartyValues({ data }) {
+        if (data) this.partyOptions = this._normalizePicklistValues(data.values);
     }
 
     handleChange(event) {
@@ -162,7 +182,7 @@ export default class DA_lwc005_ClaimCircumstancesForm extends LightningElement {
     get anyDamageValue() {
         if (this._formData.AnyDamage__c === true) return 'true';
         if (this._formData.AnyDamage__c === false) return 'false';
-        return this._formData.AnyDamage__c; 
+        return this._formData.AnyDamage__c;
     }
 
     @api

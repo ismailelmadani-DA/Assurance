@@ -1293,7 +1293,7 @@
     </tabVisibilities>
     <tabVisibilities>
         <tab>Poursuivre_Declaration</tab>
-        <visibility>Hidden</visibility>
+        <visibility>DefaultOff</visibility>
     </tabVisibilities>
     <tabVisibilities>
         <tab>standard-Case</tab>

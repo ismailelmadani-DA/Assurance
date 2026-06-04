@@ -93,14 +93,10 @@ export default class CaseCompactLayout extends NavigationMixin(LightningElement)
         const actions = this._data?.actions || [];
         return actions.filter(a => {
             if (a.name === 'continueDeclaration' && this._data?.recordTypeName === 'Declaration') {
-                if (this._data.requeteInitialeId) return false;
-                if (this._data.lastWizardStep == null) return false;
-                return this.isDeclarationButtonVisible;
+                return true;
             }
             if (a.name === 'reassign' && this._data?.recordTypeName === 'Declaration') {
-                if (this._data.requeteInitialeId) return false;
-                if (this._data.reaffecterAId)     return false;
-                return this._data.declarationOwnerId === USER_ID;
+                return true;
             }
             if (a.name === 'validateReassign') return this._showValidateReassign;
             if (a.name === 'rejectReassign')   return this._showRejectReassign;
@@ -207,24 +203,19 @@ export default class CaseCompactLayout extends NavigationMixin(LightningElement)
     }
 
     async runContinueDeclaration() {
-        const pageRef = {
-            type: 'standard__navItemPage',
-            attributes: {
-                apiName: 'Poursuivre_Declaration'
-            },
-            state: {
-                c__recordId: this.recordId
-            }
-        };
+        const url = `/lightning/n/Poursuivre_Declaration?c__recordId=${encodeURIComponent(this.recordId)}`;
 
         if (this.isConsoleNavigation) {
             await openTab({
-                pageReference: pageRef,
+                url,
                 focus: true,
                 label: 'Poursuivre la déclaration'
             });
         } else {
-            this[NavigationMixin.Navigate](pageRef);
+            this[NavigationMixin.Navigate]({
+                type: 'standard__webPage',
+                attributes: { url }
+            });
         }
     }
 
