@@ -15,6 +15,13 @@ const STATUS_CLASSES = {
     'Clôturée' : 'ccl-status-badge ccl-status--cloturee',
 };
 
+const DECLARATION_LABELS = {
+    'Account.Name'                      : 'Nom de l\'assuré',
+    'Police__r.PolicyNumber__c'         : 'Numéro de police',
+    'Vehicule__r.RegistrationNumber__c' : 'Numéro d\'immatriculation',
+    'DateOfOccurrence__c'               : 'Date de survenance',
+};
+
 export default class CaseCompactLayout extends NavigationMixin(LightningElement) {
 
     @api recordId;
@@ -46,10 +53,12 @@ export default class CaseCompactLayout extends NavigationMixin(LightningElement)
                 recordTypeName : this.defaultRecordType
             });
             this._error = null;
+            const isDeclaration = data.recordTypeName === 'Declaration';
             this._data  = {
                 ...data,
                 fields: (data.fields || []).map(f => ({
                     ...f,
+                    label       : (isDeclaration ? DECLARATION_LABELS[f.fieldPath] : undefined) || f.label,
                     recordUrl   : (f.isLookup && f.lookupId) ? '/' + f.lookupId : null,
                     isStatus    : f.fieldPath === 'Status',
                     statusClass : f.fieldPath === 'Status'
@@ -96,7 +105,9 @@ export default class CaseCompactLayout extends NavigationMixin(LightningElement)
                 return true;
             }
             if (a.name === 'reassign' && this._data?.recordTypeName === 'Declaration') {
-                return true;
+                if (this._data.requeteInitialeId) return false;
+                if (this._data.reaffecterAId)     return false;
+                return this._data.declarationOwnerId === USER_ID;
             }
             if (a.name === 'validateReassign') return this._showValidateReassign;
             if (a.name === 'rejectReassign')   return this._showRejectReassign;

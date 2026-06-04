@@ -80,7 +80,8 @@
 /* ── Grille des champs ── */
 .ccl-fields-grid {
     display: grid !important;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    /*grid-template-columns: repeat(4, minmax(0, 1fr));*/
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     padding: 16px 20px;
     gap: 16px;
     list-style: none;

@@ -15,7 +15,7 @@ export default class Lwc006_PointChoc extends LightningElement {
     set savedPoints(value) {
         this._savedPoints = value;
         if (value) {
-            this._scheduleRestore();
+            this._applyWithRetry(value, this._savedPrecisions);
         }
     }
 
@@ -29,7 +29,6 @@ export default class Lwc006_PointChoc extends LightningElement {
 
     _savedPoints = '';
     _savedPrecisions = '';
-    _restoreScheduled = false;
 
     @track parts = [];
     @track motifVal = '';
@@ -41,25 +40,25 @@ export default class Lwc006_PointChoc extends LightningElement {
         return !!this.recordId;
     }
 
-    renderedCallback() {
-        if (this._restoreScheduled && !this._restored) {
-            this._restored = true;
-            this._restoreScheduled = false;
-            this._doRestore();
+    _applyWithRetry(pointsStr, precisions, attempt = 0) {
+        if (!pointsStr) return;
+
+        // Essayer d'appliquer
+        const firstPath = this.template.querySelector('path[data-value]');
+        if (firstPath) {
+            this._applyPoints(pointsStr, precisions);
+            return;
+        }
+
+        // SVG pas encore prêt, réessayer jusqu'à 10 fois
+        if (attempt < 10) {
+            setTimeout(() => {
+                this._applyWithRetry(pointsStr, precisions, attempt + 1);
+            }, 100);
         }
     }
 
-    _scheduleRestore() {
-        this._restored = false;
-        this._restoreScheduled = true;
-    }
-
-    _doRestore() {
-        const pointsStr = this._savedPoints;
-        const precisions = this._savedPrecisions;
-
-        if (!pointsStr) return;
-
+    _applyPoints(pointsStr, precisions) {
         this.parts = [];
 
         const partiesEndommagees = pointsStr.split(';').map(p => p.trim()).filter(p => p !== '');
@@ -85,34 +84,18 @@ export default class Lwc006_PointChoc extends LightningElement {
     @wire(getRecord, { recordId: '$recordId', fields: [POINTS_CHOC_FIELD, PRECISIONS_FIELD] })
     wiredClaim({ error, data }) {
         if (data) {
-            const pointsSauvegardes = getFieldValue(data, POINTS_CHOC_FIELD);
-            const precisionsSauvegardees = getFieldValue(data, PRECISIONS_FIELD);
+            const points = getFieldValue(data, POINTS_CHOC_FIELD);
+            const precisions = getFieldValue(data, PRECISIONS_FIELD);
 
-            if (precisionsSauvegardees) {
-                this.motifVal = precisionsSauvegardees;
+            if (precisions) {
+                this._savedPrecisions = precisions;
+                this.motifVal = precisions;
             }
-            if (pointsSauvegardes) {
-                this.colorierPointsExistants(pointsSauvegardes);
+            if (points) {
+                this._savedPoints = points;
+                this._applyWithRetry(points, precisions);
             }
-        } else if (error) {
-            console.error('Erreur lors de la récupération des points de choc', error);
         }
-    }
-
-    colorierPointsExistants(pointsStr) {
-        const partiesEndommagees = pointsStr.split(';').map(p => p.trim()).filter(p => p !== '');
-        setTimeout(() => {
-            partiesEndommagees.forEach(partval => {
-                const myPartElement = this.template.querySelector(`path[data-value='${partval}']`);
-                if (myPartElement) {
-                    myPartElement.style.fill = '#FF0000';
-                    myPartElement.style.fillOpacity = '0.6';
-                    this.parts.push({ id: myPartElement.id, val: partval });
-                }
-            });
-            this.parts = [...this.parts];
-            this.updateLayout();
-        }, 500);
     }
 
     onclickPart(event) {
