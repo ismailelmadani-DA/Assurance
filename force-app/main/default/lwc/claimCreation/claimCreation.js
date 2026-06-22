@@ -218,10 +218,26 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
     get step12Class() { return this.currentStep === 12 ? 'step active' : (this.currentStep > 12 ? 'step completed' : 'step'); }
     get step12IconClass() { return this.currentStep === 12 ? 'circle-ring' : (this.currentStep > 12 ? 'circle-check' : 'square-gray'); }
 
+    formatDateOnly(value) {
+        if (!value) return '';
+        const datePart = String(value).slice(0, 10);
+        const d = new Date(datePart);
+        if (isNaN(d.getTime())) return datePart;
+        return d.toLocaleDateString('fr-FR');
+    }
+
+    get dateSurvenanceDisplay() {
+        return this.formatDateOnly(this.dateSurvenance);
+    }
+
+    get minDateDepot() {
+        return this.dateSurvenance ? String(this.dateSurvenance).slice(0, 10) : null;
+    }
+
     // --- Données pour composants enfants ---
     get summaryForChild() {
         return {
-            dateSurvenance: this.dateSurvenance,
+            dateSurvenance: this.formatDateOnly(this.dateSurvenance),
             policyNumber: this.selectedPolicyRecord?.PolicyNumber,
             registrationNumber: this.selectedPolicyRecord?.RegistrationNumber,
             caseNumber: this.createdCaseNumber || 'En cours',
@@ -518,6 +534,13 @@ export default class ClaimCreationWizard extends NavigationMixin(LightningElemen
                 const allValid = [...this.template.querySelectorAll('lightning-input, lightning-combobox')]
                     .reduce((v, i) => { i.reportValidity(); return v && i.checkValidity(); }, true);
                 if (!allValid) { this.isLoading = false; return; }
+
+                if (this.dateSurvenance && this.caseData.dateDepot
+                    && String(this.caseData.dateDepot).slice(0, 10) < String(this.dateSurvenance).slice(0, 10)) {
+                    this.showToast('Erreur', 'La date de dépôt ne peut pas être antérieure à la date de survenance.', 'error');
+                    this.isLoading = false;
+                    return;
+                }
 
                 // ✅ Si le Case a déjà été créé (retour arrière), on ne recrée pas
                 if (this.caseAlreadyCreated) {

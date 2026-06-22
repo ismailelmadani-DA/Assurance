@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PaiementFranchise__c</fullName>
+    <label>Paiement de la franchise</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>A la compagnie</fullName>
+                <default>false</default>
+                <label>A la compagnie</label>
+            </value>
+            <value>
+                <fullName>Au garagiste</fullName>
+                <default>false</default>
+                <label>Au garagiste</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

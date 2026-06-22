@@ -11,26 +11,6 @@
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Chute d&apos;objet</fullName>
-                <default>false</default>
-                <label>Chute d&apos;objet</label>
-            </value>
-            <value>
-                <fullName>Jet de pierre</fullName>
-                <default>false</default>
-                <label>Jet de pierre</label>
-            </value>
-            <value>
-                <fullName>Carambolage</fullName>
-                <default>false</default>
-                <label>Carambolage</label>
-            </value>
-            <value>
-                <fullName>Renversement</fullName>
-                <default>false</default>
-                <label>Renversement</label>
-            </value>
-            <value>
                 <fullName>Choc / Collision</fullName>
                 <default>false</default>
                 <label>Choc / Collision</label>
@@ -41,9 +21,104 @@
                 <label>Accident</label>
             </value>
             <value>
-                <fullName>Panne</fullName>
+                <fullName>Renversement</fullName>
                 <default>false</default>
-                <label>Panne</label>
+                <label>Renversement</label>
+            </value>
+            <value>
+                <fullName>Carambolage</fullName>
+                <default>false</default>
+                <label>Carambolage</label>
+            </value>
+            <value>
+                <fullName>Chute d&apos;objet</fullName>
+                <default>false</default>
+                <label>Chute d&apos;objet</label>
+            </value>
+            <value>
+                <fullName>Jet de pierre</fullName>
+                <default>false</default>
+                <label>Jet de pierre</label>
+            </value>
+            <value>
+                <fullName>Sortie de route</fullName>
+                <default>false</default>
+                <label>Sortie de route</label>
+            </value>
+            <value>
+                <fullName>Heurt de véhicule</fullName>
+                <default>false</default>
+                <label>Heurt de véhicule</label>
+            </value>
+            <value>
+                <fullName>Heurt d&apos;obstacle fixe</fullName>
+                <default>false</default>
+                <label>Heurt d&apos;obstacle fixe</label>
+            </value>
+            <value>
+                <fullName>Perte de contrôle</fullName>
+                <default>false</default>
+                <label>Perte de contrôle</label>
+            </value>
+            <value>
+                <fullName>Accident avec piéton</fullName>
+                <default>false</default>
+                <label>Accident avec piéton</label>
+            </value>
+            <value>
+                <fullName>Accident avec animal</fullName>
+                <default>false</default>
+                <label>Accident avec animal</label>
+            </value>
+            <value>
+                <fullName>Inondation</fullName>
+                <default>false</default>
+                <label>Inondation</label>
+            </value>
+            <value>
+                <fullName>Tempête</fullName>
+                <default>false</default>
+                <label>Tempête</label>
+            </value>
+            <value>
+                <fullName>Grêle</fullName>
+                <default>false</default>
+                <label>Grêle</label>
+            </value>
+            <value>
+                <fullName>Tremblement de terre</fullName>
+                <default>false</default>
+                <label>Tremblement de terre</label>
+            </value>
+            <value>
+                <fullName>Glissement de terrain</fullName>
+                <default>false</default>
+                <label>Glissement de terrain</label>
+            </value>
+            <value>
+                <fullName>Chute d&apos;arbre</fullName>
+                <default>false</default>
+                <label>Chute d&apos;arbre</label>
+            </value>
+            <value>
+                <fullName>Foudre</fullName>
+                <default>false</default>
+                <label>Foudre</label>
+            </value>
+            <value>
+                <fullName>Vent violent</fullName>
+                <default>false</default>
+                <label>Vent violent</label>
+            </value>
+            <value>
+                <fullName>Submersion</fullName>
+                <default>false</default>
+                <label>Submersion</label>
+            </value>
+            <value>
+                <fullName>Coulée de boue</fullName>
+                <default>false</default>
+                <label>Coulée de boue</label>
             </value>
             <value>
                 <fullName>Incendie</fullName>
@@ -51,8 +126,109 @@
                 <label>Incendie</label>
             </value>
             <value>
+                <fullName>Court-circuit</fullName>
+                <default>false</default>
+                <label>Court-circuit</label>
+            </value>
+            <value>
+                <fullName>Explosion</fullName>
+                <default>false</default>
+                <label>Explosion</label>
+            </value>
+            <value>
+                <fullName>Surchauffe moteur</fullName>
+                <default>false</default>
+                <label>Surchauffe moteur</label>
+            </value>
+            <value>
+                <fullName>Incendie criminel</fullName>
+                <default>false</default>
+                <label>Incendie criminel</label>
+            </value>
+            <value>
+                <fullName>Propagation de feu</fullName>
+                <default>false</default>
+                <label>Propagation de feu</label>
+            </value>
+            <value>
+                <fullName>Auto-combustion</fullName>
+                <default>false</default>
+                <label>Auto-combustion</label>
+            </value>
+            <value>
+                <fullName>Vol total</fullName>
+                <default>false</default>
+                <label>Vol total</label>
+            </value>
+            <value>
+                <fullName>Tentative de vol</fullName>
+                <default>false</default>
+                <label>Tentative de vol</label>
+            </value>
+            <value>
+                <fullName>Vol avec effraction</fullName>
+                <default>false</default>
+                <label>Vol avec effraction</label>
+            </value>
+            <value>
+                <fullName>Vol d&apos;accessoires</fullName>
+                <default>false</default>
+                <label>Vol d&apos;accessoires</label>
+            </value>
+            <value>
+                <fullName>Détournement</fullName>
+                <default>false</default>
+                <label>Détournement</label>
+            </value>
+            <value>
+                <fullName>Vandalisme</fullName>
+                <default>false</default>
+                <label>Vandalisme</label>
+            </value>
+            <value>
+                <fullName>Car-jacking</fullName>
+                <default>false</default>
+                <label>Car-jacking</label>
+            </value>
+            <value>
+                <fullName>Impact</fullName>
+                <default>false</default>
+                <label>Impact</label>
+            </value>
+            <value>
+                <fullName>Fissure</fullName>
+                <default>false</default>
+                <label>Fissure</label>
+            </value>
+            <value>
+                <fullName>Bris pare-brise</fullName>
+                <default>false</default>
+                <label>Bris pare-brise</label>
+            </value>
+            <value>
+                <fullName>Bris vitre latérale</fullName>
+                <default>false</default>
+                <label>Bris vitre latérale</label>
+            </value>
+            <value>
+                <fullName>Bris lunette arrière</fullName>
+                <default>false</default>
+                <label>Bris lunette arrière</label>
+            </value>
+            <value>
+                <fullName>Acte de vandalisme</fullName>
+                <default>false</default>
+                <label>Acte de vandalisme</label>
+            </value>
+            <value>
+                <fullName>Panne</fullName>
+                <default>false</default>
+                <label>Panne</label>
+            </value>
+            <value>
                 <fullName>Collision</fullName>
                 <default>false</default>
+                <isActive>false</isActive>
                 <label>Collision</label>
             </value>
         </valueSetDefinition>

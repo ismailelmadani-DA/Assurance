@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>OrigineCorrection__c</fullName>
+    <label>Origine correction</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Revue en interne</fullName>
+                <default>false</default>
+                <label>Revue en interne</label>
+            </value>
+            <value>
+                <fullName>Revue d&apos;expert sur document</fullName>
+                <default>false</default>
+                <label>Revue d&apos;expert sur document</label>
+            </value>
+            <value>
+                <fullName>Revue d&apos;expert suite à expertise véhicule</fullName>
+                <default>false</default>
+                <label>Revue d&apos;expert suite à expertise véhicule</label>
+            </value>
+            <value>
+                <fullName>Contre-proposition garagiste</fullName>
+                <default>false</default>
+                <label>Contre-proposition garagiste</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

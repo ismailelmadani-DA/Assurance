@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Instruction__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <description>Instruction PEC à laquelle la ligne de correction de devis est rattachée.</description>
+    <label>Instruction</label>
+    <referenceTo>Instruction__c</referenceTo>
+    <relationshipLabel>Corrections Devis</relationshipLabel>
+    <relationshipName>Corrections_Devis</relationshipName>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

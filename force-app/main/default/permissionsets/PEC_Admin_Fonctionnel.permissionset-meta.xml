@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>PEC Admin Fonctionnel</label>
+    <description>Donne la visibilité et l'édition du champ « Admin fonctionnel » sur l'utilisateur (désignation du destinataire des requêtes Création prestataire).</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>User.AdminFonctionnel__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+</PermissionSet>

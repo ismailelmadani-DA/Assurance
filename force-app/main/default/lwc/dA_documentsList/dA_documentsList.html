@@ -16,7 +16,14 @@
                     <lightning-icon icon-name="utility:add" size="xx-small"></lightning-icon>
                     <span>Ajouter Document</span>
                 </button>
-                
+
+                <template if:true={isInstructionMode}>
+                    <button class="doc-btn doc-btn--add" onclick={handleAssociate} title="Associer un document existant">
+                        <lightning-icon icon-name="utility:add" size="xx-small"></lightning-icon>
+                        <span>Associer Document</span>
+                    </button>
+                </template>
+
                 <button class="doc-btn doc-btn--icon" onclick={handleRefresh} title="Actualiser">
                     <lightning-icon icon-name="utility:refresh" size="xx-small" variant="inverse"></lightning-icon>
                 </button>
@@ -93,14 +100,22 @@
                 </header>
 
                 <div class="doc-modal__body" style="background-color: #f0f4f8; padding: 0;">
-                    <c-d-a_documents-g-e-d 
-                        record-id={recordId} 
-                        document-id={selectedDocumentId} 
+                    <c-d-a_documents-g-e-d
+                        record-id={effectiveRecordIdForModal}
+                        document-id={selectedDocumentId}
                         onclose={handleModalClose}>
                     </c-d-a_documents-g-e-d>
                 </div>
 
             </section>
         </div>
+    </template>
+
+    <template if:true={showAssociateModal}>
+        <c-d-a_lwc030_associer-document
+            record-id={recordId}
+            onsuccess={handleAssociateSuccess}
+            oncancel={closeAssociateModal}>
+        </c-d-a_lwc030_associer-document>
     </template>
 </template>

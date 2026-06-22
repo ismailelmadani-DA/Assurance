@@ -1,0 +1,661 @@
+<template>
+
+    <!-- ════════════════════════════════════════
+         CARD PRINCIPALE — DÉTAILS PEC
+    ════════════════════════════════════════ -->
+    <div class="pm-card">
+
+        <!-- HEADER -->
+        <div class="pm-header">
+            <div class="pm-header__left">
+                <div class="pm-header__icon-wrap">
+                    <lightning-icon icon-name="standard:work_order" size="small" alternative-text="Détails PEC"></lightning-icon>
+                </div>
+                <div>
+                    <h1 class="pm-header__title">Détails PEC</h1>
+                    <span class="pm-header__subtitle">Étape en cours : {etape}</span>
+                </div>
+            </div>
+
+            <div class="pm-header__actions">
+                <template if:true={hasNextStep}>
+                    <button class="pm-btn pm-btn--add" type="button" onclick={handleEtapeSuivante}>
+                        <lightning-icon icon-name="utility:forward" size="x-small" alternative-text="Étape suivante"></lightning-icon>
+                        Étape suivante
+                    </button>
+                </template>
+            </div>
+        </div>
+
+        <!-- STEPPER (lecture seule : progression uniquement via « Étape suivante ») -->
+        <div class="pec-stepper">
+            <template for:each={steps} for:item="step">
+                <div key={step.key} class={step.cls}>
+                    <span class="pec-step__num">{step.num}</span>
+                    <span class="pec-step__label">{step.label}</span>
+                </div>
+            </template>
+        </div>
+
+        <!-- BODY -->
+        <div class="pm-body">
+
+            <template if:true={isLoading}>
+                <div class="pm-spinner-overlay">
+                    <lightning-spinner alternative-text="Chargement..." size="medium"></lightning-spinner>
+                </div>
+            </template>
+
+            <!-- ════════════════════════════════════════
+                 BLOC 1 : DONNÉES DEVIS INITIAL
+                 (étapes 1, 2 — consultation à l'étape 5)
+            ════════════════════════════════════════ -->
+            <template if:true={showBlocDevisInitial}>
+            <div class="pm-section">
+                <div class="pm-section__title">
+                    <span class="pm-section__num">1</span>
+                    <lightning-icon icon-name="standard:contract" size="x-small" alternative-text="Devis initial"></lightning-icon>
+                    Données devis initial
+                </div>
+
+                <div class="pm-grid">
+
+                    <!-- Montant devis initial -->
+                    <div class="pm-field">
+                        <lightning-input
+                            type="number"
+                            label="Montant devis initial"
+                            step="0.01"
+                            value={devis.montantDevisInitial}
+                            required
+                            disabled={devisFieldsDisabled}
+                            onchange={handleDevisFieldChange}
+                            data-field="montantDevisInitial">
+                        </lightning-input>
+                    </div>
+
+                    <!-- Date réception devis initial (RG1) -->
+                    <div class="pm-field">
+                        <lightning-input
+                            type="date"
+                            label="Date réception devis initial"
+                            value={devis.dateReceptionDevisInitial}
+                            min={minDateReception}
+                            required
+                            disabled={devisFieldsDisabled}
+                            onchange={handleDevisFieldChange}
+                            data-field="dateReceptionDevisInitial">
+                        </lightning-input>
+                        <span class="pm-city-hint">Ne peut pas être antérieure à la date sinistre et date déclaration</span>
+                    </div>
+
+                    <!-- Origine devis -->
+                    <div class="pm-field pm-field--full">
+                        <div class="pm-contact-selector">
+                            <span class="pm-contact-label">Origine devis&nbsp;<abbr title="required" class="pec-required">*</abbr></span>
+                            <div class="pm-contact-toggle">
+                                <template for:each={origineDevisChips} for:item="chip">
+                                    <button key={chip.value}
+                                            class={chip.cls}
+                                            type="button"
+                                            disabled={devisFieldsDisabled}
+                                            data-value={chip.value}
+                                            onclick={handleOrigineDevisClick}>
+                                        {chip.label}
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Réparateur (RG2 / RG3) -->
+                    <template if:true={showGaragisteListe}>
+                        <div class="pm-field pm-field--full pm-field--animated">
+                            <label class="pec-label">
+                                Réparateur (Garagiste/Concessionnaire)
+                                <template if:true={reparateurRequired}>
+                                    <abbr title="required" class="pec-required">*</abbr>
+                                </template>
+                            </label>
+
+                            <template if:true={isLoadingGaragistes}>
+                                <div class="pec-inline-spinner">
+                                    <lightning-spinner size="small" alternative-text="Chargement..."></lightning-spinner>
+                                </div>
+                            </template>
+
+                            <template if:false={isLoadingGaragistes}>
+                                <template if:true={hasGaragistes}>
+                                    <div class="pm-table-wrap pec-checklist">
+                                        <table class="pm-table pec-table--compact">
+                                            <thead>
+                                                <tr>
+                                                    <th class="pm-th pec-th--check"></th>
+                                                    <th class="pm-th">Nom</th>
+                                                    <th class="pm-th">Code tiers</th>
+                                                    <th class="pm-th">Ville</th>
+                                                    <th class="pm-th">Pays</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template for:each={garagisteRows} for:item="g">
+                                                    <tr key={g.Id}
+                                                        class={g.rowClass}
+                                                        onclick={handleGaragisteSelect}
+                                                        data-id={g.Id}>
+                                                        <td class="pm-td pm-td--center">
+                                                            <template if:true={g.isSelected}>
+                                                                <span class="pm-badge pm-badge--driver">
+                                                                    <lightning-icon icon-name="utility:check" size="x-small" alternative-text="Sélectionné"></lightning-icon>
+                                                                </span>
+                                                            </template>
+                                                        </td>
+                                                        <td class="pm-td pm-td--name">{g.Name}</td>
+                                                        <td class="pm-td pm-td--mono">{g.codeTier__c}</td>
+                                                        <td class="pm-td">{g.Ville__c}</td>
+                                                        <td class="pm-td">{g.Pays__c}</td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </template>
+                                <template if:false={hasGaragistes}>
+                                    <div class="pm-empty pec-empty--small">
+                                        <p class="pm-empty__text">{garagistesEmptyMessage}</p>
+                                    </div>
+                                </template>
+                            </template>
+                        </div>
+                    </template>
+
+                    <!-- Nouveau réparateur « non conventionné » -->
+                    <template if:true={showNouveauReparateur}>
+                        <div class="pm-field pm-field--full">
+                            <div class="pm-toggle-row">
+                                <span class="pm-toggle-label">
+                                    <lightning-icon icon-name="utility:new" size="x-small" alternative-text="Nouveau"></lightning-icon>
+                                    Nouveau réparateur « non conventionné »
+                                </span>
+                                <lightning-input
+                                    type="checkbox"
+                                    label="Nouveau réparateur non conventionné"
+                                    variant="label-hidden"
+                                    checked={devis.nouveauReparateur}
+                                    disabled={devisFieldsDisabled}
+                                    onchange={handleNouveauReparateurChange}>
+                                </lightning-input>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template if:true={showNouveauReparateurFields}>
+                        <!-- Nom réparateur -->
+                        <div class="pm-field pm-field--animated">
+                            <lightning-input
+                                type="text"
+                                label="Nom réparateur"
+                                value={devis.nomReparateur}
+                                required
+                                disabled={devisFieldsDisabled}
+                                onchange={handleDevisFieldChange}
+                                data-field="nomReparateur">
+                            </lightning-input>
+                        </div>
+
+                        <!-- Identifiant fiscal -->
+                        <div class="pm-field pm-field--animated">
+                            <lightning-input
+                                type="text"
+                                label="Identifiant fiscale"
+                                value={devis.identifiantFiscal}
+                                disabled={devisFieldsDisabled}
+                                onchange={handleDevisFieldChange}
+                                data-field="identifiantFiscal">
+                            </lightning-input>
+                        </div>
+
+                        <!-- Ajouter réparateur (RG4) -->
+                        <div class="pm-field pm-field--full pec-field--right">
+                            <button class="pm-btn pm-btn--outlined"
+                                    type="button"
+                                    disabled={devisFieldsDisabled}
+                                    onclick={handleAjouterReparateur}>
+                                <lightning-icon icon-name="utility:add" size="x-small" alternative-text="Ajouter"></lightning-icon>
+                                Ajouter réparateur
+                            </button>
+                        </div>
+                    </template>
+
+                </div>
+            </div>
+
+            </template>
+
+            <!-- ════════════════════════════════════════
+                 BLOC 2 : DONNÉES EXPERTISE
+                 (étapes 1 et 2 — consultation à l'étape 5)
+            ════════════════════════════════════════ -->
+            <template if:true={showBlocExpertise}>
+            <div class="pm-section">
+                <div class="pm-section__title">
+                    <span class="pm-section__num">2</span>
+                    <lightning-icon icon-name="standard:service_report" size="x-small" alternative-text="Expertise"></lightning-icon>
+                    Données expertise
+                </div>
+
+                <div class="pm-grid">
+
+                    <!-- Montant apprécié (modifiable étapes 1 et 2) -->
+                    <div class="pm-field">
+                        <lightning-input
+                            type="number"
+                            label="Montant apprécié"
+                            step="0.01"
+                            value={devis.montantApprecie}
+                            disabled={expertiseFieldsDisabled}
+                            onchange={handleDevisFieldChange}
+                            data-field="montantApprecie">
+                        </lightning-input>
+                    </div>
+
+                    <!-- Nécessite une expertise ? -->
+                    <div class="pm-field">
+                        <div class="pm-contact-selector pec-selector--field">
+                            <span class="pm-contact-label">Nécessite une expertise ?&nbsp;<abbr title="required" class="pec-required">*</abbr></span>
+                            <div class="pm-contact-toggle">
+                                <template for:each={expertiseChips} for:item="chip">
+                                    <button key={chip.value}
+                                            class={chip.cls}
+                                            type="button"
+                                            disabled={devisFieldsDisabled}
+                                            data-value={chip.value}
+                                            onclick={handleExpertiseClick}>
+                                        {chip.label}
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Commentaire (modifiable étapes 1 et 2) -->
+                    <div class="pm-field pm-field--full">
+                        <lightning-textarea
+                            label="Commentaire"
+                            value={devis.commentaire}
+                            disabled={expertiseFieldsDisabled}
+                            onchange={handleDevisFieldChange}
+                            data-field="commentaire">
+                        </lightning-textarea>
+                    </div>
+
+                </div>
+
+                <!-- Enregistrer (RG5 / RG6 / RG7) -->
+                <template if:true={showDevisSave}>
+                    <div class="pec-section-footer">
+                        <button class="pm-btn pm-btn--save pm-btn--fixed-width" type="button" onclick={handleSaveDevis} disabled={isSaving}>
+                            <lightning-icon icon-name="utility:save" size="x-small" alternative-text="Enregistrer"></lightning-icon>
+                            Enregistrer
+                        </button>
+                    </div>
+                </template>
+            </div>
+            </template>
+
+            <!-- ════════════════════════════════════════
+                 BLOC 3 : DONNÉES DEVIS CORRIGÉ
+                 (étape 3 — consultation à l'étape 5)
+            ════════════════════════════════════════ -->
+            <template if:true={showBlocCorrige}>
+            <div class="pm-section">
+                <div class="pm-section__title pec-section__title--actions">
+                    <span class="pec-section__title-left">
+                        <span class="pm-section__num">3</span>
+                        <lightning-icon icon-name="standard:adjust_value" size="x-small" alternative-text="Devis corrigé"></lightning-icon>
+                        Données devis corrigé
+                    </span>
+                    <!-- RG1 : affiche le formulaire de saisie -->
+                    <template if:true={correctionAllowed}>
+                        <button class="pm-btn pm-btn--outlined pec-btn--small" type="button" onclick={handleAjouterCorrection}>
+                            <lightning-icon icon-name="utility:add" size="x-small" alternative-text="Ajouter"></lightning-icon>
+                            Ajouter une correction devis
+                        </button>
+                    </template>
+                </div>
+
+                <!-- Formulaire de correction (RG2) -->
+                <template if:true={showCorrectionForm}>
+                    <div class="pec-correction-form pm-field--animated">
+                        <div class="pec-correction-form__title">{correctionFormTitle}</div>
+                        <div class="pm-grid">
+
+                            <!-- Montant devis corrigé (RG3 / RG4) -->
+                            <div class="pm-field">
+                                <lightning-input
+                                    type="number"
+                                    label="Montant devis corrigé"
+                                    step="0.01"
+                                    value={correctionForm.montantDevisCorrige}
+                                    required
+                                    disabled={isCorrectionEdit}
+                                    onchange={handleCorrectionFieldChange}
+                                    data-field="montantDevisCorrige">
+                                </lightning-input>
+                            </div>
+
+                            <!-- Réparateur (RG6) -->
+                            <div class="pm-field">
+                                <lightning-combobox
+                                    label="Réparateur (Garagiste/Concessionnaire)"
+                                    value={correctionForm.reparateurId}
+                                    options={reparateurOptions}
+                                    placeholder="Sélectionner un garagiste"
+                                    required
+                                    disabled={isCorrectionEdit}
+                                    onchange={handleCorrectionFieldChange}
+                                    data-field="reparateurId">
+                                </lightning-combobox>
+                            </div>
+
+                            <!-- Origine correction (RG5) -->
+                            <div class="pm-field pm-field--full">
+                                <label class="pec-label">Origine correction&nbsp;<abbr title="required" class="pec-required">*</abbr></label>
+                                <div class="pec-chip-group">
+                                    <template for:each={origineCorrectionChips} for:item="chip">
+                                        <button key={chip.value}
+                                                class={chip.cls}
+                                                type="button"
+                                                disabled={isCorrectionEdit}
+                                                data-value={chip.value}
+                                                onclick={handleOrigineCorrectionClick}>
+                                            {chip.label}
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Statut correction (RG7) -->
+                            <div class="pm-field">
+                                <lightning-combobox
+                                    label="Statut correction"
+                                    value={correctionForm.statutCorrection}
+                                    options={statutCorrectionOptions}
+                                    required
+                                    onchange={handleCorrectionFieldChange}
+                                    data-field="statutCorrection">
+                                </lightning-combobox>
+                            </div>
+
+                            <!-- Date statut (RG8 : date système) -->
+                            <div class="pm-field">
+                                <label class="pec-label">Date statut</label>
+                                <div class="pec-date-auto">
+                                    <lightning-icon icon-name="utility:clock" size="x-small" alternative-text="Auto"></lightning-icon>
+                                    {todayFmt} — renseignée automatiquement
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="pec-section-footer">
+                            <button class="pm-btn pm-btn--cancel" type="button" onclick={handleCancelCorrection} disabled={isSaving}>
+                                Annuler
+                            </button>
+                            <!-- RG9 -->
+                            <button class="pm-btn pm-btn--save pm-btn--fixed-width" type="button" onclick={handleSaveCorrection} disabled={isSaving}>
+                                <lightning-icon icon-name="utility:save" size="x-small" alternative-text="Enregistrer"></lightning-icon>
+                                Enregistrer
+                            </button>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Tableau des corrections proposées -->
+                <template if:true={hasCorrections}>
+                    <div class="pm-table-wrap pec-table-wrap--flush">
+                        <table class="pm-table pec-table--compact">
+                            <thead>
+                                <tr>
+                                    <th class="pm-th">N°</th>
+                                    <th class="pm-th">Montant devis corrigé</th>
+                                    <th class="pm-th">Origine correction</th>
+                                    <th class="pm-th">Réparateur</th>
+                                    <th class="pm-th">Statut correction</th>
+                                    <th class="pm-th">Date statut</th>
+                                    <template if:true={correctionAllowed}>
+                                        <th class="pm-th pm-th--center">Actions</th>
+                                    </template>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={correctionRows} for:item="row">
+                                    <tr key={row.Id}>
+                                        <td class="pm-td pm-td--name">{row.Name}</td>
+                                        <td class="pm-td pm-td--mono">{row.montantFmt}</td>
+                                        <td class="pm-td">{row.OrigineCorrection__c}</td>
+                                        <td class="pm-td">{row.reparateurName}</td>
+                                        <td class="pm-td"><span class={row.statutClass}>{row.StatutCorrection__c}</span></td>
+                                        <td class="pm-td pm-td--mono">{row.dateStatutFmt}</td>
+                                        <template if:true={correctionAllowed}>
+                                            <td class="pm-td pm-td--actions">
+                                                <div class="pm-action-group">
+                                                    <button class="pm-action-btn pm-action-btn--edit"
+                                                            type="button"
+                                                            title="Modifier le statut"
+                                                            data-id={row.Id}
+                                                            onclick={handleEditCorrection}>
+                                                        <lightning-icon icon-name="utility:edit" size="x-small" alternative-text="Modifier"></lightning-icon>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </template>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+
+                <template if:false={hasCorrections}>
+                    <div class="pm-empty pec-empty--small">
+                        <p class="pm-empty__text">Aucune correction de devis enregistrée.</p>
+                    </div>
+                </template>
+            </div>
+
+            </template>
+
+            <!-- ════════════════════════════════════════
+                 BLOC 4 : DONNÉES PRISE EN CHARGE
+                 (étape 4 — consultation à l'étape 5)
+            ════════════════════════════════════════ -->
+            <template if:true={showBlocPEC}>
+            <div class="pm-section">
+                <div class="pm-section__title">
+                    <span class="pm-section__num">4</span>
+                    <lightning-icon icon-name="standard:budget" size="x-small" alternative-text="Prise en charge"></lightning-icon>
+                    Données prise en charge
+                </div>
+
+                <div class="pm-grid">
+
+                    <!-- Montant accordée PEC (RG1) -->
+                    <div class="pm-field">
+                        <lightning-input
+                            type="number"
+                            label="Montant accordée PEC"
+                            step="0.01"
+                            value={pec.montantAccordePEC}
+                            required
+                            disabled={pecFieldsDisabled}
+                            onchange={handlePECFieldChange}
+                            data-field="montantAccordePEC">
+                        </lightning-input>
+                        <span class="pm-city-hint">Valeur reprise de la dernière correction au statut « Confirmée »</span>
+                    </div>
+
+                    <!-- Franchise % (RG2) -->
+                    <div class="pm-field">
+                        <lightning-input
+                            type="number"
+                            label="Franchise (en %)"
+                            step="0.01"
+                            max="100"
+                            value={pec.franchisePourcentage}
+                            required
+                            disabled={pecFieldsDisabled}
+                            onchange={handlePECFieldChange}
+                            data-field="franchisePourcentage">
+                        </lightning-input>
+                    </div>
+
+                    <!-- Franchise Min -->
+                    <div class="pm-field">
+                        <lightning-input
+                            type="number"
+                            label="Franchise Min"
+                            step="0.01"
+                            value={pec.franchiseMin}
+                            required
+                            disabled={pecFieldsDisabled}
+                            onchange={handlePECFieldChange}
+                            data-field="franchiseMin">
+                        </lightning-input>
+                    </div>
+
+                    <!-- Franchise MAX -->
+                    <div class="pm-field">
+                        <lightning-input
+                            type="number"
+                            label="Franchise MAX"
+                            step="0.01"
+                            value={pec.franchiseMax}
+                            required
+                            disabled={pecFieldsDisabled}
+                            onchange={handlePECFieldChange}
+                            data-field="franchiseMax">
+                        </lightning-input>
+                    </div>
+
+                    <!-- Paiement de la franchise -->
+                    <div class="pm-field">
+                        <div class="pm-contact-selector pec-selector--field">
+                            <span class="pm-contact-label">Paiement de la franchise&nbsp;<abbr title="required" class="pec-required">*</abbr></span>
+                            <div class="pm-contact-toggle">
+                                <template for:each={paiementFranchiseChips} for:item="chip">
+                                    <button key={chip.value}
+                                            class={chip.cls}
+                                            type="button"
+                                            disabled={pecFieldsDisabled}
+                                            data-value={chip.value}
+                                            onclick={handlePaiementFranchiseClick}>
+                                        {chip.label}
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Obligation Rapport d'expertise post travaux -->
+                    <div class="pm-field">
+                        <div class="pm-contact-selector pec-selector--field">
+                            <span class="pm-contact-label">Obligation Rapport d'expertise post travaux&nbsp;<abbr title="required" class="pec-required">*</abbr></span>
+                            <div class="pm-contact-toggle">
+                                <template for:each={obligationChips} for:item="chip">
+                                    <button key={chip.value}
+                                            class={chip.cls}
+                                            type="button"
+                                            disabled={pecFieldsDisabled}
+                                            data-value={chip.value}
+                                            onclick={handleObligationClick}>
+                                        {chip.label}
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Date d'envoi de la PEC -->
+                    <div class="pm-field">
+                        <lightning-input
+                            type="date"
+                            label="Date d'envoi de la PEC"
+                            value={pec.dateEnvoiPEC}
+                            required
+                            disabled={pecFieldsDisabled}
+                            onchange={handlePECFieldChange}
+                            data-field="dateEnvoiPEC">
+                        </lightning-input>
+                    </div>
+
+                    <!-- Commentaire -->
+                    <div class="pm-field pm-field--full">
+                        <lightning-textarea
+                            label="Commentaire"
+                            value={pec.commentaire}
+                            disabled={pecFieldsDisabled}
+                            onchange={handlePECFieldChange}
+                            data-field="commentaire">
+                        </lightning-textarea>
+                    </div>
+
+                </div>
+
+                <!-- Édition de la PEC (RG3) + Enregistrer (RG4 / RG5) -->
+                <template if:true={showPECSave}>
+                    <div class="pec-section-footer">
+                        <button class="pm-btn pm-btn--outlined" type="button" onclick={handleEditionPEC} disabled={isSaving}>
+                            <lightning-icon icon-name="utility:print" size="x-small" alternative-text="Édition"></lightning-icon>
+                            Édition de la PEC
+                        </button>
+                        <button class="pm-btn pm-btn--save pm-btn--fixed-width" type="button" onclick={handleSavePEC} disabled={isSaving}>
+                            <lightning-icon icon-name="utility:save" size="x-small" alternative-text="Enregistrer"></lightning-icon>
+                            Enregistrer
+                        </button>
+                    </div>
+                </template>
+            </div>
+            </template>
+
+        </div><!-- /pm-body -->
+    </div><!-- /pm-card -->
+
+
+    <!-- ════════════════════════════════════════
+         MODAL CONFIRMATION ÉTAPE SUIVANTE
+    ════════════════════════════════════════ -->
+    <template if:true={showEtapeModal}>
+        <div class="pm-modal-overlay">
+            <div class="pm-modal pm-modal--small">
+
+                <div class="pm-modal__header">
+                    <div class="pm-modal__header-inner">
+                        <lightning-icon icon-name="utility:forward" size="x-small" alternative-text="Étape suivante"></lightning-icon>
+                        <h2 class="pm-modal__title">Passer à l'étape suivante</h2>
+                    </div>
+                    <button class="pm-modal__close" type="button" onclick={handleCancelEtape} title="Fermer">
+                        <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Fermer"></lightning-icon>
+                    </button>
+                </div>
+
+                <div class="pm-modal__body pm-modal__body--confirm">
+                    <p>Confirmer le passage à l'étape « <strong>{nextStepLabel}</strong> » ?</p>
+                    <p class="pm-confirm__note">Les champs de l'étape en cours ne seront plus modifiables.</p>
+                </div>
+
+                <div class="pm-modal__footer">
+                    <button class="pm-btn pm-btn--cancel pm-btn--fixed-width" type="button" onclick={handleCancelEtape}>
+                        Annuler
+                    </button>
+                    <button class="pm-btn pm-btn--save pm-btn--fixed-width" type="button" onclick={handleConfirmEtape}>
+                        <lightning-icon icon-name="utility:check" size="x-small" alternative-text="Confirmer"></lightning-icon>
+                        Confirmer
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </template>
+
+</template>

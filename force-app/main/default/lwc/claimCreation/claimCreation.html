@@ -183,7 +183,7 @@
                     <h1 class="main-title slds-m-bottom_medium">Informations de la déclaration</h1>
 
                     <div class="slds-box slds-theme_shade slds-m-bottom_medium slds-grid slds-wrap">
-                        <div class="slds-col slds-size_1-of-4">Date Survenance: <strong>{dateSurvenance}</strong></div>
+                        <div class="slds-col slds-size_1-of-4">Date Survenance: <strong>{dateSurvenanceDisplay}</strong></div>
                         <div class="slds-col slds-size_1-of-4">N° Police:
                             <strong>{selectedPolicyRecord.PolicyNumber}</strong></div>
                         <div class="slds-col slds-size_1-of-4">N° Immatriculation:
@@ -215,7 +215,9 @@
                             <div
                                 class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-p-horizontal_x-small slds-m-top_x-small">
                                 <lightning-input type="date" label="Date dépôt déclaration" data-field="dateDepot"
-                                    value={caseData.dateDepot} required onchange={handleCaseInputChange}>
+                                    value={caseData.dateDepot} min={minDateDepot}
+                                    message-when-range-underflow="La date de dépôt ne peut pas être antérieure à la date de survenance."
+                                    required onchange={handleCaseInputChange}>
                                 </lightning-input>
                             </div>
                             <div

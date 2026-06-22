@@ -689,6 +689,10 @@
             <fullName>Médecin médicolégal</fullName>
             <default>false</default>
         </values>
+        <values>
+            <fullName>Réparateur</fullName>
+            <default>false</default>
+        </values>
     </picklistValues>
     <picklistValues>
         <picklist>TypeRequete__c</picklist>

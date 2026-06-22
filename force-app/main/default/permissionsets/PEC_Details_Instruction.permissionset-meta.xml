@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>PEC Détails Instruction</label>
+    <description>Donne accès aux champs PEC de l'instruction et à l'objet Correction Devis pour l'onglet Détails PEC.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>true</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Correction_Devis__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.MontantDevisInitial__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.DateReceptionDevisInitial__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.OrigineDevis__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.Reparateur__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.NouveauReparateurNonConventionne__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.NomReparateur__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.IdentifiantFiscal__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.MontantApprecie__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.NecessiteExpertise__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.CommentaireDevisInitial__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.MontantAccordePEC__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.FranchisePourcentage__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.FranchiseMin__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.FranchiseMax__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.PaiementFranchise__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.ObligationRapportExpertise__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.CommentairePEC__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.DateEnvoiPEC__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.EtapePEC__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Correction_Devis__c.MontantDevisCorrige__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Correction_Devis__c.OrigineCorrection__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Correction_Devis__c.Reparateur__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Correction_Devis__c.StatutCorrection__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Correction_Devis__c.DateStatut__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Account.Conventionne__c</field><readable>true</readable></fieldPermissions>
+</PermissionSet>

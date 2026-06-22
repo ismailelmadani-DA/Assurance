@@ -1,0 +1,82 @@
+<template>
+    <div class="assoc-overlay">
+        <section class="assoc-modal" role="dialog" aria-modal="true" aria-labelledby="assoc-title">
+
+            <header class="assoc-header">
+                <h2 id="assoc-title" class="assoc-header__title">Associer Document</h2>
+                <button class="assoc-header__close" onclick={handleCancel} title="Fermer">
+                    <lightning-icon icon-name="utility:close" size="small" variant="inverse"></lightning-icon>
+                </button>
+            </header>
+
+            <div class="assoc-body">
+
+                <template if:true={isLoading}>
+                    <div class="assoc-spinner">
+                        <lightning-spinner alternative-text="Chargement..." size="medium"></lightning-spinner>
+                    </div>
+                </template>
+
+                <template if:true={hasDocuments}>
+                    <div class="assoc-table-wrap">
+                        <table class="assoc-table">
+                            <thead>
+                                <tr>
+                                    <th class="assoc-th assoc-th--check"></th>
+                                    <th class="assoc-th">NOM DOCUMENT</th>
+                                    <th class="assoc-th">TYPE DOCUMENT</th>
+                                    <th class="assoc-th">NUMÉRO DOC GED</th>
+                                    <th class="assoc-th">DATE DE RÉCEPTION</th>
+                                    <th class="assoc-th">NUMÉRO POLICE</th>
+                                    <th class="assoc-th">STATUS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={availableDocs} for:item="doc">
+                                    <tr key={doc.Id} class={doc.rowClass} data-id={doc.Id} onclick={handleRowClick}>
+                                        <td class="assoc-td assoc-td--check">
+                                            <lightning-input
+                                                type="checkbox"
+                                                variant="label-hidden"
+                                                label="Sélectionner"
+                                                data-id={doc.Id}
+                                                checked={doc.selected}
+                                                onchange={handleToggle}>
+                                            </lightning-input>
+                                        </td>
+                                        <td class="assoc-td assoc-td--name">
+                                            <a class="assoc-link" href="javascript:void(0)" data-id={doc.Id} onclick={handleOpenDoc}>{doc.Name}</a>
+                                        </td>
+                                        <td class="assoc-td">{doc.Type_de_document__c}</td>
+                                        <td class="assoc-td assoc-td--ged">{doc.IdDocument__c}</td>
+                                        <td class="assoc-td">
+                                            <lightning-formatted-date-time value={doc.dateOfReceipt__c}></lightning-formatted-date-time>
+                                        </td>
+                                        <td class="assoc-td">{doc.Police__c}</td>
+                                        <td class="assoc-td">{doc.Statut__c}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+
+                <template if:false={hasDocuments}>
+                    <template if:false={isLoading}>
+                        <div class="assoc-empty">
+                            Aucun document disponible sur le sinistre à associer.
+                        </div>
+                    </template>
+                </template>
+
+            </div>
+
+            <footer class="assoc-footer">
+                <button class="assoc-btn assoc-btn--confirm" disabled={isConfirmDisabled} onclick={handleConfirm}>
+                    Confirmer
+                </button>
+            </footer>
+
+        </section>
+    </div>
+</template>

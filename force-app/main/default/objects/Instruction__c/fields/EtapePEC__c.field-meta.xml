@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>EtapePEC__c</fullName>
+    <description>Etape courante du workflow PEC : pilote les droits de saisie sur l&apos;onglet Détails PEC.</description>
+    <label>Etape PEC</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Etude de document</fullName>
+                <default>true</default>
+                <label>Etude de document</label>
+            </value>
+            <value>
+                <fullName>Expertise</fullName>
+                <default>false</default>
+                <label>Expertise</label>
+            </value>
+            <value>
+                <fullName>Correction devis</fullName>
+                <default>false</default>
+                <label>Correction devis</label>
+            </value>
+            <value>
+                <fullName>Etablissement PEC</fullName>
+                <default>false</default>
+                <label>Etablissement PEC</label>
+            </value>
+            <value>
+                <fullName>Réparation</fullName>
+                <default>false</default>
+                <label>Réparation</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

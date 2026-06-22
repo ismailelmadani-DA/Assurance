@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Statut__c</fullName>
+    <label>Statut</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Instruction créé</fullName>
+                <default>false</default>
+                <label>Instruction créé</label>
+            </value>
+            <value>
+                <fullName>Instruction annulée</fullName>
+                <default>false</default>
+                <label>Instruction annulée</label>
+            </value>
+            <value>
+                <fullName>Instruction terminée</fullName>
+                <default>false</default>
+                <label>Instruction terminée</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

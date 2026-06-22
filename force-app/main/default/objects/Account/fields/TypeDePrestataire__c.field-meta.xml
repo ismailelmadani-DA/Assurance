@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TypeDePrestataire__c</fullName>
+    <label>Type De Prestataire</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Expert Automobile</fullName>
+                <default>false</default>
+                <label>Expert Automobile</label>
+            </value>
+            <value>
+                <fullName>Garagiste</fullName>
+                <default>false</default>
+                <label>Garagiste</label>
+            </value>
+            <value>
+                <fullName>Avocat</fullName>
+                <default>false</default>
+                <label>Avocat</label>
+            </value>
+            <value>
+                <fullName>Médecin</fullName>
+                <default>false</default>
+                <label>Médecin</label>
+            </value>
+            <value>
+                <fullName>Clinique</fullName>
+                <default>false</default>
+                <label>Clinique</label>
+            </value>
+            <value>
+                <fullName>Centre radiologique</fullName>
+                <default>false</default>
+                <label>Centre radiologique</label>
+            </value>
+            <value>
+                <fullName>Pharmacie</fullName>
+                <default>false</default>
+                <label>Pharmacie</label>
+            </value>
+            <value>
+                <fullName>Hôpital</fullName>
+                <default>false</default>
+                <label>Hôpital</label>
+            </value>
+            <value>
+                <fullName>Enquêteur</fullName>
+                <default>false</default>
+                <label>Enquêteur</label>
+            </value>
+            <value>
+                <fullName>Réparateur</fullName>
+                <default>false</default>
+                <label>Réparateur</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

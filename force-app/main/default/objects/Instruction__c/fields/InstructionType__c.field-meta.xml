@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>InstructionType__c</fullName>
+    <label>Type d’instruction</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>PEC - Prise en charge</fullName>
+                <default>false</default>
+                <label>PEC - Prise en charge</label>
+            </value>
+            <value>
+                <fullName>Remboursement</fullName>
+                <default>false</default>
+                <label>Remboursement</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

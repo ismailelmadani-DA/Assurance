@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TypeMedecin__c</fullName>
+    <label>Type Medecin</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Médecin conseil</fullName>
+                <default>false</default>
+                <label>Médecin conseil</label>
+            </value>
+            <value>
+                <fullName>Médecin médicolégal</fullName>
+                <default>false</default>
+                <label>Médecin médicolégal</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

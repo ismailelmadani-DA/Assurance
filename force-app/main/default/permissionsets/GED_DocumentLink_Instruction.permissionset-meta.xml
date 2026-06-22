@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>GED Document Link Instruction</label>
+    <description>Donne la visibilité sur le champ Instruction du pivot Document Link (requêtes API, exports Data Loader).</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Document_Link__c.Instruction__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+</PermissionSet>

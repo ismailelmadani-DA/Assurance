@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RecordType xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Deces</fullName>
+    <active>false</active>
+    <label>Décès</label>
+    <picklistValues>
+        <picklist>EtapePEC__c</picklist>
+        <values>
+            <fullName>Correction devis</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Etablissement PEC</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Etude de document</fullName>
+            <default>true</default>
+        </values>
+        <values>
+            <fullName>Expertise</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Réparation</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>Etape__c</picklist>
+        <values>
+            <fullName>Correction du devis</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Expertise</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Réparation</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Établissement d%27une PEC</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Étude de documents</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>InstructionType__c</picklist>
+        <values>
+            <fullName>PEC - Prise en charge</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Remboursement</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>Nature_d_instruction__c</picklist>
+        <values>
+            <fullName>Amiable</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>NecessiteExpertise__c</picklist>
+        <values>
+            <fullName>Non</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Oui</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>ObligationRapportExpertise__c</picklist>
+        <values>
+            <fullName>Non</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Oui</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>OrigineDevis__c</picklist>
+        <values>
+            <fullName>Garage conventionné</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Garage non conventionné</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>PaiementFranchise__c</picklist>
+        <values>
+            <fullName>A la compagnie</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Au garagiste</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>Statut__c</picklist>
+        <values>
+            <fullName>Instruction annulée</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Instruction créé</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Instruction terminée</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>TypeDegat__c</picklist>
+        <values>
+            <fullName>Corporel</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Matériel</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+</RecordType>

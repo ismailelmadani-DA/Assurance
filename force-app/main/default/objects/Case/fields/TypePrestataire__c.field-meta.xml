@@ -41,6 +41,11 @@
                 <default>false</default>
                 <label>Avocat</label>
             </value>
+            <value>
+                <fullName>Réparateur</fullName>
+                <default>false</default>
+                <label>Réparateur</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>
