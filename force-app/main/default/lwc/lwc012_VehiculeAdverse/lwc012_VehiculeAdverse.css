@@ -98,3 +98,9 @@
     color: #ea001e;
     font-weight: normal;
 }
+
+/* --- SÉLECTION DU CONDUCTEUR --- */
+.driver-select-box {
+    background-color: #ffffff;
+    border-left: 3px solid #006233;
+}

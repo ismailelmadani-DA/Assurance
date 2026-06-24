@@ -12,7 +12,7 @@
 
     <template if:true={adverseVehicles.length}>
         <div class="slds-m-bottom_medium">
-            <template for:each={adverseVehicles} for:item="veh">
+            <template for:each={displayVehicles} for:item="veh">
                 <div key={veh.key} class="slds-box white-box slds-m-bottom_small vehicle-added-card">
                     <div class="slds-grid slds-grid_vertical-align-center slds-m-bottom_small">
                         <lightning-icon icon-name="custom:custom31" size="small" class="slds-m-right_small"></lightning-icon>
@@ -47,6 +47,19 @@
                                     </li>
                                 </template>
                             </ul>
+                        </template>
+
+                        <template if:true={veh.passengers.length}>
+                            <div class="slds-box slds-m-top_small driver-select-box">
+                                <lightning-combobox
+                                    label="Qui est le conducteur ?"
+                                    placeholder="Sélectionner le conducteur"
+                                    options={veh.passengerOptions}
+                                    value={veh.selectedDriverKey}
+                                    data-key={veh.key}
+                                    onchange={handleDriverChange}>
+                                </lightning-combobox>
+                            </div>
                         </template>
 
                         <template if:true={veh.isPassengerFormOpen}>

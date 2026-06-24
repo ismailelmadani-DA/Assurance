@@ -288,12 +288,21 @@ public with sharing class ClaimSearchController {
                 newP.Name = fullName != null ? fullName : 'Passager Inconnu';
                 newP.CIN__c = (String)p.get('CIN__c');
 
-                if (p.get('Id') != null && String.isNotBlank((String)p.get('Id'))) {
-                    newP.Id = (Id)p.get('Id'); 
+                // On n'accepte le champ 'Id' comme identifiant du passager que s'il
+                // s'agit réellement d'un Id de Passager__c. Un autre type d'Id (ex : un
+                // Id de compte 001...) doit être ignoré pour éviter l'erreur
+                // « Invalid id value for this SObject type ». On retombe alors sur la
+                // correspondance par CIN puis par nom.
+                String rawPassagerId = (String) p.get('Id');
+                Boolean isValidPassagerId = String.isNotBlank(rawPassagerId)
+                    && ((Id) rawPassagerId).getSObjectType() == Passager__c.SObjectType;
+
+                if (isValidPassagerId) {
+                    newP.Id = (Id) rawPassagerId;
                 } else if (String.isNotBlank(newP.CIN__c) && passagerIdMap.containsKey(newP.CIN__c)) {
-                    newP.Id = passagerIdMap.get(newP.CIN__c); 
+                    newP.Id = passagerIdMap.get(newP.CIN__c);
                 } else if (passagerIdMap.containsKey(newP.Name)) {
-                    newP.Id = passagerIdMap.get(newP.Name); 
+                    newP.Id = passagerIdMap.get(newP.Name);
                 }
 
                 if (String.isNotBlank(newP.CIN__c) && accountMap.containsKey(newP.CIN__c)) {
@@ -453,8 +462,20 @@ public with sharing class ClaimSearchController {
 
                 VehicleCaseAssignment__c newAssignment = new VehicleCaseAssignment__c();
                 newAssignment.Case__c = caseId;
-                newAssignment.Vehicule__c = currentVehiculeId; 
-                
+                newAssignment.Vehicule__c = currentVehiculeId;
+
+                // État du véhicule au niveau de chaque véhicule adverse (affiché
+                // sur la liste « Véhicules adverses » du sinistre).
+                if (v.get('VehicleIsDamaged__c') != null && String.isNotBlank((String)v.get('VehicleIsDamaged__c'))) {
+                    newAssignment.EtatVehicule__c = (String)v.get('VehicleIsDamaged__c');
+                }
+
+                // Date de mise en circulation : la liste « Véhicules adverses » du
+                // sinistre lit ce champ sur l'affectation (et non sur le véhicule).
+                if (v.get('DateMiseEnCirculation__c') != null && String.isNotBlank((String)v.get('DateMiseEnCirculation__c'))) {
+                    newAssignment.DateMiseEnCirculation__c = Date.valueOf((String)v.get('DateMiseEnCirculation__c'));
+                }
+
                 if (v.get('Adversaire_Assure__c') != null) {
                     newAssignment.AdversaireAssure__c = Boolean.valueOf((String)v.get('Adversaire_Assure__c'));
                 }
@@ -497,6 +518,10 @@ public with sharing class ClaimSearchController {
                         newPass.MaritalStatus__c = (String)pMap.get('MaritalStatus__c');
                         newPass.Ville__c = (String)pMap.get('Ville__c');
                         newPass.StateOfPerson__c = (String)pMap.get('StateOfPerson__c');
+
+                        if (pMap.get('isDriver__c') != null) {
+                            newPass.isDriver__c = Boolean.valueOf(pMap.get('isDriver__c'));
+                        }
                         
                         if (pMap.get('Telephone__c') != null) {
                             newPass.Telephone__c = String.valueOf(pMap.get('Telephone__c'));
@@ -653,17 +678,38 @@ public with sharing class ClaimSearchController {
             insert newClaim;
             
 
-            List<Passager__c> passagers = [SELECT Id, Roles__c , Compte__c,StateOfPerson__c FROM Passager__c WHERE Case__c = :caseId];
-            
+            List<Passager__c> passagers = [
+                SELECT Id, Roles__c, Compte__c, Account__c, StateOfPerson__c, CIN__c,
+                       isDriver__c, Vehicule__c, Pays__c, Ville__c, Adresse__c,
+                       BirthDay__c, MaritalStatus__c, Civilite__c
+                FROM Passager__c WHERE Case__c = :caseId
+            ];
+
             if (!passagers.isEmpty()) {
                 List<ClaimParticipant__c> participantsToInsert = new List<ClaimParticipant__c>();
                 for (Passager__c p : passagers) {
                     ClaimParticipant__c participant = new ClaimParticipant__c();
-                    participant.Claim__c = newClaim.Id;    
-                    participant.Passager__c = p.Id;        
+                    participant.Claim__c = newClaim.Id;
+                    participant.Passager__c = p.Id;
                     participant.Roles__c = p.Roles__c;
-                    participant.StateOfPerson__c = p.StateOfPerson__c;  
-                    participant.ParticipantAccount__c = p.Compte__c;    
+                    participant.StateOfPerson__c = p.StateOfPerson__c;
+                    participant.ParticipantAccount__c = p.Compte__c;
+                    // Report complet des données du passager (assuré comme adverse)
+                    // vers le participant du sinistre, afin qu'elles soient visibles
+                    // sur la fiche Sinistre (véhicule, conducteur, localisation…).
+                    // ParticipantCNI__c est une formule : la CNI provient du compte lié.
+                    participant.isDriver__c = p.isDriver__c;
+                    participant.Vehicule__c = p.Vehicule__c;
+                    participant.Pays__c = p.Pays__c;
+                    participant.Ville__c = p.Ville__c;
+                    participant.Adresse__c = p.Adresse__c;
+                    participant.BirthDay__c = p.BirthDay__c;
+                    participant.CompagnieAdverse__c = p.Account__c;
+                    // Civilite__c / MaritalStatus__c volontairement non reportés :
+                    // ce sont des listes restreintes dont les valeurs diffèrent de
+                    // celles de Passager__c (ex : « M. ») et qui ne sont pas affichées
+                    // dans la liste des passagers adverses ; la civilité provient du
+                    // compte lié (ParticipantAccount__r.Civility__c).
                     participantsToInsert.add(participant);
                 }
                 insert participantsToInsert;
@@ -825,7 +871,7 @@ public with sharing class ClaimSearchController {
             List<Passager__c> passagers = [
                 SELECT Id, Name, Roles__c, Civilite__c, CIN__c, Pays__c, Ville__c, Adresse__c,
                        BirthDay__c, MaritalStatus__c, StateOfPerson__c, Telephone__c, Email__c,
-                       MoyenNotification__c, Vehicule__c, Account__c, Compte__c
+                       MoyenNotification__c, Vehicule__c, Account__c, Compte__c, isDriver__c
                 FROM Passager__c WHERE Case__c = :caseId
             ];
 
@@ -848,7 +894,8 @@ public with sharing class ClaimSearchController {
                     'Telephone__c' => p.Telephone__c,
                     'Email__c' => p.Email__c,
                     'MoyenNotification__c' => p.MoyenNotification__c,
-                    'CompagnieAdverse__c' => p.Account__c
+                    'CompagnieAdverse__c' => p.Account__c,
+                    'isDriver__c' => p.isDriver__c
                 };
                 if (p.Roles__c == 'Passager assuré') {
                     passengersInsured.add(row);

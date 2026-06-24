@@ -21,9 +21,18 @@ export default class Lwc012_VehiculeAdverse extends LightningElement {
     set savedAdverseVehicles(value) {
         if (value && value.length > 0) {
             this._savedAdverseVehicles = value;
-            this.adverseVehicles = value.map(v => ({
+            // Les véhicules/passagers rechargés depuis la sauvegarde n'ont pas de
+            // clé technique 'key' (générée uniquement lors d'une saisie manuelle).
+            // On en attribue une à chaque élément pour fiabiliser le rendu et les
+            // interactions (édition, suppression, sélection du conducteur).
+            this.adverseVehicles = value.map((v, vIndex) => ({
                 ...v,
-                isPassengerFormOpen: false
+                key: v.key != null ? v.key : `veh-${vIndex}`,
+                isPassengerFormOpen: false,
+                passengers: (v.passengers || []).map((p, pIndex) => ({
+                    ...p,
+                    key: p.key != null ? p.key : `veh-${vIndex}-pass-${pIndex}`
+                }))
             }));
             this.isFormVisible = false;
         }
@@ -46,7 +55,8 @@ export default class Lwc012_VehiculeAdverse extends LightningElement {
 
     @track passengerData = {
         Name__c: '', Civilite__c: '', CIN__c: '', Pays__c: '', Adresse__c: '',
-        BirthDay__c: null, MaritalStatus__c: '', Ville__c: '', StateOfPerson__c: ''
+        BirthDay__c: null, MaritalStatus__c: '', Ville__c: '', StateOfPerson__c: '',
+        isDriver__c: false
     };
 
     @track civiliteOptions = [];
@@ -183,7 +193,8 @@ export default class Lwc012_VehiculeAdverse extends LightningElement {
         this.currentPassengerKey = null;
         this.passengerData = {
             Name__c: '', Civilite__c: '', CIN__c: '', Pays__c: '', Adresse__c: '',
-            BirthDay__c: null, MaritalStatus__c: '', Ville__c: '', StateOfPerson__c: ''
+            BirthDay__c: null, MaritalStatus__c: '', Ville__c: '', StateOfPerson__c: '',
+            isDriver__c: false
         };
         this.adverseVehicles = this.adverseVehicles.map(v => ({
             ...v,
@@ -256,6 +267,43 @@ export default class Lwc012_VehiculeAdverse extends LightningElement {
             this.closePassengerForm();
             this.notifyParent();
         }
+    }
+
+    // Liste des véhicules enrichie pour l'affichage : options de conducteur
+    // et conducteur actuellement sélectionné, calculés à partir des passagers liés.
+    get displayVehicles() {
+        return this.adverseVehicles.map(veh => {
+            const passengers = veh.passengers || [];
+            const driver = passengers.find(p => p.isDriver__c === true);
+            return {
+                ...veh,
+                passengerOptions: passengers.map(p => ({
+                    label: p.CIN__c ? `${p.Name__c} (CIN: ${p.CIN__c})` : p.Name__c,
+                    value: p.key != null ? p.key.toString() : ''
+                })),
+                selectedDriverKey: driver && driver.key != null ? driver.key.toString() : ''
+            };
+        });
+    }
+
+    // Sélection du conducteur du véhicule adverse : le passager choisi passe
+    // isDriver__c = true, les autres passagers du même véhicule repassent à false.
+    handleDriverChange(event) {
+        const vehKey = event.target.dataset.key;
+        const selectedPassKey = event.detail.value;
+        this.adverseVehicles = this.adverseVehicles.map(veh => {
+            if (veh.key.toString() === vehKey.toString()) {
+                return {
+                    ...veh,
+                    passengers: veh.passengers.map(p => ({
+                        ...p,
+                        isDriver__c: p.key.toString() === selectedPassKey.toString()
+                    }))
+                };
+            }
+            return veh;
+        });
+        this.notifyParent();
     }
 
     handleDeletePassenger(event) {
