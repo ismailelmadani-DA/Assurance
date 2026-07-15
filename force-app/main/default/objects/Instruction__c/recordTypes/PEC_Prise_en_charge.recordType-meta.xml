@@ -4,6 +4,17 @@
     <active>true</active>
     <label>PEC (Prise en charge)</label>
     <picklistValues>
+        <picklist>MotifAnnulation__c</picklist>
+        <values>
+            <fullName>Passage à un autre type d%27instruction</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Désistement de l%27assuré</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
         <picklist>EtapePEC__c</picklist>
         <values>
             <fullName>Correction devis</fullName>
@@ -123,6 +134,22 @@
         </values>
         <values>
             <fullName>Instruction terminée</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Etude document terminée</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Expertise terminée</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Correction devis terminée</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Prise en charge accordée</fullName>
             <default>false</default>
         </values>
     </picklistValues>

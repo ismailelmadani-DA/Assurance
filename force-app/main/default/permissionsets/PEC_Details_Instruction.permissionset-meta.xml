@@ -37,4 +37,10 @@
     <fieldPermissions><editable>true</editable><field>Correction_Devis__c.StatutCorrection__c</field><readable>true</readable></fieldPermissions>
     <fieldPermissions><editable>true</editable><field>Correction_Devis__c.DateStatut__c</field><readable>true</readable></fieldPermissions>
     <fieldPermissions><editable>true</editable><field>Account.Conventionne__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.RemiseFondsDocumentaire__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.PaiementFranchiseRecu__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Case.RapportRecu__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Case.DateReceptionRapport__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.MotifAnnulation__c</field><readable>true</readable></fieldPermissions>
+    <fieldPermissions><editable>true</editable><field>Instruction__c.DebutTravaux__c</field><readable>true</readable></fieldPermissions>
 </PermissionSet>

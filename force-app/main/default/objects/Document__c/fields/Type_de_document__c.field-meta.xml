@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Type_de_document__c</fullName>
+    <label>Type de document</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Procès verbal</fullName>
+                <default>false</default>
+                <label>Procès verbal</label>
+            </value>
+            <value>
+                <fullName>Certificat médical</fullName>
+                <default>false</default>
+                <label>Certificat médical</label>
+            </value>
+            <value>
+                <fullName>Certificat de guérison</fullName>
+                <default>false</default>
+                <label>Certificat de guérison</label>
+            </value>
+            <value>
+                <fullName>Devis</fullName>
+                <default>false</default>
+                <label>Devis</label>
+            </value>
+            <value>
+                <fullName>Devis Initial</fullName>
+                <default>false</default>
+                <label>Devis Initial</label>
+            </value>
+            <value>
+                <fullName>Devis estimatif</fullName>
+                <default>false</default>
+                <label>Devis estimatif</label>
+            </value>
+            <value>
+                <fullName>Rapport d’expertise</fullName>
+                <default>false</default>
+                <label>Rapport d’expertise</label>
+            </value>
+            <value>
+                <fullName>Rapport Additif</fullName>
+                <default>false</default>
+                <label>Rapport Additif</label>
+            </value>
+            <value>
+                <fullName>Rapport d’évaluation</fullName>
+                <default>false</default>
+                <label>Rapport d’évaluation</label>
+            </value>
+            <value>
+                <fullName>Devis définitif</fullName>
+                <default>false</default>
+                <label>Devis définitif</label>
+            </value>
+            <value>
+                <fullName>ACCORD PRISE EN CHARGE MAT</fullName>
+                <default>false</default>
+                <label>ACCORD PRISE EN CHARGE MAT</label>
+            </value>
+            <value>
+                <fullName>Rapport post travaux</fullName>
+                <default>false</default>
+                <label>Rapport post travaux</label>
+            </value>
+            <value>
+                <fullName>Bon de sortie MAT</fullName>
+                <default>false</default>
+                <label>Bon de sortie MAT</label>
+            </value>
+            <value>
+                <fullName>PEC retournée</fullName>
+                <default>false</default>
+                <label>PEC retournée</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

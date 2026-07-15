@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>RemiseFondsDocumentaire__c</fullName>
+    <label>Remise du fonds documentaire à l'expert</label>
+    <description>Action cochée lorsque le fonds documentaire / billet d'expertise a été remis à l'expert. Contrôle de clôture de l'étape Etude de document (CR4) lorsqu'une expertise est requise.</description>
+    <defaultValue>false</defaultValue>
+    <externalId>false</externalId>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

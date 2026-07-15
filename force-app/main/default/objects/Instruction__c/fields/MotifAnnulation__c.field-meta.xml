@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>MotifAnnulation__c</fullName>
+    <label>Motif d'annulation</label>
+    <description>Motif d'annulation de l'instruction PEC sélectionné par le gestionnaire, manager ou directeur depuis le bandeau de l'instruction. Le libellé affiché est précisé selon l'étape du parcours.</description>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Passage à un autre type d'instruction</fullName>
+                <default>false</default>
+                <label>Passage à un autre type d'instruction</label>
+            </value>
+            <value>
+                <fullName>Désistement de l'assuré</fullName>
+                <default>false</default>
+                <label>Désistement de l'assuré</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

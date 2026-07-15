@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>DebutTravaux__c</fullName>
+    <label>Début des travaux</label>
+    <description>Indique que les travaux de réparation ont démarré. Bloque l'annulation de l'instruction à l'étape Réparation (RG6).</description>
+    <defaultValue>false</defaultValue>
+    <externalId>false</externalId>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

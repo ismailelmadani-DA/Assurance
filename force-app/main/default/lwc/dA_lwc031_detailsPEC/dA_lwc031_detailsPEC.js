@@ -9,12 +9,14 @@ import saveCorrection from '@salesforce/apex/DA_lwc031_DetailsPECController.save
 import savePriseEnCharge from '@salesforce/apex/DA_lwc031_DetailsPECController.savePriseEnCharge';
 import creerRequetePrestataire from '@salesforce/apex/DA_lwc031_DetailsPECController.creerRequetePrestataire';
 import passerEtapeSuivante from '@salesforce/apex/DA_lwc031_DetailsPECController.passerEtapeSuivante';
+import marquerEtapeTerminee from '@salesforce/apex/DA_lwc031_DetailsPECController.marquerEtapeTerminee';
+import annulerInstruction from '@salesforce/apex/DA_lwc031_DetailsPECController.annulerInstruction';
 
 const ETAPES = [
-    'Etude de document',
+    'Étude de documents',
     'Expertise',
-    'Correction devis',
-    'Etablissement PEC',
+    'Correction du devis',
+    "Établissement d'une PEC",
     'Réparation'
 ];
 
@@ -38,6 +40,15 @@ const STATUT_CORRECTION_OPTIONS = [
 ];
 
 const OUI_NON = ['Oui', 'Non'];
+
+// Motifs d'annulation : la valeur envoyée au serveur reste stable (valeur de
+// picklist), seul le libellé affiché est précisé selon l'étape du parcours.
+const MOTIF_PASSAGE     = 'Passage à un autre type d\'instruction';
+const MOTIF_DESISTEMENT = 'Désistement de l\'assuré';
+const STATUT_ANNULEE  = 'Instruction annulée';
+const STATUTS_TERMINEE = [
+    'Instruction terminée'
+];
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 function formatDate(isoDate) {
@@ -100,8 +111,13 @@ export default class DA_lwc031_detailsPEC extends LightningElement {
     @track isLoadingGaragistes = false;
     @track isSaving            = false;
     @track showEtapeModal      = false;
+    @track expertiseIgnoree    = false;   // étape Expertise non activée (grisée)
+    @track isClotureInstruction = false;  // modal de clôture (étape 5) vs passage d'étape
+    @track showAnnulationModal = false;   // modal « Annuler instruction »
+    @track motifAnnulation     = '';      // motif sélectionné dans le modal d'annulation
 
     etape           = ETAPES[0];
+    statut          = '';
     reparateurName  = '';
     dateSinistre    = null;
     dateDeclaration = null;
@@ -115,7 +131,8 @@ export default class DA_lwc031_detailsPEC extends LightningElement {
         this.wiredDetailsResult = result;
         if (result.data) {
             const instr = result.data.instruction;
-            this.etape  = instr.EtapePEC__c || ETAPES[0];
+            this.etape  = instr.Etape__c || ETAPES[0];
+            this.statut = instr.Statut__c || '';
 
             this.devis = {
                 montantDevisInitial       : instr.MontantDevisInitial__c ?? '',
@@ -127,8 +144,13 @@ export default class DA_lwc031_detailsPEC extends LightningElement {
                 identifiantFiscal         : instr.IdentifiantFiscal__c || '',
                 montantApprecie           : instr.MontantApprecie__c ?? '',
                 necessiteExpertise        : instr.NecessiteExpertise__c || '',
+                remiseFondsDocumentaire   : instr.RemiseFondsDocumentaire__c === true,
                 commentaire               : instr.CommentaireDevisInitial__c || ''
             };
+
+            // L'étape Expertise est grisée si elle a été sautée (expertise = Non)
+            this.expertiseIgnoree = instr.NecessiteExpertise__c === 'Non'
+                && ETAPES.indexOf(this.etape) > ETAPES.indexOf('Expertise');
 
             this.pec = {
                 montantAccordePEC          : instr.MontantAccordePEC__c ?? '',
@@ -136,6 +158,7 @@ export default class DA_lwc031_detailsPEC extends LightningElement {
                 franchiseMin               : instr.FranchiseMin__c ?? '',
                 franchiseMax               : instr.FranchiseMax__c ?? '',
                 paiementFranchise          : instr.PaiementFranchise__c || '',
+                paiementFranchiseRecu      : instr.PaiementFranchiseRecu__c === true,
                 obligationRapportExpertise : instr.ObligationRapportExpertise__c || '',
                 commentaire                : instr.CommentairePEC__c || '',
                 dateEnvoiPEC               : instr.DateEnvoiPEC__c || ''
@@ -177,14 +200,48 @@ export default class DA_lwc031_detailsPEC extends LightningElement {
     get steps() {
         return ETAPES.map((label, i) => {
             let cls = 'pec-step';
-            if (i < this.etapeIndex)        cls += ' pec-step--done';
-            else if (i === this.etapeIndex) cls += ' pec-step--current';
+            if (this.expertiseIgnoree && label === 'Expertise') {
+                // Étape non activée (expertise = Non) : grisée en gris foncé
+                cls += ' pec-step--skipped';
+            } else if (i < this.etapeIndex) {
+                cls += ' pec-step--done';
+            } else if (i === this.etapeIndex) {
+                cls += ' pec-step--current';
+            }
             return { label, num: i + 1, key: label, cls };
         });
     }
 
     get hasNextStep() { return this.etapeIndex < ETAPES.length - 1; }
     get nextStepLabel() { return ETAPES[this.etapeIndex + 1]; }
+
+    // ── Annulation d'instruction ─────────────────────────────────────────────
+    get isInstructionAnnulee() { return this.statut === STATUT_ANNULEE; }
+    get isInstructionTerminee() { return STATUTS_TERMINEE.includes(this.statut); }
+
+    // Bouton « Annuler instruction » : actif à toutes les étapes, sauf si
+    // l'instruction est déjà annulée ou terminée.
+    get annulationDisabled() {
+        return this.isSaving || this.isLoading
+            || this.isInstructionAnnulee || this.isInstructionTerminee;
+    }
+
+    // Liste de motifs affichée selon l'étape (le libellé est précisé par étape,
+    // la valeur envoyée au serveur reste stable).
+    get motifOptions() {
+        let passageLabel;
+        if (this.isEtape1 || this.isEtape2) {
+            passageLabel = MOTIF_PASSAGE + ' (non-confirmation du mode d\'indemnisation)';
+        } else if (this.isEtape3 || this.isEtape4) {
+            passageLabel = MOTIF_PASSAGE + ' (Retard d\'établissement de prise en charge)';
+        } else {
+            passageLabel = MOTIF_PASSAGE + ' (Retard dans le démarrage des travaux)';
+        }
+        return [
+            { label: passageLabel,        value: MOTIF_PASSAGE },
+            { label: MOTIF_DESISTEMENT,   value: MOTIF_DESISTEMENT }
+        ];
+    }
 
     // ── Visibilité des blocs : uniquement le bloc de l'étape en cours ────────
     // Étape 5 (Réparation) : consultation de tous les blocs déjà saisis (US5)
@@ -249,6 +306,12 @@ export default class DA_lwc031_detailsPEC extends LightningElement {
 
     get devisFieldsDisabled()     { return this.devisLocked || this.isSaving; }
     get expertiseFieldsDisabled() { return this.expertiseLocked || this.isSaving; }
+
+    // CR4 (Etape 1) : action « Remise du fonds documentaire » visible si expertise requise
+    get showRemiseFondsDoc() { return this.devis.necessiteExpertise === 'Oui'; }
+
+    // CR4 (Etape 4) : action « Paiement franchise reçu » visible si paiement « A la compagnie »
+    get showPaiementFranchiseRecu() { return this.pec.paiementFranchise === 'A la compagnie'; }
 
     // ── Données devis corrigé : getters ──────────────────────────────────────
     get correctionRows() {
@@ -534,7 +597,8 @@ export default class DA_lwc031_detailsPEC extends LightningElement {
     // ── Handlers prise en charge ─────────────────────────────────────────────
     handlePECFieldChange(event) {
         const field = event.target.dataset.field;
-        this.pec = { ...this.pec, [field]: event.detail.value };
+        const value = event.target.type === 'checkbox' ? event.target.checked : event.detail.value;
+        this.pec = { ...this.pec, [field]: value };
     }
 
     handlePaiementFranchiseClick(event) {
@@ -596,6 +660,13 @@ export default class DA_lwc031_detailsPEC extends LightningElement {
 
     // ── Avancement d'étape (progression uniquement, pas de retour) ───────────
     handleEtapeSuivante() {
+        this.isClotureInstruction = false;
+        this.showEtapeModal = true;
+    }
+
+    // Étape 5 : clôture de l'instruction
+    handleMarquerInstructionTerminee() {
+        this.isClotureInstruction = true;
         this.showEtapeModal = true;
     }
 
@@ -603,13 +674,87 @@ export default class DA_lwc031_detailsPEC extends LightningElement {
         this.showEtapeModal = false;
     }
 
+    // Texte du modal selon le contexte (passage d'étape ou clôture)
+    get etapeModalTitle() {
+        return this.isClotureInstruction ? "Clôturer l'instruction" : "Passer à l'étape suivante";
+    }
+    get etapeModalMessage() {
+        return this.isClotureInstruction
+            ? "Confirmer la clôture de l'instruction ?"
+            : `Confirmer le passage à l'étape « ${this.nextStepLabel} » ?`;
+    }
+
     handleConfirmEtape() {
         this.showEtapeModal = false;
         this.isLoading = true;
-        passerEtapeSuivante({ instructionId: this.recordId })
-            .then(newEtape => {
-                this.etape = newEtape;
-                this.fireToast('Étape suivante', `L'instruction passe à l'étape « ${newEtape} ».`, 'success');
+        marquerEtapeTerminee({ instructionId: this.recordId })
+            .then(result => {
+                if (!result.ok) {
+                    // Un ou plusieurs contrôles KO : on bloque l'avancement
+                    this.afficherControlesKO(result.erreurs);
+                    return null;
+                }
+                this.etape = result.nouvelleEtape;
+                this.expertiseIgnoree = result.expertiseIgnoree === true;
+                if (result.instructionTerminee) {
+                    this.fireToast(
+                        'Instruction terminée',
+                        "L'instruction est clôturée (statut « Instruction terminée »).",
+                        'success'
+                    );
+                } else {
+                    this.fireToast(
+                        'Étape terminée',
+                        `L'instruction passe à l'étape « ${result.nouvelleEtape} ».`,
+                        'success'
+                    );
+                }
+                return refreshApex(this.wiredDetailsResult);
+            })
+            .catch(error => { this.fireToast('Erreur', this.extractError(error), 'error'); })
+            .finally(()  => { this.isLoading = false; });
+    }
+
+    // Alerte récapitulant les contrôles non satisfaits
+    afficherControlesKO(erreurs) {
+        const lignes = (erreurs || []).map(e => `- ${e}`).join('\n');
+        this.fireToast(
+            'Contrôles non satisfaits',
+            `Attention, vous ne pouvez pas clôturer cette étape sans :\n${lignes}`,
+            'warning'
+        );
+    }
+
+    // ── Annulation d'instruction ─────────────────────────────────────────────
+    handleAnnulerInstruction() {
+        this.motifAnnulation = '';
+        this.showAnnulationModal = true;
+    }
+
+    handleCancelAnnulation() {
+        this.showAnnulationModal = false;
+    }
+
+    handleMotifAnnulationChange(event) {
+        this.motifAnnulation = event.detail.value;
+    }
+
+    handleConfirmAnnulation() {
+        if (!this.motifAnnulation) {
+            this.fireToast('Validation', 'Veuillez sélectionner un motif d\'annulation.', 'warning');
+            return;
+        }
+        this.showAnnulationModal = false;
+        this.isLoading = true;
+        annulerInstruction({ instructionId: this.recordId, motif: this.motifAnnulation })
+            .then(result => {
+                if (!result.ok) {
+                    // Un contrôle est KO : on affiche le message d'alerte et on arrête.
+                    this.fireToast('Annulation impossible', result.message, 'warning');
+                    return null;
+                }
+                this.statut = STATUT_ANNULEE;
+                this.fireToast('Instruction annulée', "L'instruction a été annulée.", 'success');
                 return refreshApex(this.wiredDetailsResult);
             })
             .catch(error => { this.fireToast('Erreur', this.extractError(error), 'error'); })
@@ -618,7 +763,10 @@ export default class DA_lwc031_detailsPEC extends LightningElement {
 
     // ── Utilitaires ──────────────────────────────────────────────────────────
     fireToast(title, message, variant) {
-        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+        // Les toasts d'erreur / de validation restent affichés jusqu'à fermeture
+        // manuelle (sticky) ; les autres se referment automatiquement.
+        const mode = (variant === 'error' || variant === 'warning') ? 'sticky' : 'dismissable';
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant, mode }));
     }
 
     extractError(error) {

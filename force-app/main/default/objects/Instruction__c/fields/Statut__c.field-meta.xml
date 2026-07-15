@@ -24,6 +24,26 @@
                 <default>false</default>
                 <label>Instruction terminée</label>
             </value>
+            <value>
+                <fullName>Etude document terminée</fullName>
+                <default>false</default>
+                <label>Etude document terminée</label>
+            </value>
+            <value>
+                <fullName>Expertise terminée</fullName>
+                <default>false</default>
+                <label>Expertise terminée</label>
+            </value>
+            <value>
+                <fullName>Correction devis terminée</fullName>
+                <default>false</default>
+                <label>Correction devis terminée</label>
+            </value>
+            <value>
+                <fullName>Prise en charge accordée</fullName>
+                <default>false</default>
+                <label>Prise en charge accordée</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

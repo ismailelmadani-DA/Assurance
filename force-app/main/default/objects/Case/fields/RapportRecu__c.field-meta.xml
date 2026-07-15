@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>RapportRecu__c</fullName>
+    <label>Rapport reçu</label>
+    <description>Indique que le rapport d'expertise de la mission a été reçu. Utilisé pour le contrôle de clôture de l'étape Expertise (CR2) du parcours PEC.</description>
+    <defaultValue>false</defaultValue>
+    <externalId>false</externalId>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

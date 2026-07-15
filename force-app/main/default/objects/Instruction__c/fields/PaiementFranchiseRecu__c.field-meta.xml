@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>PaiementFranchiseRecu__c</fullName>
+    <label>Paiement de la franchise reçu</label>
+    <description>Indique que le paiement de la franchise par l'assuré a été reçu. Contrôle de clôture de l'étape Etablissement PEC (CR4) lorsque le paiement de la franchise se fait « A la compagnie ».</description>
+    <defaultValue>false</defaultValue>
+    <externalId>false</externalId>
+    <trackTrending>false</trackTrending>
+    <type>Checkbox</type>
+</CustomField>

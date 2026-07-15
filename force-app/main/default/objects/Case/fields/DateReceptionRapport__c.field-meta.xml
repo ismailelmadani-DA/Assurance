@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>DateReceptionRapport__c</fullName>
+    <label>Date de réception du rapport</label>
+    <description>Date de réception du rapport d'expertise de la mission. Utilisé pour le contrôle de clôture de l'étape Expertise (CR2) du parcours PEC.</description>
+    <externalId>false</externalId>
+    <trackTrending>false</trackTrending>
+    <type>Date</type>
+</CustomField>
